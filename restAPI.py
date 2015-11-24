@@ -61,3 +61,8 @@ class restAPI(object):
 		url = self.buildURL()
 		self.response = requests.get( url , auth=HTTPDigestAuth( username , password ) )
 		return self.response
+
+	def submitForJSON(self):
+		url = self.buildURL()
+		self.response = requests.get( url , headers={ "Content-Type" : "application/json" } )
+		return self.response

@@ -11,20 +11,21 @@
 
 from restAPI import restAPI
 
-class vepAPI(restAPI):
-	endpoint = "http://rest.ensembl.org"
+class ensemblAPI(restAPI):
+	endpoint = "http://grch37.rest.ensembl.org"
 	species = "human"
 	hgvs = "/vep/" + species + "/hgvs/"
+	translation = "/map/translation/"
 	def __init__(self,**kwargs):
 		subset = kwargs.get("subset",'')
 		if not subset:
-			super(vepAPI,self).__init__(vepAPI.endpoint,vepAPI.hgvs)
+			super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
 		else:
-			if ( subset == vepAPI.hgvs or subset == vepAPI.variantID ):
-				super(vepAPI,self).__init__(vepAPI.endpoint,subset)
+			if ( subset == ensemblAPI.hgvs or subset == ensemblAPI.translation ):
+				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,subset)
 			else:
 				print "ADSERROR: bad subset. restAPI.subset initializing to variant association results"
-				super(vepAPI,self).__init__(vepAPI.endpoint,vepAPI.hgvs)
+				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
 
 	def setSubset(self,subset):
 		self.subset = subset
@@ -34,6 +35,13 @@ class vepAPI(restAPI):
 
 	def beginQuery(self):
 		self.action = ""
+
+	def useGRCh38(self):
+		ensemblAPI.endpoint = "http://rest.ensembl.org"
+
+	def useGRCh37(self):
+		ensemblAPI.endpoint = "http://grch37.rest.ensembl.org"
+
 	def searchVariant(self,variant):
 		self.action = variant + "?"
 
