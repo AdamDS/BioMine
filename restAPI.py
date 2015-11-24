@@ -10,12 +10,16 @@
 #"The API uses a process called Digest Authentication as a security
 # measure to verify user requests submitted to the database."
 
+import requests
+from requests.auth import HTTPDigestAuth
+
 class restAPI(object):
 	'''REST API class, has 
 		endpoint = the endpoint
 		subset = the subset realm of the RESTful service
 		action = the query, file upload, etc.'''
 	def __init__(self,endpoint,subset):
+		self.response = ""
 		self.endpoint = endpoint
 		self.subset = subset
 		self.action = ""
@@ -47,3 +51,13 @@ class restAPI(object):
 
 	def buildURLJSON(self):
 		return self.endpoint + self.subset + self.action + "&_type=json"
+
+	def submit(self):
+		url = self.buildURL()
+		self.response = requests.get( url )
+		return self.response
+
+	def submitDigest(self,username,password):
+		url = self.buildURL()
+		self.response = requests.get( url , auth=HTTPDigestAuth( username , password ) )
+		return self.response

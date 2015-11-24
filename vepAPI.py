@@ -7,7 +7,7 @@
 ### Inherited
 #	endpoint	"http://rest.ensembl.org"
 #	subset		"/vep/human/hgvs/"
-#	action		query=
+#	action		
 
 from restAPI import restAPI
 
@@ -34,5 +34,11 @@ class vepAPI(restAPI):
 
 	def beginQuery(self):
 		self.action = ""
-	def search(self,variant):
+	def searchVariant(self,variant):
 		self.action = variant + "?"
+
+	def searchProteinAnnotations( self , variants ):
+		for transcript , proteinAnno in variants:
+			self.beginQuery();
+			self.searchVariant( transcript + ":" + proteinAnno );
+			print self.buildURL();

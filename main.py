@@ -7,7 +7,7 @@ import getopt
 import requests
 import json
 import tempfile
-from restAPI import restAPI
+from vepAPI import vepAPI
 from requests.auth import HTTPDigestAuth
 from xmlutils.xml2json import xml2json
 import xml.etree.ElementTree as ET
@@ -49,7 +49,7 @@ def parseArgs( argv ):
 	return { "username" : username , "password" : password , "api" : api , "output" : output }
 	
 def checkConnection():
-	search = "https://"
+	search = "http://rest.ensembl.org/"
 	res = requests.get( search )
 	print search
 	if res:
@@ -63,13 +63,13 @@ def main( argv ):
 	password = values["password"].strip()
 	output = values["output"]
 
-	search = ""
-	res = requests.get( search , auth=HTTPDigestAuth( username , password ) )
+	search = vepAPI()
+	search.searchVariant( "EGFR:p.L858R" )
+	#search.searchVariant( "ENST00000275493:p.L858R" )
+	#search.searchVariant( "9:g.22125504G>C" )
+	res = search.submit()
 	if res:
-		records = ""
-		if records:
-			print "records obtained: " + str(len(records))
-			print records
+		print res.text
 	else:
 		print res.status_code
 	print search
