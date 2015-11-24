@@ -39,11 +39,10 @@ def parseArgs( argv ):
 	return { "input" : inputFile , "output" : output }
 	
 def checkConnection():
-	search = "http://rest.ensembl.org/"
+	search = "http://rest.ensembl.org/vep/human/hgvs/EGFR:p.L858R"
 	res = requests.get( search )
-	print search
 	if res:
-		print "have xml"
+		print "have response"
 	else:
 		print res.status_code
 
@@ -52,18 +51,29 @@ def main( argv ):
 	inputFile = values["input"]
 	outputFile = values["output"]
 
+	inFile = None
+	variants = []
+	if inputFile:
+		inFile = open( inputFile , 'r' )
+		for line in inFile:
+			fields = line.split( '\t' )
+			variants.append( fields[0] + ":" + fields[1] )
+
 	search = ensemblAPI()
-	search.searchVariant( "EGFR:p.L858R" )
-	#search.searchVariant( "ENST00000275493:p.L858R" )
-	#search.searchVariant( "9:g.22125504G>C" )
+	res = search.annotateVariants( variants , content = "text/json" )
+	#res = search.annotateVariant( "EGFR:p.L858R" )
+	#search.annotateVariant( "ENST00000275493:p.L858R" )
+	#search.annotateVariant( "9:g.22125504G>C" )
 
 	#res = search.submitForJSON()
-	res = search.submit()
-	if res:
-		print res.text
-	else:
-		print res.status_code
-	print search
+	#res = search.submit()
+	for key , value in res.iteritems():
+		print key + " => " + value
+	#if res:
+	#	print res.text
+	#else:
+	#	print res.status_code
+	#print search
 
 if __name__ == "__main__":
 	main( sys.argv[1:] )

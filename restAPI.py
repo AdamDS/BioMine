@@ -52,17 +52,25 @@ class restAPI(object):
 	def buildURLJSON(self):
 		return self.endpoint + self.subset + self.action + "&_type=json"
 
-	def submit(self):
+	def submit(self,**kwargs):
+		out = kwargs.get("content",'')
 		url = self.buildURL()
-		self.response = requests.get( url )
-		return self.response
+		if out:
+			self.response = requests.get( url , headers = { "Content-Type" : out } )
+			return self.response
+		else:
+			self.response = requests.get( url )
+			return self.response
 
 	def submitDigest(self,username,password):
 		url = self.buildURL()
 		self.response = requests.get( url , auth=HTTPDigestAuth( username , password ) )
 		return self.response
 
-	def submitForJSON(self):
+	def submitJSON(self):
 		url = self.buildURL()
-		self.response = requests.get( url , headers={ "Content-Type" : "application/json" } )
-		return self.response
+		self.submit("application/json")
+
+	def submitXML(self):
+		url = self.buildURL()
+		self.submit("text/xml")

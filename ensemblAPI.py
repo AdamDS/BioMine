@@ -26,6 +26,10 @@ class ensemblAPI(restAPI):
 			else:
 				print "ADSERROR: bad subset. restAPI.subset initializing to variant association results"
 				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
+	def useGRCh38(self):
+		ensemblAPI.endpoint = "http://rest.ensembl.org"
+	def useGRCh37(self):
+		ensemblAPI.endpoint = "http://grch37.rest.ensembl.org"
 
 	def setSubset(self,subset):
 		self.subset = subset
@@ -36,17 +40,20 @@ class ensemblAPI(restAPI):
 	def beginQuery(self):
 		self.action = ""
 
-	def useGRCh38(self):
-		ensemblAPI.endpoint = "http://rest.ensembl.org"
-
-	def useGRCh37(self):
-		ensemblAPI.endpoint = "http://grch37.rest.ensembl.org"
-
-	def searchVariant(self,variant):
+	def annotateVariant( self , variant , **kwargs ):
+		out = kwargs.get( "content" , '' )
 		self.action = variant + "?"
+		return self.submit( content = out )
 
-	def searchProteinAnnotations( self , variants ):
-		for transcript , proteinAnno in variants:
+	def annotateVariants( self , variants , **kwargs ):
+		out = kwargs.get("content",'')
+		results = {}
+		#for name , var in variants:
+		for var in variants:
 			self.beginQuery();
-			self.searchVariant( transcript + ":" + proteinAnno );
-			print self.buildURL();
+			#variant = name + ":" + var
+			variant = var
+			self.annotateVariant( variant , content = out );
+			response = self.submit( content = out )
+			results[variant] = response.text
+		return results
