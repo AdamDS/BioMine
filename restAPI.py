@@ -12,6 +12,7 @@
 
 import requests
 from requests.auth import HTTPDigestAuth
+import json
 
 class restAPI(object):
 	'''REST API class, has 
@@ -23,6 +24,8 @@ class restAPI(object):
 		self.endpoint = endpoint
 		self.subset = subset
 		self.action = ""
+		self.headers = {}
+		self.data = {}
 
 	def queryAll(self):
 		return self.site + "?query=NOT%20asdf"
@@ -52,15 +55,52 @@ class restAPI(object):
 	def buildURLJSON(self):
 		return self.endpoint + self.subset + self.action + "&_type=json"
 
+	def addData( self , field , value ):
+		self.data[field] = value
+	def buildData( self ):
+		json.dumps( self.data )
+		return self.data
+
+	def addHeader( self , field , value ):
+		self.headers[field] = value
+	def buildHeader( self ):
+		json.dumps( self.headers )
+		return self.headers
+
 	def submit(self,**kwargs):
-		out = kwargs.get("content",'')
+		contentHeaders = kwargs.get("content",'')
+		dataIn = kwargs.get("data",'')
+		doPost = kwargs.get("post",False)
 		url = self.buildURL()
-		if out:
-			self.response = requests.get( url , headers = { "Content-Type" : out } )
-			return self.response
+		print url
+		if contentHeaders:
+			self.addHeader( "Content-Type" , contentHeaders )
+			self.buildHeader()
+			if dataIn:
+				self.buildData()
+				if doPost:
+					self.response = requests.post( url , headers = self.headers , data = self.data )
+				else:
+					self.response = requests.get( url , headers = self.headers , data = self.data )
+			else:
+				if doPost:
+					self.response = requests.post( url , headers = self.headers )
+				else:
+					self.response = requests.get( url , headers = self.headers )
 		else:
-			self.response = requests.get( url )
-			return self.response
+			if dataIn:
+				self.buildData()
+				if doPost:
+					self.response = requests.post( url , data = self.data )
+				else:
+					self.response = requests.get( url , data = self.data )
+			else:
+				if doPost:
+					self.response = requests.post( url )
+				else:
+					self.response = requests.get( url )
+		#print self.response
+		return self.response
 
 	def submitDigest(self,username,password):
 		url = self.buildURL()
@@ -69,8 +109,8 @@ class restAPI(object):
 
 	def submitJSON(self):
 		url = self.buildURL()
-		self.submit("application/json")
+		self.submit( content = "application/json")
 
 	def submitXML(self):
 		url = self.buildURL()
-		self.submit("text/xml")
+		self.submit( content = "text/xml")

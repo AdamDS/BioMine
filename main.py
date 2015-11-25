@@ -62,8 +62,12 @@ def main( argv ):
 
 	variants = readMutations( inputFile )
 	ensemblInstance = ensemblAPI()
-	ensemblInstance.annotationIO( outputFile , variants )
+	#ensemblInstance.annotateHGVSList( variants )
+	#print ensemblInstance.headers
+	#print ensemblInstance.data
+	#print ensemblInstance.buildURL()
 
+	ensemblInstance.fOutAnnotateHGVS( outputFile , variants )
 	#responses = ensemblInstance.annotateVariants( variants , content = "text/xml" )
 	#response = ensemblInstance.annotateVariant( "EGFR:p.L858R" )
 

@@ -11,6 +11,7 @@
 
 from restAPI import restAPI
 import xml.etree.ElementTree as ET
+import json
 
 class ensemblAPI(restAPI):
 	endpoint = "http://grch37.rest.ensembl.org"
@@ -41,40 +42,94 @@ class ensemblAPI(restAPI):
 	def beginQuery(self):
 		self.action = ""
 
-	def annotateVariant( self , variant , **kwargs ):
+	def annotateVariant( self , hgvsNotated , **kwargs ):
 		out = kwargs.get( "content" , '' )
-		self.action = variant + "?"
+		self.action = hgvsNotated + "?"
 		return self.submit( content = out )
-
-	def annotateVariants( self , variants , **kwargs ):
+	def annotatedVariantDict( self , hgvsNotatedArray , **kwargs ):
 		out = kwargs.get("content",'')
-		results = {}
-		#for name , var in variants:
-		for var in variants:
+		resultDict = {}
+		for var in hgvsNotatedArray:
 			self.beginQuery();
-			#variant = name + ":" + var
-			variant = var
-			self.annotateVariant( variant , content = out );
-			response = self.submit( content = out )
-			results[variant] = response.text
-		return results
+			hgvsNotated = var.strip()
+			if out:
+				response = self.annotateVariant( hgvsNotated , content = out )
+			else:
+				response = self.annotateVariant( hgvsNotated )
+			resultDict[hgvsNotated] = response.text
+		return resultDict
 
-	def annotationIO( self , outputFile , variants ):
-		responses = self.annotateVariants( variants , content = "text/xml" )
+	def buildHGVSannotation( self, geneVariant , response , **kwargs ):
+		head = kwargs.get( "header" , True )
 		annotations = []
-		for key , value in responses.iteritems():
-			variant = key.strip().split( ":" )
-			root = ET.fromstring(value)
-			for result in root.iter('data'):
+		#print response
+		if head:
+			annotations.append( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) )
+		root = ET.fromstring( response )
+		for result in root.iter('data'):
+			if not result.get('error'):
 				allele = result.get('allele_string')
-				alleles = allele.split( "/" )
+				alleles = ["" , ""]
+				if allele:
+					alleles = allele.split( '/' )
 				start = result.get('start')
+				if not start:
+					start = ""
 				stop = result.get('end')
+				if not stop:
+					stop = ""
 				chromosome = result.get('seq_region_name')
+				if not chromosome:
+					chromosome = ""
 				strand = result.get('strand')
+				if not strand:
+					strand = ""
 				consequence = result.get('most_severe_consequence')
-				annotations.append( '\t'.join( [ variant[0] , variant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) )
+				if not consequence:
+					consequence = ""
+				annotations.append( '\t'.join( [ geneVariant[0] , geneVariant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) )
+		return annotations
+	def annotateHGVSDict( self, resultDict , **kwargs ):
+		head = kwargs.get( "header" , True )
+		annotations = []
+		if head:
+			annotations.append( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) )
+		for hgvsNotated , response in resultDict.iteritems():
+			geneVariant = hgvsNotated.strip().split( ":" )
+			annotations.extend( self.buildHGVSannotation( geneVariant , response , header = False ) )
+		return annotations
+	def annotateHGVSList( self , variants ):
+		self.beginQuery();
+		variantList = []
+		for var in variants:
+			variantList.append( var.strip() )
+		json.dumps( variantList )
+		self.addHeader( "Accept" , "application/json" )
+		self.addData( "hgvs_notation" , variantList )
+		return self.submit( content = "text/xml" , data = variantList , post = True )
+
+		
+	def fOutAnnotateHGVS( self , outputFile , variantArray ):
+		resultDict = self.annotatedVariantDict( variantArray , content = "text/xml" )
+		annotations = self.annotateHGVSDict( resultDict , header = False )
 		fout = open( outputFile , 'w' )
-		fout.write( "Gene\tMutation\tChromosome\tStart\tStop\tReference\tVariant\tStrand\tMutation_Type\n" )
+		fout.write( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) + "\n" )
 		for annotation in annotations:
 			fout.write( annotation + "\n" )
+		#annotations = []
+		#for key , value in responses.iteritems():
+		#	variant = key.strip().split( ":" )
+		#	root = ET.fromstring(value)
+		#	for result in root.iter('data'):
+		#		allele = result.get('allele_string')
+		#		alleles = allele.split( "/" )
+		#		start = result.get('start')
+		#		stop = result.get('end')
+		#		chromosome = result.get('seq_region_name')
+		#		strand = result.get('strand')
+		#		consequence = result.get('most_severe_consequence')
+				#annotations.append( '\t'.join( [ variant[0] , variant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) )
+		#		fout.write( '\t'.join( [ variant[0] , variant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) )
+		#		print variant
+		#for annotation in annotations:
+		#	fout.write( annotation + "\n" )
