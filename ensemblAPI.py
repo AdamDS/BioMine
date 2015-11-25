@@ -62,6 +62,7 @@ class ensemblAPI(restAPI):
 	def buildHGVSannotation( self, geneVariant , response , **kwargs ):
 		head = kwargs.get( "header" , True )
 		annotations = []
+		errors = []
 		#print response
 		if head:
 			annotations.append( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) )
@@ -88,16 +89,22 @@ class ensemblAPI(restAPI):
 				if not consequence:
 					consequence = ""
 				annotations.append( '\t'.join( [ geneVariant[0] , geneVariant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) )
-		return annotations
+			else:
+				#print response
+				errors.append( '\t'.join( [ geneVariant[0] , geneVariant[1] , result.get('error') ] ) )
+		return { "annotations" : annotations , "errors" : errors }
 	def annotateHGVSDict( self, resultDict , **kwargs ):
 		head = kwargs.get( "header" , True )
 		annotations = []
+		errors = []
 		if head:
 			annotations.append( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) )
 		for hgvsNotated , response in resultDict.iteritems():
 			geneVariant = hgvsNotated.strip().split( ":" )
-			annotations.extend( self.buildHGVSannotation( geneVariant , response , header = False ) )
-		return annotations
+			output = self.buildHGVSannotation( geneVariant , response , header = False )
+			annotations.extend( output["annotations"] )
+			errors.extend( output["errors"] )
+		return { "annotations" : annotations , "errors" : errors }
 	def annotateHGVSList( self , variants ):
 		self.beginQuery();
 		variantList = []
@@ -111,11 +118,14 @@ class ensemblAPI(restAPI):
 		
 	def fOutAnnotateHGVS( self , outputFile , variantArray ):
 		resultDict = self.annotatedVariantDict( variantArray , content = "text/xml" )
-		annotations = self.annotateHGVSDict( resultDict , header = False )
+		output = self.annotateHGVSDict( resultDict , header = False )
 		fout = open( outputFile , 'w' )
 		fout.write( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) + "\n" )
-		for annotation in annotations:
+		for annotation in output["annotations"]:
 			fout.write( annotation + "\n" )
+		ferr = open( outputFile + ".err" , 'w' )
+		for error in output["errors"]:
+			ferr.write( error + "\n" )
 		#annotations = []
 		#for key , value in responses.iteritems():
 		#	variant = key.strip().split( ":" )
