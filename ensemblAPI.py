@@ -42,31 +42,39 @@ class ensemblAPI(restAPI):
 	def beginQuery(self):
 		self.action = ""
 
-	def annotateVariant( self , hgvsNotated , **kwargs ):
+	def annotateHGVSScalar2Response( self , hgvsNotated , **kwargs ):
 		out = kwargs.get( "content" , '' )
 		self.action = hgvsNotated + "?"
 		return self.submit( content = out )
-	def annotatedVariantDict( self , hgvsNotatedArray , **kwargs ):
+	def annotateHGVSArray2Dict( self , hgvsNotatedArray , **kwargs ):
 		out = kwargs.get("content",'')
 		resultDict = {}
 		for var in hgvsNotatedArray:
 			self.beginQuery();
 			hgvsNotated = var.strip()
 			if out:
-				response = self.annotateVariant( hgvsNotated , content = out )
+				self.annotateHGVSScalar2Response( hgvsNotated , content = out )
 			else:
-				response = self.annotateVariant( hgvsNotated )
-			resultDict[hgvsNotated] = response.text
+				self.annotateHGVSScalar2Response( hgvsNotated )
+			resultDict[hgvsNotated] = self.response.text
 		return resultDict
+	def annotateHGVSScalar2tsv( self , hgvsNotated , **kwargs ):
+		out = "text/xml"
+		head = kwargs.get( "header" , '' )
+		self.action = hgvsNotated + "?"
+		self.submit( content = out )
+		#print self.response.text
+		geneVariant = hgvsNotated.split( ":" )
+		return self.annotateHGVSScalarResponse2tsv( geneVariant , content = out , header = head )
 
-	def buildHGVSannotation( self, geneVariant , response , **kwargs ):
+	def annotateHGVSScalarResponse2tsv( self, geneVariant , **kwargs ):
 		head = kwargs.get( "header" , True )
 		annotations = []
 		errors = []
-		#print response
+		#print self.response.text
 		if head:
 			annotations.append( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) )
-		root = ET.fromstring( response )
+		root = ET.fromstring( self.response.text )
 		for result in root.iter('data'):
 			if not result.get('error'):
 				allele = result.get('allele_string')
@@ -93,7 +101,7 @@ class ensemblAPI(restAPI):
 				#print response
 				errors.append( '\t'.join( [ geneVariant[0] , geneVariant[1] , result.get('error') ] ) )
 		return { "annotations" : annotations , "errors" : errors }
-	def annotateHGVSDict( self, resultDict , **kwargs ):
+	def annotatedHGVSDict2tsv( self, resultDict , **kwargs ):
 		head = kwargs.get( "header" , True )
 		annotations = []
 		errors = []
@@ -101,24 +109,26 @@ class ensemblAPI(restAPI):
 			annotations.append( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) )
 		for hgvsNotated , response in resultDict.iteritems():
 			geneVariant = hgvsNotated.strip().split( ":" )
-			output = self.buildHGVSannotation( geneVariant , response , header = False )
+			output = self.annotateHGVSScalarResponse2tsv( geneVariant , response , header = False )
 			annotations.extend( output["annotations"] )
 			errors.extend( output["errors"] )
 		return { "annotations" : annotations , "errors" : errors }
-	def annotateHGVSList( self , variants ):
-		self.beginQuery();
-		variantList = []
-		for var in variants:
-			variantList.append( var.strip() )
-		json.dumps( variantList )
-		self.addHeader( "Accept" , "application/json" )
-		self.addData( "hgvs_notation" , variantList )
-		return self.submit( content = "text/xml" , data = variantList , post = True )
+	#def annotateHGVSList( self , variants ): #Ensembl hasn't made this possible...yet
+	#	self.beginQuery();
+	#	variantList = []
+	#	for var in variants:
+	#		variantList.append( var.strip() )
+	#	json.dumps( variantList )
+	#	self.addHeader( "Accept" , "application/json" )
+	#	self.addData( "hgvs_notation" , variantList )
+	#	return self.submit( content = "text/xml" , data = variantList , post = True )
 
+	def annotateHGVSList2tsv( self , variantArray ):
+		resultDict = self.annotateHGVSArray2Dict( variantArray , content = "text/xml" )
+		return self.annotatedHGVSDict2tsv( resultDict , header = False )
 		
 	def fOutAnnotateHGVS( self , outputFile , variantArray ):
-		resultDict = self.annotatedVariantDict( variantArray , content = "text/xml" )
-		output = self.annotateHGVSDict( resultDict , header = False )
+		output = self.annotatedHGVS2tsv( variantArray )
 		fout = open( outputFile , 'w' )
 		fout.write( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) + "\n" )
 		for annotation in output["annotations"]:

@@ -72,7 +72,7 @@ class restAPI(object):
 		dataIn = kwargs.get("data",'')
 		doPost = kwargs.get("post",False)
 		url = self.buildURL()
-		print url
+		#print url
 		if contentHeaders:
 			self.addHeader( "Content-Type" , contentHeaders )
 			self.buildHeader()

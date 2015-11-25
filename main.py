@@ -15,10 +15,13 @@ import xml.etree.ElementTree as ET
 def parseArgs( argv ):
 	helpText = "python main.py" + " "
 	helpText += "-i <inputFile> -o <outputFile>\n"
+	helpText += "-s \"HGVS notation\" -t (boolean flag for tsv output)\n"
 	inputFile = ""
 	output = ""
+	hgvs = ""
+	tsv = False
 	try:
-		opts, args = getopt.getopt( argv , "h:i:o:" , ["input=" , "output="] )
+		opts, args = getopt.getopt( argv , "h:i:o:s:t" , ["input=" , "output=" , "hgvs="] )
 	except getopt.GetoptError:
 		print "ADSERROR: Command not recognized"
 		print( helpText ) 
@@ -36,7 +39,11 @@ def parseArgs( argv ):
 			inputFile = arg
 		elif opt in ( "-o" , "--output" ):
 			output = arg
-	return { "input" : inputFile , "output" : output }
+		elif opt in ( "-s" , "--hgvs" ):
+			hgvs = arg
+		elif opt in ( "-t" , "--tsv" ):
+			tsv = True
+	return { "input" : inputFile , "output" : output , "hgvs" : hgvs , "tsv" : tsv }
 	
 def checkConnection():
 	ensemblInstance = "http://rest.ensembl.org/info/ping?content-type=application/json"
@@ -59,18 +66,32 @@ def main( argv ):
 	values = parseArgs( argv )
 	inputFile = values["input"]
 	outputFile = values["output"]
+	hgvs = values["hgvs"]
+	tsv = values["tsv"]
 
+	results = ""
 	variants = readMutations( inputFile )
 	ensemblInstance = ensemblAPI()
-	#ensemblInstance.annotateHGVSList( variants )
+	if inputFile and outputFile:
+		ensemblInstance.fOutAnnotateHGVS( outputFile , variants )
+	elif inputFile and not outputFile:
+		results = ensemblInstance.annotateHGVSArray2tsv( variants )
+	#results["annotations"]
+	#results["errors"]
+
+	if hgvs:
+		if tsv:
+			resultsErrors = ensemblInstance.annotateHGVSScalar2tsv( hgvs )
+			results = resultsErrors["annotations"]
+		else:
+			ensemblInstance.annotateHGVSScalar2Response( hgvs )
+			results = ensemblInstance.response.text
+
+	print results
+
 	#print ensemblInstance.headers
 	#print ensemblInstance.data
 	#print ensemblInstance.buildURL()
-
-	ensemblInstance.fOutAnnotateHGVS( outputFile , variants )
-	#responses = ensemblInstance.annotateVariants( variants , content = "text/xml" )
-	#response = ensemblInstance.annotateVariant( "EGFR:p.L858R" )
-
 	#for key , value in response.iteritems():
 	#	fout.write( key + "\t" + value )
 	#if response:
