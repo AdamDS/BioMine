@@ -39,41 +39,41 @@ def parseArgs( argv ):
 	return { "input" : inputFile , "output" : output }
 	
 def checkConnection():
-	search = "http://rest.ensembl.org/vep/human/hgvs/EGFR:p.L858R"
-	res = requests.get( search )
+	ensemblInstance = "http://rest.ensembl.org/info/ping?content-type=application/json"
+	res = requests.get( ensemblInstance )
 	if res:
 		print "have response"
 	else:
 		print res.status_code
 
-def main( argv ):
-	values = parseArgs( argv )
-	inputFile = values["input"]
-	outputFile = values["output"]
-
-	inFile = None
+def readMutations( inputFile ):
 	variants = []
 	if inputFile:
 		inFile = open( inputFile , 'r' )
 		for line in inFile:
 			fields = line.split( '\t' )
 			variants.append( fields[0] + ":" + fields[1] )
+	return variants
+	
+def main( argv ):
+	values = parseArgs( argv )
+	inputFile = values["input"]
+	outputFile = values["output"]
 
-	search = ensemblAPI()
-	res = search.annotateVariants( variants , content = "text/json" )
-	#res = search.annotateVariant( "EGFR:p.L858R" )
-	#search.annotateVariant( "ENST00000275493:p.L858R" )
-	#search.annotateVariant( "9:g.22125504G>C" )
+	variants = readMutations( inputFile )
+	ensemblInstance = ensemblAPI()
+	ensemblInstance.annotationIO( outputFile , variants )
 
-	#res = search.submitForJSON()
-	#res = search.submit()
-	for key , value in res.iteritems():
-		print key + " => " + value
-	#if res:
-	#	print res.text
+	#responses = ensemblInstance.annotateVariants( variants , content = "text/xml" )
+	#response = ensemblInstance.annotateVariant( "EGFR:p.L858R" )
+
+	#for key , value in response.iteritems():
+	#	fout.write( key + "\t" + value )
+	#if response:
+	#	print response.text
 	#else:
-	#	print res.status_code
-	#print search
+	#	print response.status_code
+	#print ensemblInstance
 
 if __name__ == "__main__":
 	main( sys.argv[1:] )

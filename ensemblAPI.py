@@ -10,6 +10,7 @@
 #	action		
 
 from restAPI import restAPI
+import xml.etree.ElementTree as ET
 
 class ensemblAPI(restAPI):
 	endpoint = "http://grch37.rest.ensembl.org"
@@ -57,3 +58,23 @@ class ensemblAPI(restAPI):
 			response = self.submit( content = out )
 			results[variant] = response.text
 		return results
+
+	def annotationIO( self , outputFile , variants ):
+		responses = self.annotateVariants( variants , content = "text/xml" )
+		annotations = []
+		for key , value in responses.iteritems():
+			variant = key.strip().split( ":" )
+			root = ET.fromstring(value)
+			for result in root.iter('data'):
+				allele = result.get('allele_string')
+				alleles = allele.split( "/" )
+				start = result.get('start')
+				stop = result.get('end')
+				chromosome = result.get('seq_region_name')
+				strand = result.get('strand')
+				consequence = result.get('most_severe_consequence')
+				annotations.append( '\t'.join( [ variant[0] , variant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) )
+		fout = open( outputFile , 'w' )
+		fout.write( "Gene\tMutation\tChromosome\tStart\tStop\tReference\tVariant\tStrand\tMutation_Type\n" )
+		for annotation in annotations:
+			fout.write( annotation + "\n" )
