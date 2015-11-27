@@ -28,6 +28,7 @@ class ensemblAPI(restAPI):
 			else:
 				print "ADSERROR: bad subset. restAPI.subset initializing to variant association results"
 				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
+
 	def useGRCh38(self):
 		ensemblAPI.endpoint = "http://rest.ensembl.org"
 	def useGRCh37(self):
@@ -52,12 +53,15 @@ class ensemblAPI(restAPI):
 		for var in hgvsNotatedArray:
 			self.beginQuery();
 			hgvsNotated = var.strip()
-			if out:
-				self.annotateHGVSScalar2Response( hgvsNotated , content = out )
-			else:
-				self.annotateHGVSScalar2Response( hgvsNotated )
+			self.annotateHGVSScalar2Response( hgvsNotated , content = out )
 			resultDict[hgvsNotated] = self.response.text
 		return resultDict
+
+	def HGVSAnnotationHeader( self ):
+		return "\t".join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) + "\n"
+	def HGVSErrorHeader( self ):
+		return "\t".join( [ "Gene" , "Mutation" , "Error" ] ) + "\n"
+
 	def annotateHGVSScalar2tsv( self , hgvsNotated , **kwargs ):
 		out = "text/xml"
 		head = kwargs.get( "header" , '' )
@@ -66,14 +70,14 @@ class ensemblAPI(restAPI):
 		#print self.response.text
 		geneVariant = hgvsNotated.split( ":" )
 		return self.annotateHGVSScalarResponse2tsv( geneVariant , content = out , header = head )
-
 	def annotateHGVSScalarResponse2tsv( self, geneVariant , **kwargs ):
 		head = kwargs.get( "header" , True )
-		annotations = []
-		errors = []
+		annotations = ""
+		errors = ""
 		#print self.response.text
 		if head:
-			annotations.append( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) )
+			annotations += self.HGVSAnnotationHeader()
+			errors += self.HGVSErrorHeader()
 		root = ET.fromstring( self.response.text )
 		for result in root.iter('data'):
 			if not result.get('error'):
@@ -96,23 +100,39 @@ class ensemblAPI(restAPI):
 				consequence = result.get('most_severe_consequence')
 				if not consequence:
 					consequence = ""
-				annotations.append( '\t'.join( [ geneVariant[0] , geneVariant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) )
+				annotations += "\t".join( [ geneVariant[0] , geneVariant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) + "\n"
 			else:
 				#print response
-				errors.append( '\t'.join( [ geneVariant[0] , geneVariant[1] , result.get('error') ] ) )
+				errors += "\t".join( [ geneVariant[0] , geneVariant[1] , result.get('error') ] ) + "\n"
+		return { "annotations" : annotations , "errors" : errors }
+	def annotateHGVSArray2tsv( self , hgvsNotatedArray , **kwargs ):
+		out = "text/xml"
+		head = kwargs.get( "header" , '' )
+		annotations = ""
+		errors = ""
+		for var in hgvsNotatedArray:
+			self.beginQuery();
+			hgvsNotated = var.strip()
+			self.annotateHGVSScalar2Response( hgvsNotated , content = out )
+			results = self.annotateHGVSScalarResponse2tsv( hgvsNotated.split( ":" ) , content = out , header = head )
+			head = False
+			annotations += results["annotations"]
+			errors += results["errors"]
 		return { "annotations" : annotations , "errors" : errors }
 	def annotatedHGVSDict2tsv( self, resultDict , **kwargs ):
 		head = kwargs.get( "header" , True )
-		annotations = []
-		errors = []
+		annotations = ""
+		errors = ""
 		if head:
-			annotations.append( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) )
+			annotations += self.HGVSAnnotationHeader()
+			errors += self.HGVSErrorHeader()
 		for hgvsNotated , response in resultDict.iteritems():
 			geneVariant = hgvsNotated.strip().split( ":" )
 			output = self.annotateHGVSScalarResponse2tsv( geneVariant , response , header = False )
-			annotations.extend( output["annotations"] )
-			errors.extend( output["errors"] )
+			annotations += output["annotations"]
+			errors += output["errors"]
 		return { "annotations" : annotations , "errors" : errors }
+
 	#def annotateHGVSList( self , variants ): #Ensembl hasn't made this possible...yet
 	#	self.beginQuery();
 	#	variantList = []
@@ -122,34 +142,17 @@ class ensemblAPI(restAPI):
 	#	self.addHeader( "Accept" , "application/json" )
 	#	self.addData( "hgvs_notation" , variantList )
 	#	return self.submit( content = "text/xml" , data = variantList , post = True )
-
-	def annotateHGVSList2tsv( self , variantArray ):
-		resultDict = self.annotateHGVSArray2Dict( variantArray , content = "text/xml" )
-		return self.annotatedHGVSDict2tsv( resultDict , header = False )
+	#def annotateHGVSList2tsv( self , variantArray ):
+	#	resultDict = self.annotateHGVSArray2Dict( variantArray , content = "text/xml" )
+	#	return self.annotatedHGVSDict2tsv( resultDict , header = False )
 		
-	def fOutAnnotateHGVS( self , outputFile , variantArray ):
-		output = self.annotatedHGVS2tsv( variantArray )
+	def annotateHGVSArray2File( self , variantArray , outputFile ):
+		output = self.annotateHGVSArray2tsv( variantArray )
 		fout = open( outputFile , 'w' )
-		fout.write( '\t'.join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) + "\n" )
+		fout.write( self.HGVSAnnotationHeader() )
 		for annotation in output["annotations"]:
-			fout.write( annotation + "\n" )
+			fout.write( annotation )
 		ferr = open( outputFile + ".err" , 'w' )
+		ferr.write( self.HGVSErrorHeader() )
 		for error in output["errors"]:
-			ferr.write( error + "\n" )
-		#annotations = []
-		#for key , value in responses.iteritems():
-		#	variant = key.strip().split( ":" )
-		#	root = ET.fromstring(value)
-		#	for result in root.iter('data'):
-		#		allele = result.get('allele_string')
-		#		alleles = allele.split( "/" )
-		#		start = result.get('start')
-		#		stop = result.get('end')
-		#		chromosome = result.get('seq_region_name')
-		#		strand = result.get('strand')
-		#		consequence = result.get('most_severe_consequence')
-				#annotations.append( '\t'.join( [ variant[0] , variant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) )
-		#		fout.write( '\t'.join( [ variant[0] , variant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) )
-		#		print variant
-		#for annotation in annotations:
-		#	fout.write( annotation + "\n" )
+			ferr.write( error )

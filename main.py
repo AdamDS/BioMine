@@ -72,16 +72,16 @@ def main( argv ):
 	results = ""
 	variants = readMutations( inputFile )
 	ensemblInstance = ensemblAPI()
+
 	if inputFile and outputFile:
-		ensemblInstance.fOutAnnotateHGVS( outputFile , variants )
+		ensemblInstance.annotateHGVSArray2File( variants , outputFile )
 	elif inputFile and not outputFile:
-		results = ensemblInstance.annotateHGVSArray2tsv( variants )
-	#results["annotations"]
-	#results["errors"]
+		resultsErrors = ensemblInstance.annotateHGVSArray2tsv( variants , header = True )
+		results = resultsErrors["annotations"]
 
 	if hgvs:
 		if tsv:
-			resultsErrors = ensemblInstance.annotateHGVSScalar2tsv( hgvs )
+			resultsErrors = ensemblInstance.annotateHGVSScalar2tsv( hgvs , header = True )
 			results = resultsErrors["annotations"]
 		else:
 			ensemblInstance.annotateHGVSScalar2Response( hgvs )
