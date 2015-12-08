@@ -25,11 +25,11 @@ from ..restAPI import restAPI
 
 class entrezAPI(restAPI):
 	endpoint = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
-	esearch = "esearch.fcgi"
-	esummary = "esummary.fcgi"
-	elink = "elink.fcgi"
-	epost = "epost.fcgi"
-	efetch = "efetch.fcgi"
+	esearch = "esearch.fcgi?"
+	esummary = "esummary.fcgi?"
+	elink = "elink.fcgi?"
+	epost = "epost.fcgi?"
+	efetch = "efetch.fcgi?"
 	pubmed = "pubmed"
 	clinvar = "clinvar"
 	protein = "protein"
@@ -67,21 +67,27 @@ class entrezAPI(restAPI):
 
 	def buildSearchAction( self , query ):
 		self.query = ','.join( query )
-		return '&'.join( [ self.database , self.query ] )
+		return '&'.join( [ "db=" + self.database , "term=" + self.query ] )
 	
 	def buildSummaryAction( self , ids ):
 		self.uid = ','.join( ids )
 		return '&'.join( [ self.database , self.uid ] )
 
-	def searchPubMed( self , query , **kwargs ):
+	def searchPubMed( self , query ):
 		self.subset = entrezAPI.esearch
 		self.database = entrezAPI.pubmed
-		self.action = entrezAPI.buildSearchAction( query )
+		self.action = self.buildSearchAction( query )
+		print self.subset
+		print self.database
+		print self.action
 		return self.submit( )
 	def searchClinVar( self , query , **kwargs ):
 		self.subset = entrezAPI.esearch
 		self.database = entrezAPI.clinvar
-		self.action = entrezAPI.buildSearchAction( query )
+		self.action = self.buildSearchAction( query )
+		print self.subset
+		print self.database
+		print self.action
 		return self.submit( )
 	
 	def getClinicalSignificance( self , queries ):

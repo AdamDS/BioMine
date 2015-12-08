@@ -2,6 +2,13 @@
 Integrating URL APIs through a more common framework.
 ## Clinical Trials - HTTP
 Based on [ClinicalTrials.gov](https://clinicaltrials.gov/ct2/info/linking)
+## NCBI: Entrez - service
+Based on [NCBI's Entrez Programming Utilities (E-utilities)](http://www.ncbi.nlm.nih.gov/books/NBK25501/)
+### Search ClinVar
+#### searchClinVar - search terms for ClinVar
+	returns requests response object
+#### searchPubMed - search terms for PubMed
+	returns requests response object
 ## NCBI: PubChem - ReST
 Based on [NCBI's Power User Gateway for PubChem](http://www.ncbi.nlm.nih.gov/home/api.shtml)
 ### Compound Synonyms

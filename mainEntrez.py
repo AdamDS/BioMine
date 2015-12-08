@@ -77,7 +77,11 @@ def main( argv ):
 	query = values["query"]
 
 	results = ""
-	queries = readDBSearches( inputFile )
+	queries = {}
+	if inputFile:
+		queries = readDBSearches( inputFile )
+	else:
+		queries = { "databases" : database , "searches" : query }
 	entrezInstance = entrezAPI()
 
 	if inputFile and outputFormat:
@@ -88,9 +92,13 @@ def main( argv ):
 	print results
 
 	if query:
-		results = entrezInstance.searchPubMed( queries )
+		print queries
+		if database == "pubmed":
+			results = entrezInstance.searchPubMed( queries["searches"] )
+		if database == "clinvar":
+			results = entrezInstance.searchClinVar( queries["searches"] )
 
-	print results
+	print results.text
 
 	#print entrezInstance.headers
 	#print entrezInstance.data

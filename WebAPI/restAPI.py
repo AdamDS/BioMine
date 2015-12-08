@@ -10,9 +10,9 @@
 #"The API uses a process called Digest Authentication as a security
 # measure to verify user requests submitted to the database."
 
-#import requests
-#from requests.auth import HTTPDigestAuth
-#import json
+import requests
+from requests.auth import HTTPDigestAuth
+import json
 
 class restAPI(object):
 	'''REST API class, has 
