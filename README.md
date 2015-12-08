@@ -1,8 +1,8 @@
-# restAPIs
-Integrating ReST APIs through a more common framework.
-## Clinical Trials
+# urlAPIs
+Integrating URL APIs through a more common framework.
+## Clinical Trials - HTTP
 Based on [ClinicalTrials.gov](https://clinicaltrials.gov/ct2/info/linking)
-## NCBI PubChem
+## NCBI: PubChem - ReST
 Based on [NCBI's Power User Gateway for PubChem](http://www.ncbi.nlm.nih.gov/home/api.shtml)
 ### Compound Synonyms
 #### compoundSynonyms - single compound lookup
@@ -11,7 +11,7 @@ Based on [NCBI's Power User Gateway for PubChem](http://www.ncbi.nlm.nih.gov/hom
 	returns tab delimited array (searched compound '\t' synonym)
 #### compoundsSynonyms2File - array of compounds lookup and write to file
 	no return
-## Variant Effect Predictor
+## Ensembl: Variant Effect Predictor - ReST
 Based on [Ensembl's VEP annotator](http://rest.ensembl.org/#Variation)
 ### HGVS genomic variant annotation
 ### Use GRCh37 or GRCh38

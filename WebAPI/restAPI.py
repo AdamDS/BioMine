@@ -10,9 +10,9 @@
 #"The API uses a process called Digest Authentication as a security
 # measure to verify user requests submitted to the database."
 
-import requests
-from requests.auth import HTTPDigestAuth
-import json
+#import requests
+#from requests.auth import HTTPDigestAuth
+#import json
 
 class restAPI(object):
 	'''REST API class, has 
@@ -20,12 +20,21 @@ class restAPI(object):
 		subset = the subset realm of the RESTful service
 		action = the query, file upload, etc.'''
 	def __init__(self,endpoint,subset):
-		self.response = ""
+		self.response = None
 		self.endpoint = endpoint
 		self.subset = subset
 		self.action = ""
 		self.headers = {}
 		self.data = {}
+
+	def setSubset(self,subset):
+		self.subset = subset
+		self.action = ""
+	def resetURL(self):
+		self.action = ""
+
+	def beginQuery(self):
+		self.action = ""
 
 	def queryAll(self):
 		return self.site + "?query=NOT%20asdf"
@@ -64,36 +73,36 @@ class restAPI(object):
 	def addHeader( self , field , value ):
 		self.headers[field] = value
 	def buildHeader( self ):
-		json.dumps( self.headers )
-		return self.headers
+		return json.dumps( self.headers )
 
 	def submit(self,**kwargs):
 		contentHeaders = kwargs.get("content",'')
 		dataIn = kwargs.get("data",'')
 		doPost = kwargs.get("post",False)
-		url = self.buildURL()
-		print url
 		if contentHeaders:
 			self.addHeader( "Content-Type" , contentHeaders )
-			self.buildHeader()
-			if dataIn:
-				self.buildData()
+		url = self.buildURL()
+		headers = self.buildHeader()
+		data = self.buildData()
+		print url
+		if self.headers:
+			if self.data:
 				if doPost:
-					self.response = requests.post( url , headers = self.headers , data = self.data )
+					self.response = requests.post( url , headers = headers , data = data )
 				else:
-					self.response = requests.get( url , headers = self.headers , data = self.data )
+					self.response = requests.get( url , headers = headers , data = data )
 			else:
 				if doPost:
-					self.response = requests.post( url , headers = self.headers )
+					self.response = requests.post( url , headers = headers )
 				else:
-					self.response = requests.get( url , headers = self.headers )
+					self.response = requests.get( url , headers = headers )
 		else:
-			if dataIn:
+			if self.data:
 				self.buildData()
 				if doPost:
-					self.response = requests.post( url , data = self.data )
+					self.response = requests.post( url , data = data )
 				else:
-					self.response = requests.get( url , data = self.data )
+					self.response = requests.get( url , data = data )
 			else:
 				if doPost:
 					self.response = requests.post( url )

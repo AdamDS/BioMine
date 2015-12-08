@@ -4,13 +4,13 @@
 
 import sys
 import getopt
-import requests
-import json
-import tempfile
-from ensemblAPI import ensemblAPI
-from requests.auth import HTTPDigestAuth
-from xmlutils.xml2json import xml2json
-import xml.etree.ElementTree as ET
+#import requests
+#import json
+#import tempfile
+from WebAPI.Ensembl.ensemblAPI import ensemblAPI
+#from requests.auth import HTTPDigestAuth
+#from xmlutils.xml2json import xml2json
+#import xml.etree.ElementTree as ET
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "
