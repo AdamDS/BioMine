@@ -59,19 +59,24 @@ class ensemblAPI(restAPI):
 
 	def HGVSAnnotationHeader( self ):
 		return "\t".join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) + "\n"
+	def HGVSAnnotatedHeader( self , inputFile ):
+		header = inputHeader( inputFile )
+		return "\t".join( [ header.strip() , "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) + "\n"
 	def HGVSErrorHeader( self ):
 		return "\t".join( [ "Gene" , "Mutation" , "Error" ] ) + "\n"
 
 	def annotateHGVSScalar2tsv( self , hgvsNotated , **kwargs ):
 		out = "text/xml"
 		head = kwargs.get( "header" , '' )
+		line = kwargs.get( "line" , '' )
 		self.action = hgvsNotated + "?"
 		self.submit( content = out )
 		#print self.response.text
 		geneVariant = hgvsNotated.split( ":" )
-		return self.annotateHGVSScalarResponse2tsv( geneVariant , content = out , header = head )
+		return self.annotateHGVSScalarResponse2tsv( geneVariant , content = out , header = head , line = line )
 	def annotateHGVSScalarResponse2tsv( self, geneVariant , **kwargs ):
 		head = kwargs.get( "header" , True )
+		line = kwargs.get( "line" , '' )
 		annotations = ""
 		errors = ""
 		#print self.response.text
@@ -100,9 +105,10 @@ class ensemblAPI(restAPI):
 				consequence = result.get('most_severe_consequence')
 				if not consequence:
 					consequence = ""
-				annotations += "\t".join( [ geneVariant[0] , geneVariant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) + "\n"
+				annotations += "\t".join( [ line.strip() , geneVariant[0] , geneVariant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) + "\n"
 			else:
 				#print response
+				annotations = self.nullLine()
 				errors += "\t".join( [ geneVariant[0] , geneVariant[1] , result.get('error') ] ) + "\n"
 		return { "annotations" : annotations , "errors" : errors }
 	def annotateHGVSArray2tsv( self , hgvsNotatedArray , **kwargs ):
@@ -145,7 +151,24 @@ class ensemblAPI(restAPI):
 	#def annotateHGVSList2tsv( self , variantArray ):
 	#	resultDict = self.annotateHGVSArray2Dict( variantArray , content = "text/xml" )
 	#	return self.annotatedHGVSDict2tsv( resultDict , header = False )
-		
+	def annotateHGVSFile( self , inputFile , col1 , col2 , **kwargs ):
+		output = kwargs.get( "output" , '' )
+		if output:
+			print output
+			fout = open( output , 'w' )
+			fout.write( self.HGVSAnnotatedHeader( inputFile ) )
+			inFile = open( inputFile , 'r' )
+			next( inFile )
+			for line in inFile:
+				columns = line.split( "\t" )
+				fields = [ columns[col1] , columns[col2] ]
+				#print fields[0] + ":" + fields[1] + "\t\t" + line
+				annotated = self.annotateHGVSScalar2tsv( ':'.join( fields ) )
+				if annotated:
+					fout.write( line.strip() + "\t" + annotated["annotations"].strip() + "\n" )
+				else:
+					fout.write( line.strip() + "\t" + self.nullLine() + "\n" )
+	
 	def annotateHGVSArray2File( self , variantArray , outputFile ):
 		output = self.annotateHGVSArray2tsv( variantArray )
 		fout = open( outputFile , 'w' )
@@ -156,3 +179,18 @@ class ensemblAPI(restAPI):
 		ferr.write( self.HGVSErrorHeader() )
 		for error in output["errors"]:
 			ferr.write( error )
+
+	def nullLine( self ):
+		nulls = ""
+		for i in range(0,9):
+			nulls += "NULL\t"
+		return nulls.rstrip()
+
+def inputHeader( inputFile ):
+	inFile = open( inputFile , 'r' )
+	if inFile:
+		line = next(inFile).decode()
+		print line
+		return line
+	else:
+		return ""
