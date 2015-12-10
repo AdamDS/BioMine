@@ -21,7 +21,7 @@
 #from restAPI import restAPI
 #import xml.etree.ElementTree as ET
 #import json
-from ..restAPI import restAPI
+from WebAPI.restAPI import restAPI
 
 class entrezAPI(restAPI):
 	endpoint = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"

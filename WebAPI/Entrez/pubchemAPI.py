@@ -23,7 +23,7 @@
 #	subset		"/compound/" , "/substance/" , "/assay/"
 #	action		"/name/
 
-from restAPI import restAPI
+from WebAPI.restAPI import restAPI
 import xml.etree.ElementTree as ET
 import json
 
