@@ -1,6 +1,5 @@
-__author__ = 'Adam David Scott (ascott@genome.wustl.edu)'
-__version__ = "v0.0"
-
+__all__ = ['Ensembl' , 'Entrez' , 'restAPI']
+from WebAPI import restAPI
 #import requests
 #import json
 #import tempfile

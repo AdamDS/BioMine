@@ -55,7 +55,7 @@
 #	query		cond=cancer&intr=drug
 #	url			endpoint + subset + query
 
-from restAPI import restAPI
+from WebAPI.restAPI import restAPI
 
 class ctAPI(restAPI):
 	endpoint = "https://clinicaltrials.gov/ct2/"
@@ -66,7 +66,7 @@ class ctAPI(restAPI):
 		if not subset:
 			super(ctAPI,self).__init__(ctAPI.endpoint,ctAPI.results)
 		else:
-			if (subset == ctAPI.results or subset == ctAPI.show)
+			if (subset == ctAPI.results or subset == ctAPI.show):
 				super(ctAPI,self).__init__(ctAPI.endpoint,subset)
 			else:
 				print "ADSERROR: bad subset. restAPI.subset initializing to results"

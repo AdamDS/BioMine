@@ -1,4 +1,8 @@
-# urlAPIs
+# Installation
+This package uses Python 2.7.
+To install run:
+	python setup.py install
+# webAPIs
 Integrating URL APIs through a more common framework.
 ## Clinical Trials - HTTP
 Based on [ClinicalTrials.gov](https://clinicaltrials.gov/ct2/info/linking)
