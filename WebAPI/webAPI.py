@@ -2,22 +2,15 @@
 # author: Adam D Scott (amviot@gmail.com)
 # first created: 2015*09*28
 
-#import requests
-#import json
-#from requests.auth import HTTPDigestAuth
 #http://docs.python-requests.org/en/latest/user/authentication/?highlight=authentication
-#CGT API section 2.3,
-#"The API uses a process called Digest Authentication as a security
-# measure to verify user requests submitted to the database."
-
 import requests
 from requests.auth import HTTPDigestAuth
 import json
 
-class restAPI(object):
-	'''REST API class, has 
+class webAPI(object):
+	'''Web API class, has 
 		endpoint = the endpoint
-		subset = the subset realm of the RESTful service
+		subset = the subset realm of the Web service
 		action = the query, file upload, etc.'''
 	def __init__(self,endpoint,subset):
 		self.response = None
@@ -82,9 +75,9 @@ class restAPI(object):
 		if contentHeaders:
 			self.addHeader( "Content-Type" , contentHeaders )
 		url = self.buildURL()
-		headers = self.buildHeader()
+		headers = self.header #buildHeader()
 		data = self.buildData()
-		print url
+		#print url
 		if self.headers:
 			if self.data:
 				if doPost:

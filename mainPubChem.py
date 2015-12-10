@@ -4,13 +4,7 @@
 
 import sys
 import getopt
-#import requests
-#import json
-#import tempfile
-from WebAPI.Entrez.pubchemAPI import pubchemAPI
-#from requests.auth import HTTPDigestAuth
-#from xmlutils.xml2json import xml2json
-#import xml.etree.ElementTree as ET
+from pubchemAPI import pubchemAPI
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "
@@ -32,7 +26,7 @@ def parseArgs( argv ):
 		print( helpText ) 
 		sys.exit(2)
 	for opt, arg in opts:
-		print opt + " " + arg
+		#print opt + " " + arg
 		if opt in ( "-h" , "--help" ):
 			print( helpText )
 			sys.exit()
@@ -76,13 +70,13 @@ def main( argv ):
 	compounds = readCompounds( inputFile )
 	pubchemInstance = pubchemAPI()
 
-	print search
+	#print search
 	if inputFile and outputFile:
 		results = pubchemInstance.compoundsSynonyms2File( compounds , outputFile , search = search , identifier = identifier )
 	elif inputFile and not outputFile:
 		results = pubchemInstance.compoundsSynonyms( compounds , search = search , identifier = identifier )
 
-	print results
+	#print results
 
 	if compound:
 		results = pubchemInstance.compoundSynonyms( compound , search = search , identifier = identifier )

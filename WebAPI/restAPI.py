@@ -82,9 +82,10 @@ class restAPI(object):
 		if contentHeaders:
 			self.addHeader( "Content-Type" , contentHeaders )
 		url = self.buildURL()
-		headers = self.buildHeader()
+		headers = self.headers #self.buildHeader()
 		data = self.buildData()
-		print url
+		#print url
+		#print headers
 		if self.headers:
 			if self.data:
 				if doPost:

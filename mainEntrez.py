@@ -12,7 +12,7 @@ import getopt
 #from xmlutils.xml2json import xml2json
 #import xml.etree.ElementTree as ET
 #import WebAPI
-from WebAPI.Entrez.entrezAPI import entrezAPI
+from entrezAPI import entrezAPI
 #import WebAPI.Entrez.entrezAPI
 
 def parseArgs( argv ):

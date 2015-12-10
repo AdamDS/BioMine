@@ -9,7 +9,7 @@
 #	subset		"/vep/human/hgvs/"
 #	action		
 
-from restAPI import restAPI
+from WebAPI.restAPI import restAPI
 import xml.etree.ElementTree as ET
 import json
 
@@ -105,7 +105,7 @@ class ensemblAPI(restAPI):
 				consequence = result.get('most_severe_consequence')
 				if not consequence:
 					consequence = ""
-				annotations += "\t".join( [ line.strip() , geneVariant[0] , geneVariant[1] , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) + "\n"
+				annotations += "\t".join( [ line.strip() , geneVariant[0] , geneVariant[1].strip() , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) + "\n"
 			else:
 				#print response
 				annotations = self.nullLine()
@@ -154,7 +154,7 @@ class ensemblAPI(restAPI):
 	def annotateHGVSFile( self , inputFile , col1 , col2 , **kwargs ):
 		output = kwargs.get( "output" , '' )
 		if output:
-			print output
+			#print output
 			fout = open( output , 'w' )
 			fout.write( self.HGVSAnnotatedHeader( inputFile ) )
 			inFile = open( inputFile , 'r' )
@@ -190,7 +190,7 @@ def inputHeader( inputFile ):
 	inFile = open( inputFile , 'r' )
 	if inFile:
 		line = next(inFile).decode()
-		print line
+		#print line
 		return line
 	else:
 		return ""

@@ -4,13 +4,7 @@
 
 import sys
 import getopt
-#import requests
-#import json
-#import tempfile
-from WebAPI.Ensembl.ensemblAPI import ensemblAPI
-#from requests.auth import HTTPDigestAuth
-#from xmlutils.xml2json import xml2json
-#import xml.etree.ElementTree as ET
+from ensemblAPI import ensemblAPI
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "
@@ -31,7 +25,7 @@ def parseArgs( argv ):
 		print( helpText ) 
 		sys.exit(2)
 	for opt, arg in opts:
-		print opt + " " + arg
+		#print opt + " " + arg
 		if opt in ( "-h" , "--help" ):
 			print( helpText )
 			sys.exit()
