@@ -20,6 +20,7 @@
 
 import xml.etree.ElementTree as ET
 from WebAPI.restAPI import restAPI
+import variant
 
 class entrezAPI(restAPI):
 	endpoint = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -28,11 +29,15 @@ class entrezAPI(restAPI):
 	elink = "elink.fcgi?"
 	epost = "epost.fcgi?"
 	efetch = "efetch.fcgi?"
-	pubmed = "pubmed"
-	clinvar = "clinvar"
-	protein = "protein"
-	gene = "gene"
+	pubmed = "PubMed"
+	clinvar = "ClinVar"
+	protein = "Protein"
+	gene = "Gene"
+	dbsnp = "dbSNP"
+	dbvar = "dbVar"
+	omim = "OMIM"
 	defaultGroup = "grabBag"
+	largestBatchSize = 500
 	def __init__(self,**kwargs):
 		subset = kwargs.get("subset",'')
 		if not subset:
@@ -58,6 +63,7 @@ class entrezAPI(restAPI):
 		self.rettype = ""
 		self.retmode = ""
 		self.usehistory = ""
+		self.assembly = "GRCh37"
 
 	def addQuery( self , term , **kwargs ):
 		field = kwargs.get( "field" , "" )
@@ -114,40 +120,116 @@ class entrezAPI(restAPI):
 		if self.retmode:
 			self.action += "&retmode=" + self.retmode
 		if self.retstart:
-			self.action += "&retstart=" + self.retstart
+			self.action += "&retstart=" + str(self.retstart)
 		if self.retmax:
-			self.action += "&retmax=" + self.retmax
+			self.action += "&retmax=" + str(self.retmax)
 		if self.usehistory:
 			self.action += "&usehistory=" + self.usehistory
 		return self.action
+	def setRetmax( self , total ):
+		if total > entrezAPI.largestBatchSize:
+			self.retmax = entrezAPI.largestBatchSize
+		else:
+			self.retmax = total
 	
 	def doBatch( self , batchSize ):
 		self.usehistory = "y"
 		action = self.buildSearchAction( )
-		print action
+		#print action
 		url = self.buildURL()
 		response = self.submit()
-		root = ET.fromstring( self.response.text )
+		root = self.getXMLroot()
 		for webenv_generator in root.iter( "WebEnv" ):
 			self.web_env = webenv_generator.text
  		for querykey_generator in root.iter( "QueryKey" ):
 			self.query_key = querykey_generator.text
-		count_generator = root.findall( './eSearchResult/Count' )
-		self.retmax = count_generator[0].text
-		print "WebEnv = " + self.web_env
-		print "QueryKey = " + self.query_key
-		print "Return max = " + self.retmax
-		print "Batch size = " + batchSize
+		totalRecords = 0
+		for count_generator in root.iter( 'Count' ):
+			if totalRecords == 0:
+				totalRecords = count_generator.text
+		self.setRetmax( totalRecords )
+		#print "WebEnv = " + self.web_env
+		#print "QueryKey = " + self.query_key
+		#print "Return max = " + str(self.retmax)
+		#print "Batch size = " + str(batchSize)
 		self.subset = entrezAPI.esummary
 		self.action = self.buildWebEnvAction()
 		self.buildURL()
 		summaryResponse = self.submit()
+		variants = self.getClinVarVariantEntry()
+		traits = self.getClinVarTraitEntry()
+		#self.getClinVarClinicalEntry()
 
-		self.subset = entrezAPI.efetch
-		for returnIndexStart in range( 0 , batchSize , self.retmax ):
-			self.buildWebEnvAction( )
-			self.buildURL()
-			batchResponse = self.submit() #list of Id's (IDList/ID/)
+	def getClinVarVariantEntry( self ):
+		print "\tgetClinVarVariantEntry"
+		root = self.getXMLroot()
+		entries = {}
+		for DocumentSummary in root.findall( 'DocumentSummary' ):
+			print "\t\tdocsum"
+			uid = DocumentSummary.attrib["uid"]
+			print uid
+			var = variant.variant()
+			for variation in DocumentSummary.findall( 'variation' ):
+				for variation_xref in DocumentSummary.findall( 'variation_xref' ):
+					if variation_xref.find( 'db_source' ) == entrezAPI.dbsnp:
+						var.dbSNP = variation_xref.find( 'db_id' )
+						print var.dbSNP
+					if variation_xref.find( 'db_source' ) == entrezAPI.omim:
+						var.omim = variation_xref.find( 'db_id' )
+						print var.omim
+				for assembly_set in variation.findall( 'assembly_set' ):
+					assembly_name = assembly_set.find( 'assembly_name' ).text
+					print var.assembly_name
+					if assembly_name.text == self.assembly:
+						var.chromosome = assembly_set.find( 'chr' ).text
+						var.start = assembly_set.find( 'start' ).text
+						var.stop = assembly_set.find( 'stop' ).text
+						var.mutant = assembly_set.find( 'alt' ).text
+						var.reference = assembly_set.find( 'ref' ).text
+						#assembly_acc_ver = assembly_set.find( 'assembly_acc_ver' )
+			gene = DocumentSummary.find( 'gene' )
+			var.gene = gene.find( 'symbol' ).text
+			var.strand = gene.find( 'strand' ).text
+			entries[uid] = var
+			var.printVariant()
+		return entries
+
+	def getClinVarTraitEntry( self ):
+		print "\tgetClinVarTraitEntry"
+		root = self.getXMLroot()
+		entries = {}
+		for DocumentSummary in root.findall( 'DocumentSummary' ):
+			uid = DocumentSummary.attrib["uid"]
+			var.reset()
+			#print uid
+			for trait in DocumentSummary.findall( 'trait' ):
+				trait_name = trait.find( 'trait_name' ).text
+				trait_xrefs = {}
+				entries[uid] = { trait_name : trait_xrefs }
+				for trait_xref in trait.findall( 'trait_xref' ):
+					db_source = trait_xref.find( 'db_source' ).text
+					db_id = trait_xref.find( 'db_id' ).text
+					txr = {}
+					if trait_name in trait_xrefs:
+						txr = entries[trait_name]
+					txr.update( { db_source : db_id } )
+					trait_xrefs.update( { trait_name : txr } )
+				entries.update( { uid : trait_xrefs } )
+		return entries
+
+	def getClinVarClinicalEntry( self ):
+		root = self.getXMLroot()
+		entries = {}
+		for DocumentSummary in root.findall( 'DocumentSummary' ):
+			uid = DocumentSummary.attrib["uid"]
+			var.reset()
+			#print uid
+			for clinical_significance in DocumentSummary.findall( 'clinical_significance' ):
+				description = clinical_significance.find( 'description' ).text
+				review_status = clinical_significance.find( 'review_status' ).text
+				entries[uid]["description"] = description
+				entries[uid]["review_status"] = review_status
+		return entries
 
 	def searchPubMed( self , query ):
 		self.subset = entrezAPI.esearch
@@ -184,3 +266,7 @@ class entrezAPI(restAPI):
 		print searchIDs
 		#parse each DocumentSummary for clinical_significance
 		#parse clinical_signficance for description
+	
+	def getXMLroot( self ):
+		#print self.response.text
+		return ET.fromstring( self.response.text )

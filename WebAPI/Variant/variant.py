@@ -14,7 +14,11 @@ class variant(object):
 		self.assembly = kwargs.get('assembly',None)
 		self.variantClass = kwargs.get('variantClass',None)
 		self.variantType = kwargs.get('variantType',None)
+		self.dbsnp = kwargs.get('dbsnp',None)
+		self.omim = kwargs.get('omim',None)
 	def printVariant(self,delim):
+		#for attr in self.attr():
+		#	print str(attr) + delim
 		if self.gene:
 			print self.gene + delim ,
 		if self.chromosome:
@@ -29,6 +33,10 @@ class variant(object):
 			print self.mutant + delim ,
 		if self.strand:
 			print self.strand + delim ,
+		if self.dbsnp:
+			print self.dbsnp + delim ,
+		if self.omim:
+			print self.omim + delim ,
 		if self.positionPeptide:
 			print self.positionPeptide + delim ,
 		if self.referencePeptide:
@@ -59,6 +67,10 @@ class variant(object):
 			attributes.append(self.mutant)
 		if self.strand:
 			attributes.append(self.strand)
+		if self.dbsnp:
+			attributes.append(self.dbsnp)
+		if self.omim:
+			attributes.append(self.omim)
 		if self.positionPeptide:
 			attributes.append(self.positionPeptide)
 		if self.referencePeptide:
@@ -87,6 +99,18 @@ class variant(object):
 		self.variantType = fields[9]	#10	Variant_Type
 		self.reference = fields[10]	#11	Reference_Allele
 		self.mutant = fields[11] if fields[11] != fields[10] else fields[12]	#12	Tumor_Seq_Allele1	#13	Tumor_Seq_Allele2
+		self.dbsnp = fields[13]
+
+	def compareVariants( self , otherVariant ):
+		common = 0
+		attributes = self.attr()
+		otherAttributes = otherVariant.attr()
+		for attr in attributes:
+			for otherAttr in otherAttributes:
+				if attr == otherAttr:
+					common += 1
+		percentMatch = common / len( attributes )
+		return percentMatch
 
 	def readVariants(self,inputFile):
 		variants = []
@@ -96,6 +120,8 @@ class variant(object):
 				fields = line.split( '\t' )
 				variants.append( fields[0] + ":" + fields[1] )
 		return variants
+	def reset( self ):
+		self = variant.__init()
 
 '''
 mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC",referencePeptide="A123R")
