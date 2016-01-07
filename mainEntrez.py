@@ -73,7 +73,7 @@ def main( argv ):
 	values = parseArgs( argv )
 	inputFile = values["input"]
 	outputFormat = values["output"]
-	database = values["database"]
+	database = values["database"].lower()
 	query = values["query"]
 
 	results = ""
@@ -81,7 +81,7 @@ def main( argv ):
 	if inputFile:
 		queries = readDBSearches( inputFile )
 	else:
-		queries = { "databases" : database , "searches" : query }
+		queries = { "databases" : database , "searches" : [ query ] }
 	entrezInstance = entrezAPI()
 
 	if inputFile and outputFormat:
@@ -98,18 +98,10 @@ def main( argv ):
 		if database == "clinvar":
 			results = entrezInstance.searchClinVar( queries["searches"] )
 
-	print results.text
+	#results = entrezInstance.getClinicalSignificance( queries["searches"] )
+	#entrezInstance.getClinicalSignificance( queries["searches"] )
 
-	#print entrezInstance.headers
-	#print entrezInstance.data
-	#print entrezInstance.buildURL()
-	#for key , value in response.iteritems():
-	#	fout.write( key + "\t" + value )
-	#if response:
-	#	print response.text
-	#else:
-	#	print response.status_code
-	#print entrezInstance
+	print results.text
 
 if __name__ == "__main__":
 	main( sys.argv[1:] )

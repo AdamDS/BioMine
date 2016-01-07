@@ -5,46 +5,88 @@ class variant(object):
 		self.start = kwargs.get('start',None)
 		self.stop = kwargs.get('stop',None)
 		self.reference = kwargs.get('reference',None)
-		self.change = kwargs.get('change',None)
-		self.HGVSp = kwargs.get('HGVSp',None)
+		self.mutant = kwargs.get('mutant',None)
+		self.strand = kwargs.get('strand',None)
+		self.positionPeptide = kwargs.get('positionPeptide',None)
+		self.referencePeptide = kwargs.get('referencePeptide',None)
+		self.mutantPeptide = kwargs.get('mutantPeptide',None)
 		self.transcript = kwargs.get('transcript',None)
+		self.assembly = kwargs.get('assembly',None)
+		self.variantClass = kwargs.get('variantClass',None)
+		self.variantType = kwargs.get('variantType',None)
 	def printVariant(self,delim):
-		if self.gene != None:
+		if self.gene:
 			print self.gene + delim ,
-		if self.chromosome != None:
+		if self.chromosome:
 			print str(self.chromosome) + delim ,
-		if self.start != None:
+		if self.start:
 			print str(self.start) + delim ,
-		if self.stop != None:
+		if self.stop:
 			print str(self.stop) + delim ,
-		if self.reference != None:
+		if self.reference:
 			print self.reference + delim ,
-		if self.change != None:
-			print self.change + delim ,
-		if self.HGVSp != None:
-			print self.HGVSp + delim ,
-		if self.transcript != None:
+		if self.mutant:
+			print self.mutant + delim ,
+		if self.strand:
+			print self.strand + delim ,
+		if self.positionPeptide:
+			print self.positionPeptide + delim ,
+		if self.referencePeptide:
+			print self.referencePeptide + delim ,
+		if self.mutantPeptide:
+			print self.mutantPeptide + delim ,
+		if self.transcript:
 			print self.transcript + delim ,
-		print ""
+		if self.assembly:
+			print self.assembly + delim ,
+		if self.variantClass:
+			print self.variantClass + delim ,
+		if self.variantType:
+			print self.variantType + delim
 	def attr(self):
 		attributes = []
-		if self.gene != None:
+		if self.gene:
 			attributes.append(self.gene)
-		if self.chromosome != None:
+		if self.chromosome:
 			attributes.append(self.chromosome)
-		if self.start != None:
+		if self.start:
 			attributes.append(self.start)
-		if self.stop != None:
+		if self.stop:
 			attributes.append(self.stop)
-		if self.reference != None:
+		if self.reference:
 			attributes.append(self.reference)
-		if self.change != None:
-			attributes.append(self.change)
-		if self.HGVSp != None:
-			attributes.append(self.HGVSp)
-		if self.transcript != None:
+		if self.mutant:
+			attributes.append(self.mutant)
+		if self.strand:
+			attributes.append(self.strand)
+		if self.positionPeptide:
+			attributes.append(self.positionPeptide)
+		if self.referencePeptide:
+			attributes.append(self.referencePeptide)
+		if self.mutantPeptide:
+			attributes.append(self.mutantPeptide)
+		if self.transcript:
 			attributes.append(self.transcript)
 		return attributes
+	def genomicVar( self ):
+		return self.chromosome + ":" + self.start + "-" + self.stop + self.reference + ">" + self.mutant
+	def HGVSp( self ):
+		if self.gene and self.referencePeptide:
+			return self.gene + ":p." + self.referencePeptide + self.positionPeptide + self.mutantPeptide
+	def HGVSc( self ):
+		if self.gene and self.referencePeptide:
+			return self.gene + ":c." + self.codonPosition + self.reference + ">" + self.mutant
+	def mafLine2Variant( self , line ):
+		fields = line.split( "\t" )
+		self.gene = fields[0]	#1	Hugo_Symbol
+		self.chromosome = fields[4]	#5	Chromosome
+		self.start = fields[5]	#6	Start_Position
+		self.stop = fields[6]	#7	End_Position
+		self.strand = fields[7]	#8	Strand
+		self.variantClass = fields[8]	#9	Variant_Classification
+		self.variantType = fields[9]	#10	Variant_Type
+		self.reference = fields[10]	#11	Reference_Allele
+		self.mutant = fields[11] if fields[11] != fields[10] else fields[12]	#12	Tumor_Seq_Allele1	#13	Tumor_Seq_Allele2
 
 	def readVariants(self,inputFile):
 		variants = []
@@ -56,15 +98,15 @@ class variant(object):
 		return variants
 
 '''
-mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",change="GC",HGVSp="p.A123R")
+mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC",referencePeptide="A123R")
 mu.printVariant('\t')
-nu = variant(gene="BRAF",HGVSp="p.A123R")
+nu = variant(gene="BRAF",referencePeptide="A123R")
 nu.printVariant('\t')
-ou = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",change="GC")
+ou = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC")
 ou.printVariant('\t')
-pu = variant(chromosome=7,start=12345,stop=123456,reference="AT",change="GC")
+pu = variant(chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC")
 pu.printVariant('\t')
-qu = variant(chromosome=7,start=12345,reference="AT",change="GC")
+qu = variant(chromosome=7,start=12345,reference="AT",mutant="GC")
 qu.printVariant('\t')
 
 print qu.attr()
