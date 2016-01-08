@@ -34,7 +34,7 @@ class variant(object):
 		if self.strand:
 			print self.strand + delim ,
 		if self.dbsnp:
-			print self.dbsnp + delim ,
+			print "rs" + self.dbsnp + delim ,
 		if self.omim:
 			print self.omim + delim ,
 		if self.positionPeptide:

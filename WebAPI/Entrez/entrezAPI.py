@@ -139,14 +139,10 @@ class entrezAPI(restAPI):
 		url = self.buildURL()
 		response = self.submit()
 		root = self.getXMLroot()
-		for webenv_generator in root.iter( "WebEnv" ):
-			self.web_env = webenv_generator.text
- 		for querykey_generator in root.iter( "QueryKey" ):
-			self.query_key = querykey_generator.text
+		self.web_env = self.getEntry( root , 'WebEnv' )
+		self.query_key = self.getEntry( root , 'QueryKey' )
 		totalRecords = 0
-		for count_generator in root.iter( 'Count' ):
-			if totalRecords == 0:
-				totalRecords = count_generator.text
+		totalRecords = self.getEntry( root , 'Count' )
 		self.setRetmax( totalRecords )
 		#print "WebEnv = " + self.web_env
 		#print "QueryKey = " + self.query_key
@@ -159,62 +155,66 @@ class entrezAPI(restAPI):
 		variants = self.getClinVarVariantEntry()
 		traits = self.getClinVarTraitEntry()
 		#self.getClinVarClinicalEntry()
+	
+	def getEntry( self , generator , text ):
+		for entrygen in generator.iter( text ):
+			return entrygen.text
 
 	def getClinVarVariantEntry( self ):
 		print "\tgetClinVarVariantEntry"
 		root = self.getXMLroot()
 		entries = {}
-		for DocumentSummary in root.findall( 'DocumentSummary' ):
-			print "\t\tdocsum"
+		for DocumentSummary in root.iter( 'DocumentSummary' ):
 			uid = DocumentSummary.attrib["uid"]
-			print uid
+			print "uid = " + uid
 			var = variant.variant()
-			for variation in DocumentSummary.findall( 'variation' ):
-				for variation_xref in DocumentSummary.findall( 'variation_xref' ):
-					if variation_xref.find( 'db_source' ) == entrezAPI.dbsnp:
-						var.dbSNP = variation_xref.find( 'db_id' )
-						print var.dbSNP
-					if variation_xref.find( 'db_source' ) == entrezAPI.omim:
-						var.omim = variation_xref.find( 'db_id' )
-						print var.omim
-				for assembly_set in variation.findall( 'assembly_set' ):
-					assembly_name = assembly_set.find( 'assembly_name' ).text
-					print var.assembly_name
-					if assembly_name.text == self.assembly:
+			for variation in DocumentSummary.iter( 'variation' ):
+				for variation_xref in DocumentSummary.iter( 'variation_xref' ):
+					dbs = self.getEntry( variation_xref , 'db_source' )
+					if dbs == entrezAPI.dbsnp:
+						var.dbSNP = self.getEntry( variation_xref , 'db_id' )
+						print "dbSNP rs" + var.dbSNP
+					if dbs == entrezAPI.omim:
+						var.omim = self.getEntry( variation_xref , 'db_id' )
+						print "OMIM " + var.omim
+				for assembly_set in variation.iter( 'assembly_set' ):
+					assembly_name = self.getEntry( assembly_set , 'assembly_name' )
+					if assembly_name == self.assembly:
 						var.chromosome = assembly_set.find( 'chr' ).text
 						var.start = assembly_set.find( 'start' ).text
 						var.stop = assembly_set.find( 'stop' ).text
 						var.mutant = assembly_set.find( 'alt' ).text
 						var.reference = assembly_set.find( 'ref' ).text
 						#assembly_acc_ver = assembly_set.find( 'assembly_acc_ver' )
-			gene = DocumentSummary.find( 'gene' )
-			var.gene = gene.find( 'symbol' ).text
-			var.strand = gene.find( 'strand' ).text
+			for gene in DocumentSummary.iter( 'gene' ):
+				var.gene = gene.find( 'symbol' ).text
+				var.strand = gene.find( 'strand' ).text
 			entries[uid] = var
-			var.printVariant()
+			var.printVariant("\t")
+			print ""
 		return entries
 
 	def getClinVarTraitEntry( self ):
 		print "\tgetClinVarTraitEntry"
 		root = self.getXMLroot()
 		entries = {}
-		for DocumentSummary in root.findall( 'DocumentSummary' ):
+		for DocumentSummary in root.iter( 'DocumentSummary' ):
 			uid = DocumentSummary.attrib["uid"]
-			var.reset()
-			#print uid
-			for trait in DocumentSummary.findall( 'trait' ):
-				trait_name = trait.find( 'trait_name' ).text
+			for trait in DocumentSummary.iter( 'trait' ):
+				trait_name = self.getEntry( trait , 'trait_name' )
 				trait_xrefs = {}
 				entries[uid] = { trait_name : trait_xrefs }
-				for trait_xref in trait.findall( 'trait_xref' ):
-					db_source = trait_xref.find( 'db_source' ).text
-					db_id = trait_xref.find( 'db_id' ).text
+				for trait_xref in trait.iter( 'trait_xref' ):
+					db_source = self.getEntry( trait_xref , 'db_source' )
+					db_id = self.getEntry( trait_xref , 'db_id' )
+					print trait_name + " in " + db_source + " id = " + db_id
 					txr = {}
 					if trait_name in trait_xrefs:
-						txr = entries[trait_name]
+						txr = trait_xrefs[trait_name]
 					txr.update( { db_source : db_id } )
 					trait_xrefs.update( { trait_name : txr } )
 				entries.update( { uid : trait_xrefs } )
+			print entries[uid]
 		return entries
 
 	def getClinVarClinicalEntry( self ):
