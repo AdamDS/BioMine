@@ -21,6 +21,7 @@
 import xml.etree.ElementTree as ET
 from WebAPI.restAPI import restAPI
 import variant
+import re
 
 class entrezAPI(restAPI):
 	endpoint = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -154,11 +155,27 @@ class entrezAPI(restAPI):
 		summaryResponse = self.submit()
 		variants = self.getClinVarVariantEntry()
 		traits = self.getClinVarTraitEntry()
-		#self.getClinVarClinicalEntry()
+		clinical = self.getClinVarClinicalEntry()
+		return { "variants" : variants , "traits" : traits , "clinical" : clinical }
 	
 	def getEntry( self , generator , text ):
 		for entrygen in generator.iter( text ):
 			return entrygen.text
+
+	def parseClinVarTitle( self , DocumentSummary ):
+		title = self.getEntry( DocumentSummary , 'title' )
+		lhs = title.split( '(' )
+		refseqID = lhs[0]
+		hgvsp = lhs[-1].rstrip( ')' )
+		var = variant.variant()
+		refmut = var.splitHGVSp( hgvsp )
+		ref = refmut["referencePeptide"]
+		pos = refmut["positionPeptide"]
+		mut = refmut["mutantPeptide"]
+		return { "title" : title , \
+		"referencePeptide" : ref , \
+		"positionPeptide" : pos , \
+		"mutantPeptide" : mut }
 
 	def getClinVarVariantEntry( self ):
 		print "\tgetClinVarVariantEntry"
@@ -166,17 +183,20 @@ class entrezAPI(restAPI):
 		entries = {}
 		for DocumentSummary in root.iter( 'DocumentSummary' ):
 			uid = DocumentSummary.attrib["uid"]
-			print "uid = " + uid
-			var = variant.variant()
+			titleDetails = self.parseClinVarTitle( DocumentSummary )
+			refPep = titleDetails["referencePeptide"]
+			posPep = titleDetails["positionPeptide"]
+			mutPep = titleDetails["mutantPeptide"]
+			var = variant.variant( referencePeptide=refPep , positionPeptide=posPep , mutantPeptide=mutPep )
 			for variation in DocumentSummary.iter( 'variation' ):
 				for variation_xref in DocumentSummary.iter( 'variation_xref' ):
 					dbs = self.getEntry( variation_xref , 'db_source' )
 					if dbs == entrezAPI.dbsnp:
 						var.dbSNP = self.getEntry( variation_xref , 'db_id' )
-						print "dbSNP rs" + var.dbSNP
-					if dbs == entrezAPI.omim:
-						var.omim = self.getEntry( variation_xref , 'db_id' )
-						print "OMIM " + var.omim
+						#print "dbSNP rs" + var.dbSNP
+					#if dbs == entrezAPI.omim:
+						#var.omim = self.getEntry( variation_xref , 'db_id' )
+						#print "OMIM " + var.omim
 				for assembly_set in variation.iter( 'assembly_set' ):
 					assembly_name = self.getEntry( assembly_set , 'assembly_name' )
 					if assembly_name == self.assembly:
@@ -190,8 +210,7 @@ class entrezAPI(restAPI):
 				var.gene = gene.find( 'symbol' ).text
 				var.strand = gene.find( 'strand' ).text
 			entries[uid] = var
-			var.printVariant("\t")
-			print ""
+			#var.printVariant("\t")
 		return entries
 
 	def getClinVarTraitEntry( self ):
@@ -207,45 +226,43 @@ class entrezAPI(restAPI):
 				for trait_xref in trait.iter( 'trait_xref' ):
 					db_source = self.getEntry( trait_xref , 'db_source' )
 					db_id = self.getEntry( trait_xref , 'db_id' )
-					print trait_name + " in " + db_source + " id = " + db_id
+					#print trait_name + " in " + db_source + " id = " + db_id
 					txr = {}
 					if trait_name in trait_xrefs:
 						txr = trait_xrefs[trait_name]
 					txr.update( { db_source : db_id } )
 					trait_xrefs.update( { trait_name : txr } )
 				entries.update( { uid : trait_xrefs } )
-			print entries[uid]
+			#print entries[uid]
 		return entries
 
 	def getClinVarClinicalEntry( self ):
+		print "\tgetClinVarClinicalEntry"
 		root = self.getXMLroot()
 		entries = {}
-		for DocumentSummary in root.findall( 'DocumentSummary' ):
+		for DocumentSummary in root.iter( 'DocumentSummary' ):
 			uid = DocumentSummary.attrib["uid"]
-			var.reset()
-			#print uid
-			for clinical_significance in DocumentSummary.findall( 'clinical_significance' ):
-				description = clinical_significance.find( 'description' ).text
-				review_status = clinical_significance.find( 'review_status' ).text
-				entries[uid]["description"] = description
-				entries[uid]["review_status"] = review_status
+			for clinical_significance in DocumentSummary.iter( 'clinical_significance' ):
+				description = self.getEntry( clinical_significance , 'description' )
+				review_status = self.getEntry( clinical_significance , 'review_status' )
+				entries[uid] = { "description" : description.strip() , "review_status" : review_status.strip() }
 		return entries
 
 	def searchPubMed( self , query ):
 		self.subset = entrezAPI.esearch
 		self.database = entrezAPI.pubmed
 		self.action = self.buildSearchAction( query )
-		print self.subset
-		print self.database
-		print self.action
+		#print self.subset
+		#print self.database
+		#print self.action
 		return self.submit( )
 	def searchClinVar( self , query , **kwargs ):
 		self.subset = entrezAPI.esearch
 		self.database = entrezAPI.clinvar
 		self.action = self.buildSearchAction( query )
-		print self.subset
-		print self.database
-		print self.action
+		#print self.subset
+		#print self.database
+		#print self.action
 		return self.submit( )
 	
 	def getClinicalSignificance( self , queries ):

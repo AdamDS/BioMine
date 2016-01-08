@@ -1,3 +1,4 @@
+import re
 class variant(object):
 	def __init__(self,**kwargs):
 		self.gene = kwargs.get('gene',None)
@@ -15,7 +16,6 @@ class variant(object):
 		self.variantClass = kwargs.get('variantClass',None)
 		self.variantType = kwargs.get('variantType',None)
 		self.dbsnp = kwargs.get('dbsnp',None)
-		self.omim = kwargs.get('omim',None)
 	def printVariant(self,delim):
 		#for attr in self.attr():
 		#	print str(attr) + delim
@@ -35,8 +35,6 @@ class variant(object):
 			print self.strand + delim ,
 		if self.dbsnp:
 			print "rs" + self.dbsnp + delim ,
-		if self.omim:
-			print self.omim + delim ,
 		if self.positionPeptide:
 			print self.positionPeptide + delim ,
 		if self.referencePeptide:
@@ -50,7 +48,8 @@ class variant(object):
 		if self.variantClass:
 			print self.variantClass + delim ,
 		if self.variantType:
-			print self.variantType + delim
+			print self.variantType + delim ,
+		print ""
 	def attr(self):
 		attributes = []
 		if self.gene:
@@ -69,8 +68,6 @@ class variant(object):
 			attributes.append(self.strand)
 		if self.dbsnp:
 			attributes.append(self.dbsnp)
-		if self.omim:
-			attributes.append(self.omim)
 		if self.positionPeptide:
 			attributes.append(self.positionPeptide)
 		if self.referencePeptide:
@@ -100,6 +97,46 @@ class variant(object):
 		self.reference = fields[10]	#11	Reference_Allele
 		self.mutant = fields[11] if fields[11] != fields[10] else fields[12]	#12	Tumor_Seq_Allele1	#13	Tumor_Seq_Allele2
 		self.dbsnp = fields[13]
+		self.splitHGVSp( fields[47] ) #################################### Custom field, not reliable in general
+	def splitHGVSp( self , hgvsp ):
+		ref = ""
+		pos = ""
+		mut = ""
+		parts = hgvsp.split( '.' )
+		hgvsp = parts[-1]
+		pattern = re.compile( "([a-zA-Z]+?)([0-9]+?)([a-zA-Z]+)" )
+		change = pattern.match( hgvsp )
+		if change:
+			changes = change.groups()
+			ref = changes[0]
+			ref = self.convertAA( ref )
+			self.referencePeptide = ref
+			pos = changes[1]
+			self.positionPeptide = pos
+			mut = changes[-1]
+			mut = self.convertAA( mut )
+			self.mutantPeptide = mut
+		return { "referencePeptide" : ref , "positionPeptide" : pos , "mutantPeptide" : mut }
+	def convertAA( self , pep ):
+		if pep == "Arg":
+			return "R"
+		if pep == "Asn":
+			return "N"
+		if pep == "Asp":
+			return "D"
+		if pep == "Gln":
+			return "Q"
+		if pep == "Glu":
+			return "E"
+		if pep == "Lys":
+			return "K"
+		if pep == "Phe":
+			return "F"
+		if pep == "Trp":
+			return "W"
+		if pep == "Tyr":
+			return "Y"
+		return pep[0]
 
 	def compareVariants( self , otherVariant ):
 		common = 0
