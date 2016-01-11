@@ -45,12 +45,18 @@ class exacAPI(restAPI):
 		
 	def getAlleleFrequency( self , var ):
 		page = self.getPage( var )
-		dl = page.getElementsByTagName( 'dl' )
-		dt = dl.getElementsByTagName( 'dt' )
-		j = 0
-		for i in range( 0 , len( dt ) ):
-			if dt[i].innerHTML == "Allele Frequency":
-				j = i
-		dd = dl.getElementsByTagName( 'dd' )
-		alleleFrequency = dd[j].innerHTML
-		return alleleFrequency
+		if page:
+			dl = page.getElementsByTagName( 'dl' )
+			if dl:
+				dt = dl.getElementsByTagName( 'dt' )
+				if dt:
+					j = 0
+					for i in range( 0 , len( dt ) ):
+						if dt[i].innerHTML == "Allele Frequency":
+							j = i
+					dd = dl.getElementsByTagName( 'dd' )
+					if dd:
+						alleleFrequency = dd[j].innerHTML
+						return float(alleleFrequency)
+		return
+		print "ADS Error: could not get allele frequency from ExAC"

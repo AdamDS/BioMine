@@ -60,21 +60,11 @@ def main( argv ):
 	print genVar
 	g = genVar.split( '-' )
 	var = variant.variant( chromosome=g[0] , start=g[1] , reference=g[2] , mutant=g[3] )
+	var.reference = 'd'
 
 	aF = exacInstance.getAlleleFrequency( var )
+	var.printVariant(' ')
 	print "Allele Frequency = " + str(aF)
-	#print results
-
-	#print exacInstance.headers
-	#print exacInstance.data
-	#print exacInstance.buildURL()
-	#for key , value in response.iteritems():
-	#	fout.write( key + "\t" + value )
-	#if response:
-	#	print response.text
-	#else:
-	#	print response.status_code
-	#print exacInstance
 
 if __name__ == "__main__":
 	main( sys.argv[1:] )

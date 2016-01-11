@@ -1,10 +1,15 @@
+# webAPIs
+Integrating URL APIs through a more common framework.
 # Installation
 This package uses Python 2.7.
 To install run:
 	python setup.py install
-# webAPIs
-Integrating URL APIs through a more common framework.
-## Clinical Trials - HTTP
+## Dependencies
+[Requests](http://docs.python-requests.org/en/latest/)
+	pip install requests
+[AdvancedHTMLParser](https://pypi.python.org/pypi/AdvancedHTMLParser)
+	pip install AdvancedHTMLParser
+## Clinical Trials - HTML
 Based on [ClinicalTrials.gov](https://clinicaltrials.gov/ct2/info/linking)
 ## NCBI: Entrez - service
 Based on [NCBI's Entrez Programming Utilities (E-utilities)](http://www.ncbi.nlm.nih.gov/books/NBK25501/)
@@ -45,3 +50,8 @@ Based on [Ensembl's VEP annotator](http://rest.ensembl.org/#Variation)
 	returns dictionary with tsv annotations and error messages
 #### annotateHGVSArray2File - annotate an array of mutations
 	no return
+## ExAC - HTML
+	Based on [ExAC Browser Beta](exac.broadinstitute.org/)
+### Variants
+#### getAlleleFrequency - retrieves allele frequency of a variant
+	returns a number of the given variant
