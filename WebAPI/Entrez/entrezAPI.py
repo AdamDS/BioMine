@@ -19,11 +19,11 @@
 #	action		"?db=pubmed&term=astma&usehistory=y"
 
 import xml.etree.ElementTree as ET
-from WebAPI.restAPI import restAPI
+from WebAPI.webAPI import webAPI
 import variant
 import re
 
-class entrezAPI(restAPI):
+class entrezAPI(webAPI):
 	endpoint = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 	esearch = "esearch.fcgi?"
 	esummary = "esummary.fcgi?"

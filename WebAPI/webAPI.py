@@ -6,6 +6,7 @@
 import requests
 from requests.auth import HTTPDigestAuth
 import json
+import AdvancedHTMLParser
 
 class webAPI(object):
 	'''Web API class, has 
@@ -75,7 +76,7 @@ class webAPI(object):
 		if contentHeaders:
 			self.addHeader( "Content-Type" , contentHeaders )
 		url = self.buildURL()
-		headers = self.header #buildHeader()
+		headers = self.headers #buildHeader()
 		data = self.buildData()
 		#print url
 		if self.headers:
@@ -116,3 +117,8 @@ class webAPI(object):
 	def submitXML(self):
 		url = self.buildURL()
 		self.submit( content = "text/xml")
+	
+	def parseHTMLResponse( self ):
+		page = AdvancedHTMLParser.AdvancedHTMLParser()
+		page.parseStr( self.response.text )
+		return page

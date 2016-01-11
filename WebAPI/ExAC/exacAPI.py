@@ -9,12 +9,12 @@
 #	subset		"/variant/"
 #	action		
 
-from WebAPI.restAPI import restAPI
+from WebAPI.webAPI import webAPI
 import xml.etree.ElementTree as ET
 import json
 import AdvancedHTMLParser
 
-class exacAPI(restAPI):
+class exacAPI(webAPI):
 	endpoint = "http://exac.broadinstitute.org"
 	variant = "/variant/"
 	def __init__(self,**kwargs):
@@ -39,9 +39,7 @@ class exacAPI(restAPI):
 	def getPage( self , var ):
 		self.buildQuery( var )
 		self.submit()
-		page = AdvancedHTMLParser.AdvancedHTMLParser()
-		page.parseStr( self.response.text )
-		return page
+		return self.parseHTMLResponse()
 		
 	def getAlleleFrequency( self , var ):
 		page = self.getPage( var )

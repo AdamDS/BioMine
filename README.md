@@ -1,5 +1,3 @@
-# webAPIs
-Integrating URL APIs through a more common framework.
 # Installation
 This package uses Python 2.7.
 To install run:
@@ -9,6 +7,16 @@ To install run:
 	pip install requests
 [AdvancedHTMLParser](https://pypi.python.org/pypi/AdvancedHTMLParser)
 	pip install AdvancedHTMLParser
+# Modules
+## Web API - general
+Parent class of the included ReST APIs, web services, and HTML
+### Example:
+	site = webAPI.webAPI( "https://github.com/" , "AdamDS/" )
+	site.action = "WebAPIs"
+	site.submit()
+	page = site.parseHTMLResponse()
+	readme = page.getElementById( 'readme' )
+	print readme.innerHTML
 ## Clinical Trials - HTML
 Based on [ClinicalTrials.gov](https://clinicaltrials.gov/ct2/info/linking)
 ## NCBI: Entrez - service
