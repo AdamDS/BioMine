@@ -8,6 +8,7 @@ class variant(object):
 		self.reference = kwargs.get('reference',None)
 		self.mutant = kwargs.get('mutant',None)
 		self.strand = kwargs.get('strand',None)
+		self.sample = kwargs.get('sample',None)
 		self.positionPeptide = kwargs.get('positionPeptide',None)
 		self.referencePeptide = kwargs.get('referencePeptide',None)
 		self.mutantPeptide = kwargs.get('mutantPeptide',None)
@@ -35,6 +36,8 @@ class variant(object):
 			print self.strand + delim ,
 		if self.dbsnp:
 			print "rs" + self.dbsnp + delim ,
+		if self.sample:
+			print self.sample + delim ,
 		if self.positionPeptide:
 			print self.positionPeptide + delim ,
 		if self.referencePeptide:
@@ -68,6 +71,8 @@ class variant(object):
 			attributes.append(self.strand)
 		if self.dbsnp:
 			attributes.append(self.dbsnp)
+		if self.sample:
+			attributes.append(self.sample)
 		if self.positionPeptide:
 			attributes.append(self.positionPeptide)
 		if self.referencePeptide:
@@ -97,6 +102,7 @@ class variant(object):
 		self.reference = fields[10]	#11	Reference_Allele
 		self.mutant = fields[11] if fields[11] != fields[10] else fields[12]	#12	Tumor_Seq_Allele1	#13	Tumor_Seq_Allele2
 		self.dbsnp = fields[13]
+		self.sample = fields[15]
 		self.splitHGVSp( fields[47] ) #################################### Custom field, not reliable in general
 	def splitHGVSp( self , hgvsp ):
 		ref = ""

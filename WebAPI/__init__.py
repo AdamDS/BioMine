@@ -1,2 +1,2 @@
-__all__ = ['Ensembl' , 'Entrez' , 'restAPI']
+__all__ = ['ExAC' , 'Ensembl' , 'Entrez' , 'restAPI']
 from WebAPI import restAPI
