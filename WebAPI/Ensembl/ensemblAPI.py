@@ -9,11 +9,11 @@
 #	subset		"/vep/human/hgvs/"
 #	action		
 
-from WebAPI.restAPI import restAPI
+from WebAPI.webAPI import webAPI
 import xml.etree.ElementTree as ET
 import json
 
-class ensemblAPI(restAPI):
+class ensemblAPI(webAPI):
 	endpoint = "http://grch37.rest.ensembl.org"
 	species = "human"
 	hgvs = "/vep/" + species + "/hgvs/"
@@ -26,7 +26,7 @@ class ensemblAPI(restAPI):
 			if ( subset == ensemblAPI.hgvs or subset == ensemblAPI.translation ):
 				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,subset)
 			else:
-				print "ADSERROR: bad subset. restAPI.subset initializing to variant association results"
+				print "ADSERROR: bad subset. webAPI.subset initializing to variant association results"
 				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
 
 	def useGRCh38(self):

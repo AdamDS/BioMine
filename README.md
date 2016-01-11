@@ -1,14 +1,22 @@
-# webAPIs
-Integrating URL APIs through a more common framework.
 # Installation
 This package uses Python 2.7.
 To install run:
 	python setup.py install
 ## Dependencies
-[Requests](http://docs.python-requests.org/en/latest/)
-	pip install requests
-[AdvancedHTMLParser](https://pypi.python.org/pypi/AdvancedHTMLParser)
-	pip install AdvancedHTMLParser
+### [Requests](http://docs.python-requests.org/en/latest/) 
+	pip install requests 
+### [AdvancedHTMLParser](https://pypi.python.org/pypi/AdvancedHTMLParser) 
+	pip install AdvancedHTMLParser 
+# Modules
+## Web API - general
+Parent class of the included ReST APIs, web services, and HTML
+### Example:
+	site = webAPI.webAPI( "https://github.com/" , "AdamDS/" )
+	site.action = "WebAPIs"
+	site.submit()
+	page = site.parseHTMLResponse()
+	readme = page.getElementById( 'readme' )
+	print readme.innerHTML
 ## Clinical Trials - HTML
 Based on [ClinicalTrials.gov](https://clinicaltrials.gov/ct2/info/linking)
 ## NCBI: Entrez - service
@@ -31,11 +39,12 @@ Based on [NCBI's Power User Gateway for PubChem](http://www.ncbi.nlm.nih.gov/hom
 Based on [Ensembl's VEP annotator](http://rest.ensembl.org/#Variation)
 ### HGVS genomic variant annotation
 ### Use GRCh37 or GRCh38
+Switch to GRCh37 or GRCh38
 #### useGRCh37 - switches to annotation by GRCh37
 #### useGRCh38 - switches to annotation by GRCh38
 ### Annotate HGVS Notation with Genomic Variant
-	tab delimited annotation as:
-	HGVS notation, chr, start, stop, ref, var, strand, classification
+tab delimited annotation as:
+HGVS notation, chr, start, stop, ref, var, strand, classification
 #### annotateHGVSScalar2Response - annotate a single mutation
 	returns request response as JSONP
 #### annotateHGVSScalar2tsv - annotate a single mutation

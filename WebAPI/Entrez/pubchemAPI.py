@@ -23,11 +23,11 @@
 #	subset		"/compound/" , "/substance/" , "/assay/"
 #	action		"/name/
 
-from WebAPI.restAPI import restAPI
+from WebAPI.webAPI import webAPI
 import xml.etree.ElementTree as ET
 import json
 
-class pubchemAPI(restAPI):
+class pubchemAPI(webAPI):
 	endpoint = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
 	compound = "/compound/"
 	substance = "/substance/"
@@ -47,7 +47,7 @@ class pubchemAPI(restAPI):
 				 subset == pubchemAPI.substance ):
 				super(pubchemAPI,self).__init__(pubchemAPI.endpoint,subset)
 			else:
-				print "ADSERROR: bad subset. restAPI.subset initializing to variant association results"
+				print "ADSERROR: bad subset. webAPI.subset initializing to variant association results"
 				super(pubchemAPI,self).__init__(pubchemAPI.endpoint,pubchemAPI.compound)
 
 	def setSubset(self,subset):
