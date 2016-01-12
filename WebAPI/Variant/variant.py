@@ -140,6 +140,8 @@ class variant(object):
 			return "F"
 		if pep == "Trp":
 			return "W"
+		if pep == "Ter":
+			return "*"
 		if pep == "Tyr":
 			return "Y"
 		return pep[0]

@@ -13,6 +13,7 @@ from WebAPI.webAPI import webAPI
 import xml.etree.ElementTree as ET
 import json
 import AdvancedHTMLParser
+import variant
 
 class exacAPI(webAPI):
 	endpoint = "http://exac.broadinstitute.org"
@@ -40,6 +41,12 @@ class exacAPI(webAPI):
 		self.buildQuery( var )
 		self.submit()
 		return self.parseHTMLResponse()
+	
+	def getAlleleFrequencies( self , variants ):
+		entries = {}
+		for genVar in variants:
+			entries[genVar] = self.getAlleleFrequency( variants[genVar] )
+		return entries
 		
 	def getAlleleFrequency( self , var ):
 		page = self.getPage( var )
