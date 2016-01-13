@@ -13,7 +13,7 @@ class MAFVariant(variant):
 		self.disease = kwargs.get('disease',None)
 
 	def printVariant(self,delim):
-		super(MAFVariant,self).printVariant()
+		super(MAFVariant,self).printVariant(delim)
 		if self.positionPeptide:
 			print self.positionPeptide + delim ,
 		if self.referencePeptide:

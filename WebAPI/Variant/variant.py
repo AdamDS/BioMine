@@ -66,6 +66,8 @@ class variant(object):
 		self.mutant = fields[11] if fields[11] != fields[10] else fields[12]	#12	Tumor_Seq_Allele1	#13	Tumor_Seq_Allele2
 		self.dbsnp = fields[13]
 		self.sample = fields[15]
+	def uniqueVar( self ):
+		return self.sample + "::" + self.genomicVar()
 
 	def compareVariants( self , otherVariant ):
 		common = 0

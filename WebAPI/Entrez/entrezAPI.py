@@ -20,7 +20,8 @@
 
 import xml.etree.ElementTree as ET
 from WebAPI.webAPI import webAPI
-import variant
+from variant import variant
+from variant import MAFVariant
 import re
 
 class entrezAPI(webAPI):
@@ -167,7 +168,7 @@ class entrezAPI(webAPI):
 		lhs = title.split( '(' )
 		refseqID = lhs[0]
 		hgvsp = lhs[-1].rstrip( ')' )
-		var = variant.variant()
+		var = MAFVariant()
 		refmut = var.splitHGVSp( hgvsp )
 		ref = refmut["referencePeptide"]
 		pos = refmut["positionPeptide"]
@@ -187,7 +188,7 @@ class entrezAPI(webAPI):
 			refPep = titleDetails["referencePeptide"]
 			posPep = titleDetails["positionPeptide"]
 			mutPep = titleDetails["mutantPeptide"]
-			var = variant.variant( referencePeptide=refPep , positionPeptide=posPep , mutantPeptide=mutPep )
+			var = MAFVariant( referencePeptide=refPep , positionPeptide=posPep , mutantPeptide=mutPep )
 			for variation in DocumentSummary.iter( 'variation' ):
 				for variation_xref in DocumentSummary.iter( 'variation_xref' ):
 					dbs = self.getEntry( variation_xref , 'db_source' )
@@ -265,24 +266,14 @@ class entrezAPI(webAPI):
 		#print self.action
 		return self.submit( )
 	
-	def getClinicalSignificance( self , queries ):
-		self.subset = entrezAPI.esearch
-		#search ClinVar
-		self.database = entrezAPI.clinvar
-		query = self.buildSearchAction( queries )
-		self.submit() 
-		print self.response.text
-		#parse the Id field within IdList
-		ids = []
-		root = ET.fromstring( self.response.text )
-		for thisID in root.iter( 'Id' ):
-			print thisID
-			ids.append( thisID )
-		#string ids together to search esummary
-		searchIDs = ','.join( ids )
-		print searchIDs
-		#parse each DocumentSummary for clinical_significance
-		#parse clinical_signficance for description
+	def getSNPGlobalMAF( self , rs ):
+		self.addQuery( rs )
+		self.subset = entrezAPI.esummary
+		self.submit()
+		root = self.getXMLroot()
+		entries = {}
+		for DocSum in root.iter( 'DocSum' ):
+			print ""
 	
 	def getXMLroot( self ):
 		#print self.response.text
