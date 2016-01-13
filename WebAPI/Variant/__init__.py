@@ -1,2 +1,3 @@
-__all__ = ['variant']
+__all__ = ['variant' , 'MAFVariant' ]
 from variant import variant
+from MAFVariant import MAFVariant
