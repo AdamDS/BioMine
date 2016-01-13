@@ -55,8 +55,8 @@ class exacAPI(webAPI):
 	
 	def getAlleleFrequencies( self , variants ):
 		entries = {}
-		for genVar in variants:
-			entries[genVar] = self.getAlleleFrequency( variants[genVar] )
+		for var in variants:
+			entries[var.genomicVar()] = self.getAlleleFrequency( var )
 		return entries
 	def getAlleleFrequency( self , var ):
 		if self.endpoint == exacAPI.endpoint:
