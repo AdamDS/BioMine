@@ -114,7 +114,7 @@ class entrezAPI(webAPI):
 		return self.action
 	def buildSummaryAction( self , ids ):
 		self.uid = ','.join( ids )
-		self.action = '&'.join( [ self.database , self.uid ] )
+		self.action = "db=" + self.database + "&id=" + self.uid
 		return self.action
 	def actionReturnParameters( self ):
 		if self.rettype:
@@ -172,11 +172,11 @@ class entrezAPI(webAPI):
 		refmut = var.splitHGVSp( hgvsp )
 		ref = refmut["referencePeptide"]
 		pos = refmut["positionPeptide"]
-		mut = refmut["mutantPeptide"]
+		alt = refmut["alternatePeptide"]
 		return { "title" : title , \
 		"referencePeptide" : ref , \
 		"positionPeptide" : pos , \
-		"mutantPeptide" : mut }
+		"alternatePeptide" : alt }
 
 	def getClinVarVariantEntry( self ):
 		print "\tgetClinVarVariantEntry"
@@ -187,8 +187,8 @@ class entrezAPI(webAPI):
 			titleDetails = self.parseClinVarTitle( DocumentSummary )
 			refPep = titleDetails["referencePeptide"]
 			posPep = titleDetails["positionPeptide"]
-			mutPep = titleDetails["mutantPeptide"]
-			var = MAFVariant( referencePeptide=refPep , positionPeptide=posPep , mutantPeptide=mutPep )
+			altPep = titleDetails["alternatePeptide"]
+			var = MAFVariant( referencePeptide=refPep , positionPeptide=posPep , alternatePeptide=altPep )
 			for variation in DocumentSummary.iter( 'variation' ):
 				for variation_xref in DocumentSummary.iter( 'variation_xref' ):
 					dbs = self.getEntry( variation_xref , 'db_source' )
@@ -204,7 +204,7 @@ class entrezAPI(webAPI):
 						var.chromosome = assembly_set.find( 'chr' ).text
 						var.start = assembly_set.find( 'start' ).text
 						var.stop = assembly_set.find( 'stop' ).text
-						var.mutant = assembly_set.find( 'alt' ).text
+						var.alternate = assembly_set.find( 'alt' ).text
 						var.reference = assembly_set.find( 'ref' ).text
 						#assembly_acc_ver = assembly_set.find( 'assembly_acc_ver' )
 			for gene in DocumentSummary.iter( 'gene' ):

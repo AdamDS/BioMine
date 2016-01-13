@@ -46,7 +46,7 @@ class exacAPI(webAPI):
 		else:
 			self.action = query
 	def buildVariant( self , var ):
-		return '-'.join( [ var.chromosome , var.start , var.reference , var.mutant ] )
+		return '-'.join( [ var.chromosome , var.start , var.reference , var.alternate ] )
 
 	def getPage( self , var ):
 		self.buildQuery( var )

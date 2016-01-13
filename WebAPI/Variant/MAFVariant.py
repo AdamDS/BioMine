@@ -5,7 +5,7 @@ class MAFVariant(variant):
 		super(MAFVariant,self).__init__(**kwargs)
 		self.positionPeptide = kwargs.get('positionPeptide',None)
 		self.referencePeptide = kwargs.get('referencePeptide',None)
-		self.mutantPeptide = kwargs.get('mutantPeptide',None)
+		self.alternatePeptide = kwargs.get('alternatePeptide',None)
 		self.transcript = kwargs.get('transcript',None)
 		self.assembly = kwargs.get('assembly',None)
 		self.variantClass = kwargs.get('variantClass',None)
@@ -18,8 +18,8 @@ class MAFVariant(variant):
 			print self.positionPeptide + delim ,
 		if self.referencePeptide:
 			print self.referencePeptide + delim ,
-		if self.mutantPeptide:
-			print self.mutantPeptide + delim ,
+		if self.alternatePeptide:
+			print self.alternatePeptide + delim ,
 		if self.transcript:
 			print self.transcript + delim ,
 		if self.variantClass:
@@ -36,8 +36,8 @@ class MAFVariant(variant):
 			attributes.append(self.positionPeptide)
 		if self.referencePeptide:
 			attributes.append(self.referencePeptide)
-		if self.mutantPeptide:
-			attributes.append(self.mutantPeptide)
+		if self.alternatePeptide:
+			attributes.append(self.alternatePeptide)
 		if self.transcript:
 			attributes.append(self.transcript)
 		if self.disease:
@@ -45,10 +45,10 @@ class MAFVariant(variant):
 		return attributes
 	def HGVSp( self ):
 		if self.gene and self.referencePeptide:
-			return self.gene + ":p." + self.referencePeptide + self.positionPeptide + self.mutantPeptide
+			return self.gene + ":p." + self.referencePeptide + self.positionPeptide + self.alternatePeptide
 	def HGVSc( self ):
 		if self.gene and self.referencePeptide:
-			return self.gene + ":c." + self.codonPosition + self.reference + ">" + self.mutant
+			return self.gene + ":c." + self.codonPosition + self.reference + ">" + self.alternate
 	def mafLine2Variant( self , line ):
 		super(MAFVariant,self).mafLine2Variant( line )
 		fields = line.split( "\t" )
@@ -72,8 +72,8 @@ class MAFVariant(variant):
 			self.positionPeptide = pos
 			mut = changes[-1]
 			mut = self.convertAA( mut )
-			self.mutantPeptide = mut
-		return { "referencePeptide" : ref , "positionPeptide" : pos , "mutantPeptide" : mut }
+			self.alternatePeptide = mut
+		return { "referencePeptide" : ref , "positionPeptide" : pos , "alternatePeptide" : mut }
 	def convertAA( self , pep ):
 		if pep == "Arg":
 			return "R"
@@ -120,15 +120,15 @@ class MAFVariant(variant):
 		self = variant.__init()
 
 '''
-mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC",referencePeptide="A123R")
+mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC",referencePeptide="A123R")
 mu.printVariant('\t')
 nu = variant(gene="BRAF",referencePeptide="A123R")
 nu.printVariant('\t')
-ou = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC")
+ou = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC")
 ou.printVariant('\t')
-pu = variant(chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC")
+pu = variant(chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC")
 pu.printVariant('\t')
-qu = variant(chromosome=7,start=12345,reference="AT",mutant="GC")
+qu = variant(chromosome=7,start=12345,reference="AT",alternate="GC")
 qu.printVariant('\t')
 
 print qu.attr()
