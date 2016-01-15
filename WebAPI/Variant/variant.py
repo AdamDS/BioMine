@@ -95,6 +95,21 @@ class variant(object):
 	def reset( self ):
 		self = variant.__init()
 
+	def sameGenomicVariant( self , otherVar ):
+		if otherVar.chromosome == self.chromosome and \
+			otherVar.start == self.start and \
+			otherVar.stop == self.stop and \
+			otherVar.reference == self.reference and \
+			otherVar.alternate == self.alternate:
+			return True
+		return False
+	def sameGenomicReference( self , otherVar ):
+		if otherVar.chromosome == self.chromosome and \
+			otherVar.start == self.start and \
+			otherVar.stop == self.stop and \
+			otherVar.reference == self.reference:
+			return True
+		return False
 '''
 mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC")
 mu.printVariant('\t')

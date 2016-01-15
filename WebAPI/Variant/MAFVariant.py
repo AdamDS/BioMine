@@ -120,6 +120,17 @@ class MAFVariant(variant):
 	def reset( self ):
 		self = variant.__init()
 
+	def samePeptideReference( self , otherVar ):
+		if self.sameGenomicReference( otherVar ):
+			if otherVar.referencePeptide == self.referencePeptide and \
+				otherVar.positionPeptide == self.positionPeptide: #same genomic position & reference
+				return True
+		return False
+	def samePeptideChange( self , otherVar ):
+		if self.samePeptideChange( otherVar ):
+			if otherVariant.alternatePeptide == var.alternatePeptide:
+				return True
+		return False
 '''
 mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC",referencePeptide="A123R")
 mu.printVariant('\t')

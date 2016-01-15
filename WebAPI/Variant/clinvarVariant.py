@@ -1,6 +1,11 @@
 from MAFVariant import MAFVariant
 
 class clinvarVariant(MAFVariant):
+	pathogenic = "Pathogenic"
+	likelyPathogenic = "Likely Pathogenic"
+	likelyBenign = "Likely Benign"
+	benign = "Benign"
+	uncertain = "Uncertain Significance"
 	def __init__(self , **kwargs):
 		super(clinvarVariant,self).__init__(**kwargs)
 		self.uid = kwargs.get('uid',None)
