@@ -5,7 +5,7 @@ class variant(object):
 		self.start = kwargs.get('start',None)
 		self.stop = kwargs.get('stop',None)
 		self.reference = kwargs.get('reference',None)
-		self.mutant = kwargs.get('mutant',None)
+		self.alternate = kwargs.get('alternate',None)
 		self.strand = kwargs.get('strand',None)
 		self.sample = kwargs.get('sample',None)
 		self.assembly = kwargs.get('assembly',None)
@@ -21,8 +21,8 @@ class variant(object):
 			print str(self.stop) + delim ,
 		if self.reference:
 			print self.reference + delim ,
-		if self.mutant:
-			print self.mutant + delim ,
+		if self.alternate:
+			print self.alternate + delim ,
 		if self.strand:
 			print self.strand + delim ,
 		if self.dbsnp:
@@ -44,8 +44,8 @@ class variant(object):
 			attributes.append(self.stop)
 		if self.reference:
 			attributes.append(self.reference)
-		if self.mutant:
-			attributes.append(self.mutant)
+		if self.alternate:
+			attributes.append(self.alternate)
 		if self.strand:
 			attributes.append(self.strand)
 		if self.dbsnp:
@@ -54,7 +54,11 @@ class variant(object):
 			attributes.append(self.sample)
 		return attributes
 	def genomicVar( self ):
-		return self.chromosome + ":" + self.start + "-" + self.stop + self.reference + ">" + self.mutant
+		return str(self.chromosome) + ":" \
+		+ str(self.start) + "-" \
+		+ str(self.stop) \
+		+ str(self.reference) \
+		+ ">" + str(self.alternate)
 	def mafLine2Variant( self , line ):
 		fields = line.split( "\t" )
 		self.gene = fields[0]	#1	Hugo_Symbol
@@ -63,7 +67,7 @@ class variant(object):
 		self.stop = fields[6]	#7	End_Position
 		self.strand = fields[7]	#8	Strand
 		self.reference = fields[10]	#11	Reference_Allele
-		self.mutant = fields[11] if fields[11] != fields[10] else fields[12]	#12	Tumor_Seq_Allele1	#13	Tumor_Seq_Allele2
+		self.alternate = fields[11] if fields[11] != fields[10] else fields[12]	#12	Tumor_Seq_Allele1	#13	Tumor_Seq_Allele2
 		self.dbsnp = fields[13]
 		self.sample = fields[15]
 	def uniqueVar( self ):
@@ -92,13 +96,13 @@ class variant(object):
 		self = variant.__init()
 
 '''
-mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC")
+mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC")
 mu.printVariant('\t')
-ou = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC")
+ou = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC")
 ou.printVariant('\t')
-pu = variant(chromosome=7,start=12345,stop=123456,reference="AT",mutant="GC")
+pu = variant(chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC")
 pu.printVariant('\t')
-qu = variant(chromosome=7,start=12345,reference="AT",mutant="GC")
+qu = variant(chromosome=7,start=12345,reference="AT",alternate="GC")
 qu.printVariant('\t')
 
 print qu.attr()

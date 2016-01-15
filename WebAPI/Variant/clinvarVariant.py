@@ -5,7 +5,7 @@ class clinvarVariant(MAFVariant):
 		super(clinvarVariant,self).__init__(**kwargs)
 		self.uid = kwargs.get('uid',None)
 		self.trait = kwargs.get('trait',None)
-		self.clinical = kwargs.get('clinical',None)
+		self.clinical = kwargs.get('clinical',{})
 
 	def printVariant(self,delim):
 		super(clinvarVariant,self).printVariant(delim)

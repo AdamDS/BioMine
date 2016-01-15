@@ -97,12 +97,12 @@ class entrezAPI(webAPI):
 	def prepQuery( self , userVariants ): #expects a list of variants
 		for var in userVariants:
 			thisGroup = var.uniqueVar()
-			ent.addQuery( var.gene , field="gene" , group=thisGroup )
-			ent.addQuery( var.chromosome , field="chr" , group=thisGroup )
-			ent.addQuery( var.start + ":" + var.stop , field="chrpos37" , group=thisGroup )
-			ent.addQuery( "human" , field="orgn" , group=thisGroup )
-			#ent.addQuery( var.variantClass , "vartype" )
-			#ent.addQuery( var.referencePeptide + var.positionPeptide + var.alternatePeptide , "Variant name" )
+			self.addQuery( var.gene , field="gene" , group=thisGroup )
+			self.addQuery( var.chromosome , field="chr" , group=thisGroup )
+			self.addQuery( var.start + ":" + var.stop , field="chrpos37" , group=thisGroup )
+			self.addQuery( "human" , field="orgn" , group=thisGroup )
+			#self.addQuery( var.variantClass , "vartype" )
+			#self.addQuery( var.referencePeptide + var.positionPeptide + var.alternatePeptide , "Variant name" )
 			#var.referencePeptide , var.positionPeptide , var.alternatePeptide
 	def addID( self , uid ):
 		self.uids.append( uid )
@@ -148,7 +148,6 @@ class entrezAPI(webAPI):
 	def doBatch( self , batchSize ):
 		self.usehistory = "y"
 		action = self.buildSearchAction( )
-		#print action
 		url = self.buildURL()
 		response = self.submit()
 		root = self.getXMLroot()
@@ -157,18 +156,11 @@ class entrezAPI(webAPI):
 		totalRecords = 0
 		totalRecords = self.getEntry( root , 'Count' )
 		self.setRetmax( totalRecords )
-		#print "WebEnv = " + self.web_env
-		#print "QueryKey = " + self.query_key
-		#print "Return max = " + str(self.retmax)
-		#print "Batch size = " + str(batchSize)
 		self.subset = entrezAPI.esummary
 		self.action = self.buildWebEnvAction()
 		self.buildURL()
 		summaryResponse = self.submit()
-		variants = self.getClinVarVariantEntry()
-		traits = self.getClinVarTraitEntry()
-		clinical = self.getClinVarClinicalEntry()
-		return { "variants" : variants , "traits" : traits , "clinical" : clinical }
+		return self.getClinVarEntry()
 	
 	def getEntry( self , generator , text ):
 		for entrygen in generator.iter( text ):
@@ -196,12 +188,15 @@ class entrezAPI(webAPI):
 		for DocumentSummary in root.iter( 'DocumentSummary' ):
 			uid = DocumentSummary.attrib["uid"]
 			var = clinvarVariant( uid=uid )
-			self.getClinVarVariantEntry( var )
-			self.getClinVarTraitEntry( var )
-			self.getClinVarClinicalEntry( var )
-			variants[var.genomicVariant()] = var
+			self.getClinVarVariantEntry( var , DocumentSummary )
+			self.getClinVarTraitEntry( var , DocumentSummary )
+			self.getClinVarClinicalEntry( var , DocumentSummary )
+			try:
+				variants[var.genomicVar()] = var
+			except:
+				variants["null"] = var
 		return variants
-	def getClinVarVariantEntry( self , var ):
+	def getClinVarVariantEntry( self , var , DocumentSummary ):
 		print "\tgetClinVarVariantEntry"
 		titleDetails = self.parseClinVarTitle( DocumentSummary )
 		var.referencePeptide = titleDetails["referencePeptide"]
@@ -225,13 +220,11 @@ class entrezAPI(webAPI):
 					var.alternate = assembly_set.find( 'alt' ).text
 					var.reference = assembly_set.find( 'ref' ).text
 					#assembly_acc_ver = assembly_set.find( 'assembly_acc_ver' )
-		gene = self.getEntry( DocumentSummary , 'gene' )
-		var.gene = self.getEntry( gene , 'symbol' )
-		var.strand = self.getEntry( gene , 'strand' )
-		return var
-	def getClinVarTraitEntry( self , var ):
+		for gene in DocumentSummary.iter( 'gene' ):
+			var.gene = self.getEntry( gene , 'symbol' )
+			var.strand = self.getEntry( gene , 'strand' )
+	def getClinVarTraitEntry( self , var , DocumentSummary ):
 		print "\tgetClinVarTraitEntry"
-		entries = autovivification({})
 		for trait in DocumentSummary.iter( 'trait' ):
 			trait_name = self.getEntry( trait , 'trait_name' )
 			trait_xrefs = {}
@@ -245,13 +238,11 @@ class entrezAPI(webAPI):
 				txr.update( { db_source : db_id } )
 				trait_xrefs.update( { trait_name : txr } )
 				var.trait.update( { trait_name : trait_xrefs } )
-		return var
-	def getClinVarClinicalEntry( self , var ):
+	def getClinVarClinicalEntry( self , var , DocumentSummary ):
 		print "\tgetClinVarClinicalEntry"
 		for clinical_significance in DocumentSummary.iter( 'clinical_significance' ):
 			var.clinical["description"] = self.getEntry( clinical_significance , 'description' ).strip()
 			var.clinical["review_status"] = self.getEntry( clinical_significance , 'review_status' ).strip()
-		return var
 
 	def searchPubMed( self , query ):
 		self.subset = entrezAPI.esearch
