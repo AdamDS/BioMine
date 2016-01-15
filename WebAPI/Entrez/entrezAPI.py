@@ -22,6 +22,7 @@ import xml.etree.ElementTree as ET
 from WebAPI.webAPI import webAPI
 from variant import variant
 from variant import MAFVariant
+from variant import clinvarVariant
 import re
 
 class entrezAPI(webAPI):
@@ -93,6 +94,16 @@ class entrezAPI(webAPI):
 			if self.queries[group]:
 				query += "(" + self.queries[group] + ")+OR+"
 		return query
+	def prepQuery( self , userVariants ): #expects a list of variants
+		for var in userVariants:
+			thisGroup = var.uniqueVar()
+			ent.addQuery( var.gene , field="gene" , group=thisGroup )
+			ent.addQuery( var.chromosome , field="chr" , group=thisGroup )
+			ent.addQuery( var.start + ":" + var.stop , field="chrpos37" , group=thisGroup )
+			ent.addQuery( "human" , field="orgn" , group=thisGroup )
+			#ent.addQuery( var.variantClass , "vartype" )
+			#ent.addQuery( var.referencePeptide + var.positionPeptide + var.alternatePeptide , "Variant name" )
+			#var.referencePeptide , var.positionPeptide , var.alternatePeptide
 	def addID( self , uid ):
 		self.uids.append( uid )
 	
@@ -178,76 +189,69 @@ class entrezAPI(webAPI):
 		"positionPeptide" : pos , \
 		"alternatePeptide" : alt }
 
-	def getClinVarVariantEntry( self ):
+	def getClinVarEntry( self ):
 		print "\tgetClinVarVariantEntry"
 		root = self.getXMLroot()
-		entries = {}
+		variants = {}
 		for DocumentSummary in root.iter( 'DocumentSummary' ):
 			uid = DocumentSummary.attrib["uid"]
-			titleDetails = self.parseClinVarTitle( DocumentSummary )
-			refPep = titleDetails["referencePeptide"]
-			posPep = titleDetails["positionPeptide"]
-			altPep = titleDetails["alternatePeptide"]
-			var = MAFVariant( referencePeptide=refPep , positionPeptide=posPep , alternatePeptide=altPep )
-			for variation in DocumentSummary.iter( 'variation' ):
-				for variation_xref in DocumentSummary.iter( 'variation_xref' ):
-					dbs = self.getEntry( variation_xref , 'db_source' )
-					if dbs == entrezAPI.dbsnp:
-						var.dbSNP = self.getEntry( variation_xref , 'db_id' )
-						#print "dbSNP rs" + var.dbSNP
-					#if dbs == entrezAPI.omim:
-						#var.omim = self.getEntry( variation_xref , 'db_id' )
-						#print "OMIM " + var.omim
-				for assembly_set in variation.iter( 'assembly_set' ):
-					assembly_name = self.getEntry( assembly_set , 'assembly_name' )
-					if assembly_name == self.assembly:
-						var.chromosome = assembly_set.find( 'chr' ).text
-						var.start = assembly_set.find( 'start' ).text
-						var.stop = assembly_set.find( 'stop' ).text
-						var.alternate = assembly_set.find( 'alt' ).text
-						var.reference = assembly_set.find( 'ref' ).text
-						#assembly_acc_ver = assembly_set.find( 'assembly_acc_ver' )
-			for gene in DocumentSummary.iter( 'gene' ):
-				var.gene = gene.find( 'symbol' ).text
-				var.strand = gene.find( 'strand' ).text
-			entries[uid] = var
-			#var.printVariant("\t")
-		return entries
-
-	def getClinVarTraitEntry( self ):
+			var = clinvarVariant( uid=uid )
+			self.getClinVarVariantEntry( var )
+			self.getClinVarTraitEntry( var )
+			self.getClinVarClinicalEntry( var )
+			variants[var.genomicVariant()] = var
+		return variants
+	def getClinVarVariantEntry( self , var ):
+		print "\tgetClinVarVariantEntry"
+		titleDetails = self.parseClinVarTitle( DocumentSummary )
+		var.referencePeptide = titleDetails["referencePeptide"]
+		var.positionPeptide = titleDetails["positionPeptide"]
+		var.alternatePeptide = titleDetails["alternatePeptide"]
+		for variation in DocumentSummary.iter( 'variation' ):
+			for variation_xref in DocumentSummary.iter( 'variation_xref' ):
+				dbs = self.getEntry( variation_xref , 'db_source' )
+				if dbs == entrezAPI.dbsnp:
+					var.dbSNP = self.getEntry( variation_xref , 'db_id' )
+					#print "dbSNP rs" + var.dbSNP
+				#if dbs == entrezAPI.omim:
+					#var.omim = self.getEntry( variation_xref , 'db_id' )
+					#print "OMIM " + var.omim
+			for assembly_set in variation.iter( 'assembly_set' ):
+				assembly_name = self.getEntry( assembly_set , 'assembly_name' )
+				if assembly_name == self.assembly:
+					var.chromosome = assembly_set.find( 'chr' ).text
+					var.start = assembly_set.find( 'start' ).text
+					var.stop = assembly_set.find( 'stop' ).text
+					var.alternate = assembly_set.find( 'alt' ).text
+					var.reference = assembly_set.find( 'ref' ).text
+					#assembly_acc_ver = assembly_set.find( 'assembly_acc_ver' )
+		gene = self.getEntry( DocumentSummary , 'gene' )
+		var.gene = self.getEntry( gene , 'symbol' )
+		var.strand = self.getEntry( gene , 'strand' )
+		return var
+	def getClinVarTraitEntry( self , var ):
 		print "\tgetClinVarTraitEntry"
-		root = self.getXMLroot()
-		entries = {}
-		for DocumentSummary in root.iter( 'DocumentSummary' ):
-			uid = DocumentSummary.attrib["uid"]
-			for trait in DocumentSummary.iter( 'trait' ):
-				trait_name = self.getEntry( trait , 'trait_name' )
-				trait_xrefs = {}
-				entries[uid] = { trait_name : trait_xrefs }
-				for trait_xref in trait.iter( 'trait_xref' ):
-					db_source = self.getEntry( trait_xref , 'db_source' )
-					db_id = self.getEntry( trait_xref , 'db_id' )
-					#print trait_name + " in " + db_source + " id = " + db_id
-					txr = {}
-					if trait_name in trait_xrefs:
-						txr = trait_xrefs[trait_name]
-					txr.update( { db_source : db_id } )
-					trait_xrefs.update( { trait_name : txr } )
-				entries.update( { uid : trait_xrefs } )
-			#print entries[uid]
-		return entries
-
-	def getClinVarClinicalEntry( self ):
+		entries = autovivification({})
+		for trait in DocumentSummary.iter( 'trait' ):
+			trait_name = self.getEntry( trait , 'trait_name' )
+			trait_xrefs = {}
+			var.trait = { trait_name : trait_xrefs }
+			for trait_xref in trait.iter( 'trait_xref' ):
+				db_source = self.getEntry( trait_xref , 'db_source' )
+				db_id = self.getEntry( trait_xref , 'db_id' )
+				txr = {}
+				if trait_name in trait_xrefs:
+					txr = trait_xrefs[trait_name]
+				txr.update( { db_source : db_id } )
+				trait_xrefs.update( { trait_name : txr } )
+				var.trait.update( { trait_name : trait_xrefs } )
+		return var
+	def getClinVarClinicalEntry( self , var ):
 		print "\tgetClinVarClinicalEntry"
-		root = self.getXMLroot()
-		entries = {}
-		for DocumentSummary in root.iter( 'DocumentSummary' ):
-			uid = DocumentSummary.attrib["uid"]
-			for clinical_significance in DocumentSummary.iter( 'clinical_significance' ):
-				description = self.getEntry( clinical_significance , 'description' )
-				review_status = self.getEntry( clinical_significance , 'review_status' )
-				entries[uid] = { "description" : description.strip() , "review_status" : review_status.strip() }
-		return entries
+		for clinical_significance in DocumentSummary.iter( 'clinical_significance' ):
+			var.clinical["description"] = self.getEntry( clinical_significance , 'description' ).strip()
+			var.clinical["review_status"] = self.getEntry( clinical_significance , 'review_status' ).strip()
+		return var
 
 	def searchPubMed( self , query ):
 		self.subset = entrezAPI.esearch

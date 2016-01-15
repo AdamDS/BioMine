@@ -1,5 +1,6 @@
 import re
 from variant import variant
+
 class MAFVariant(variant):
 	def __init__(self , **kwargs):
 		super(MAFVariant,self).__init__(**kwargs)
