@@ -1,4 +1,4 @@
-from MAFVariant import MAFVariant
+from WebAPI.Variant.MAFVariant import MAFVariant
 
 class clinvarVariant(MAFVariant):
 	pathogenic = "Pathogenic"

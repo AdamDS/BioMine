@@ -4,7 +4,7 @@
 
 import sys
 import getopt
-from pubchemAPI import pubchemAPI
+from WebAPI.Entrez.pubchemAPI import pubchemAPI
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "

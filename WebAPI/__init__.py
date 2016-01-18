@@ -1,2 +1,7 @@
-__all__ = ['ExAC' , 'Ensembl' , 'Entrez' , 'webAPI']
-from WebAPI import webAPI
+__author__ = 'Adam David Scott (ascott@genome.wustl.edu)'
+__title__ = 'WebAPIs'
+__version__ = "v0.3"
+#__path__ = [ 'WebAPI']
+#__all__ = ['WebAPI']
+#from .webAPI import *
+from .webAPI import webAPI

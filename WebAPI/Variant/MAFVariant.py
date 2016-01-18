@@ -1,5 +1,5 @@
 import re
-from variant import variant
+from WebAPI.Variant.variant import variant
 
 class MAFVariant(variant):
 	def __init__(self , **kwargs):

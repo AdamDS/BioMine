@@ -5,6 +5,7 @@
 #http://docs.python-requests.org/en/latest/user/authentication/?highlight=authentication
 import requests
 from requests.auth import HTTPDigestAuth
+import xml.etree.ElementTree as ET
 import json
 import AdvancedHTMLParser
 
@@ -122,3 +123,22 @@ class webAPI(object):
 		page = AdvancedHTMLParser.AdvancedHTMLParser()
 		page.parseStr( self.response.text )
 		return page
+	
+	def getXMLroot( self ):
+		#print self.response.text
+		try:
+			return ET.fromstring( self.response.text )
+		except:
+			return "<None/>"
+	def getEntry( self , generator , text ):
+		try:
+			for entrygen in generator.iter( text ):
+				return entrygen.text
+		except:
+			return "<None/>"
+	def getElement( self , generator , text ):
+		try:
+			for entrygen in generator.iter( text ):
+				return entrygen
+		except:
+			return ET.fromstring( "<None/>" )

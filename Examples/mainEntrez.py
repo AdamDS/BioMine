@@ -4,16 +4,7 @@
 
 import sys
 import getopt
-#import requests
-#import json
-#import tempfile
-#from entrezAPI import entrezAPI
-#from requests.auth import HTTPDigestAuth
-#from xmlutils.xml2json import xml2json
-#import xml.etree.ElementTree as ET
-#import WebAPI
-from entrezAPI import entrezAPI
-#import WebAPI.Entrez.entrezAPI
+from WebAPI.Entrez.entrezAPI import entrezAPI
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "

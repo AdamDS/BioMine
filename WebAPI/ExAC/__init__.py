@@ -1,2 +1,4 @@
-__all__ = ['exacAPI']
-from exacAPI import exacAPI
+#__all__ = ['exacAPI']
+#__path__ = ['ExAC']
+#from .exacAPI import *
+import exacAPI

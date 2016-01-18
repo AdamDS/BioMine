@@ -4,8 +4,8 @@
 
 import sys
 import getopt
-from exacAPI import exacAPI
-import variant
+from WebAPI.ExAC.exacAPI import exacAPI
+import WebAPI.Variant.variant
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "

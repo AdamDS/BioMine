@@ -20,9 +20,9 @@
 
 import xml.etree.ElementTree as ET
 from WebAPI.webAPI import webAPI
-from variant import variant
-from variant import MAFVariant
-from variant import clinvarVariant
+from WebAPI.Variant.variant import variant
+from WebAPI.Variant.MAFVariant import MAFVariant
+from WebAPI.Variant.clinvarVariant import clinvarVariant
 import re
 
 class entrezAPI(webAPI):
@@ -162,10 +162,6 @@ class entrezAPI(webAPI):
 		summaryResponse = self.submit()
 		return self.getClinVarEntry()
 	
-	def getEntry( self , generator , text ):
-		for entrygen in generator.iter( text ):
-			return entrygen.text
-
 	def parseClinVarTitle( self , DocumentSummary ):
 		title = self.getEntry( DocumentSummary , 'title' )
 		lhs = title.split( '(' )
@@ -185,16 +181,19 @@ class entrezAPI(webAPI):
 		print "\tgetClinVarVariantEntry"
 		root = self.getXMLroot()
 		variants = {}
-		for DocumentSummary in root.iter( 'DocumentSummary' ):
-			uid = DocumentSummary.attrib["uid"]
-			var = clinvarVariant( uid=uid )
-			self.getClinVarVariantEntry( var , DocumentSummary )
-			self.getClinVarTraitEntry( var , DocumentSummary )
-			self.getClinVarClinicalEntry( var , DocumentSummary )
-			try:
-				variants[var.genomicVar()] = var
-			except:
-				variants["null"] = var
+		try:
+			for DocumentSummary in root.iter( 'DocumentSummary' ):
+				uid = DocumentSummary.attrib["uid"]
+				var = clinvarVariant( uid=uid )
+				self.getClinVarVariantEntry( var , DocumentSummary )
+				self.getClinVarTraitEntry( var , DocumentSummary )
+				self.getClinVarClinicalEntry( var , DocumentSummary )
+				try:
+					variants[var.genomicVar()] = var
+				except:
+					variants["null"] = var
+		except:
+			print "Entrez warning: no ClinVar variants"
 		return variants
 	def getClinVarVariantEntry( self , var , DocumentSummary ):
 		print "\tgetClinVarVariantEntry"
@@ -269,7 +268,3 @@ class entrezAPI(webAPI):
 		entries = {}
 		for DocSum in root.iter( 'DocSum' ):
 			print ""
-	
-	def getXMLroot( self ):
-		#print self.response.text
-		return ET.fromstring( self.response.text )

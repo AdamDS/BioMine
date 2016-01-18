@@ -4,7 +4,7 @@
 
 import sys
 import getopt
-from ensemblAPI import ensemblAPI
+from WebAPI.Ensembl.ensemblAPI import ensemblAPI
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "
