@@ -13,15 +13,19 @@ setup( \
 	long_description = 'A variety of web APIs. \
 		Currently, WebAPIs interacts with clinical and \
 		genomic type sites, but its core is not restricted \
-		to any single site or field.
+		to any single site or field. \
 		Works with ClinicalTrials, Ensembl, Entrez, ExAC, \
 		and relies on the use of several Variant classes.' ,
 	download_url = 'github.com/AdamDS/WebAPIs/archive/' + \
 		version + '.tar.gz' ,
 	classifiers = [ \
-	] ,
-	platforms = [ \
-		'2.7'
+		"License :: OSI Approved :: The MIT License (MIT)" , 
+		"Programming Language :: Python" , 
+		"Development Status :: 4 - Beta" , 
+		"Intended Audience :: Developers" , 
+		"Topic :: Internet" , 
+		"Topic :: ReST" , 
+		"Topic :: Web Services" , 
 	] ,
 	license = 'MIT' ,
 	#ClinicalTrials - none - cite data used: https://clinicaltrials.gov/ct2/about-site/terms-conditions
@@ -39,7 +43,7 @@ setup( \
 		'WebAPI.ExAC' ,
 		'WebAPI.Variant' ,
 	] , #each of the directories with modules (aka packages)
-	install_requires = [ \
+	requires = [ \
 		'AdvancedHTMLParser' , 
 		'requests' ,
 	] , #auto installs with pip install

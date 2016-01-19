@@ -59,6 +59,7 @@ class exacAPI(webAPI):
 			entries[var.genomicVar()] = self.getAlleleFrequency( var )
 		return entries
 	def getAlleleFrequency( self , var ):
+		alleleFrequency = None
 		if self.endpoint == exacAPI.endpoint:
 			page = self.getPage( var )
 			if page:
@@ -77,9 +78,12 @@ class exacAPI(webAPI):
 		else:
 			self.buildQuery( var )
 			self.submit()
-			page = json.loads( self.response.text )
-			variantInfo = page['variant']
-			alleleFrequency = variantInfo.get( 'allele_freq' )
-			return alleleFrequency
-		return
+			try:
+				page = json.loads( self.response.text )
+				variantInfo = page['variant']
+				alleleFrequency = variantInfo.get( 'allele_freq' )
+			except:
+				print "CharGer Warning: could not extract allele frequency \
+					from ExAC for " + var.genomicVar() + ""
+		return alleleFrequency
 		print "ADS Error: could not get allele frequency from ExAC"
