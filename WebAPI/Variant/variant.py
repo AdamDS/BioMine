@@ -66,6 +66,7 @@ class variant(object):
 		+ str(self.reference) + ">" \
 		+ str(self.alternate)
 	def mafLine2Variant( self , line , **kwargs ):
+#		print "variant::mafLine2Variant - " ,
 		fields = line.split( "\t" )
 		self.gene = fields[0]	#1	Hugo_Symbol
 		self.chromosome = fields[4]	#5	Chromosome
@@ -110,17 +111,19 @@ class variant(object):
 		print "sameGenomicVariant - " ,
 		if self.sameGenomicReference( otherVar ):
 			if otherVar.alternate == self.alternate:
-				print "comparing ::" + str(self.printVariant(','))
-				print ":: vs ::" + str(otherVar.printVariant(','))
+				print "comparing ::" + self.genomicVar()
+				print ":: vs ::" + otherVar.genomicVar()
 				return True
+		print "not the same genomic variant"
 		return False
 	def sameGenomicReference( self , otherVar ):
 		print "sameGenomicReference - " ,
 		if self.sameGenomicPosition( otherVar ):
 			if otherVar.reference == self.reference:
-				print "comparing ::" + str(self.printVariant(','))
-				print ":: vs ::" + str(otherVar.printVariant(','))
+				print "comparing ::" + self.genomicVar()
+				print ":: vs ::" + otherVar.genomicVar()
 				return True
+		print "not the same genomic reference"
 		return False
 	def sameGenomicPosition( self , otherVar ):
 		if otherVar.chromosome == self.chromosome and \
