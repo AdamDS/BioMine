@@ -10,7 +10,8 @@ class variant(object):
 		self.sample = kwargs.get('sample',None)
 		self.assembly = kwargs.get('assembly',None)
 		self.dbsnp = kwargs.get('dbsnp',None)
-	def printVariant(self,delim):
+	def printVariant(self,delim , **kwargs ):
+		print "variant: " ,
 		if self.gene:
 			print self.gene + delim ,
 		if self.chromosome:
@@ -59,7 +60,12 @@ class variant(object):
 		+ str(self.stop) \
 		+ str(self.reference) \
 		+ ">" + str(self.alternate)
-	def mafLine2Variant( self , line ):
+	def HGVSg( self ):
+		return str(self.chromosome) + ":g." \
+		+ str(self.start) \
+		+ str(self.reference) + ">" \
+		+ str(self.alternate)
+	def mafLine2Variant( self , line , **kwargs ):
 		fields = line.split( "\t" )
 		self.gene = fields[0]	#1	Hugo_Symbol
 		self.chromosome = fields[4]	#5	Chromosome
@@ -72,6 +78,11 @@ class variant(object):
 		self.sample = fields[15]
 	def uniqueVar( self ):
 		return self.sample + "::" + self.genomicVar()
+
+	def isIndel( self ):
+		if self.variantType == "INS" or self.variantType == "DEL":
+			return True
+		return False
 
 	def compareVariants( self , otherVariant ):
 		common = 0
@@ -96,18 +107,24 @@ class variant(object):
 		self = variant.__init()
 
 	def sameGenomicVariant( self , otherVar ):
-		if otherVar.chromosome == self.chromosome and \
-			otherVar.start == self.start and \
-			otherVar.stop == self.stop and \
-			otherVar.reference == self.reference and \
-			otherVar.alternate == self.alternate:
-			return True
+		print "sameGenomicVariant - " ,
+		if self.sameGenomicReference( otherVar ):
+			if otherVar.alternate == self.alternate:
+				print "comparing ::" + str(self.printVariant(','))
+				print ":: vs ::" + str(otherVar.printVariant(','))
+				return True
 		return False
 	def sameGenomicReference( self , otherVar ):
+		print "sameGenomicReference - " ,
+		if self.sameGenomicPosition( otherVar ):
+			if otherVar.reference == self.reference:
+				print "comparing ::" + str(self.printVariant(','))
+				print ":: vs ::" + str(otherVar.printVariant(','))
+				return True
+		return False
+	def sameGenomicPosition( self , otherVar ):
 		if otherVar.chromosome == self.chromosome and \
-			otherVar.start == self.start and \
-			otherVar.stop == self.stop and \
-			otherVar.reference == self.reference:
+			otherVar.start == self.start:
 			return True
 		return False
 '''

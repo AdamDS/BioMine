@@ -13,23 +13,26 @@ class MAFVariant(variant):
 		self.variantType = kwargs.get('variantType',None)
 		self.disease = kwargs.get('disease',None)
 
-	def printVariant(self,delim):
-		super(MAFVariant,self).printVariant(delim)
-		if self.positionPeptide:
-			print self.positionPeptide + delim ,
-		if self.referencePeptide:
-			print self.referencePeptide + delim ,
-		if self.alternatePeptide:
-			print self.alternatePeptide + delim ,
-		if self.transcript:
-			print self.transcript + delim ,
-		if self.variantClass:
-			print self.variantClass + delim ,
-		if self.variantType:
-			print self.variantType + delim ,
-		if self.disease:
-			print self.disease + delim ,
-		print ""
+	def printVariant(self,delim , **kwargs ):
+		onlyVariant = kwargs.get( 'variant' , False )
+		super(MAFVariant,self).printVariant(delim , **kwargs )
+		if not onlyVariant:
+			print "MAFVariant: " ,
+			if self.referencePeptide:
+				print self.referencePeptide + delim ,
+			if self.positionPeptide:
+				print self.positionPeptide + delim ,
+			if self.alternatePeptide:
+				print self.alternatePeptide + delim ,
+			if self.transcript:
+				print self.transcript + delim ,
+			if self.variantClass:
+				print self.variantClass + delim ,
+			if self.variantType:
+				print self.variantType + delim ,
+			if self.disease:
+				print self.disease + delim ,
+			print ""
 	def attr(self):
 		attributes = []
 		super(MAFVariant,self).attr()
@@ -44,38 +47,103 @@ class MAFVariant(variant):
 		if self.disease:
 			attributes.append(self.disease)
 		return attributes
+	def asIndel( self ):
+		if self.isIndel():
+			self.positionPeptide + \
+			self.peptide
+			
+	def determineLengthOfIndel( self ):
+		lengthOfIndel = 0
+		endDeletion = 0
+		if self.isIndel():
+			lenRef = len(self.reference)
+			lenAlt = len(self.alternate)
+			lengthOfIndel = lenAlt - lenRef
+			if lenRef > 1:
+				print "is del"
+		return lengthOfIndel
+	def isIndel( self ):
+		if self.variatnType == "INS" or self.variantType == "DEL":
+			return True
+		return False
+	def HGVSc( self ):
+		return str(self.gene) + ":c." \
+		+ str(self.codonStart) + \
+		+ str(self.reference) + ">"\
+		+ str(self.alternate)
+	def HGVSct( self ):
+		return str(self.transcript) + ":c." \
+		+ str(self.codonStart) \
+		+ str(self.reference) + "_" \
+		+ str(self.alternate)
 	def HGVSp( self ):
 		if self.gene and self.referencePeptide:
 			return self.gene + ":p." + self.referencePeptide + self.positionPeptide + self.alternatePeptide
 	def HGVSc( self ):
 		if self.gene and self.referencePeptide:
 			return self.gene + ":c." + self.codonPosition + self.reference + ">" + self.alternate
-	def mafLine2Variant( self , line ):
-		super(MAFVariant,self).mafLine2Variant( line )
+	def mafLine2Variant( self , line , **kwargs ):
+		print "MAFVariant::mafLine2Variant"
+		super(MAFVariant,self).mafLine2Variant( line , **kwargs )
+		deltaPeptideColumn = kwargs.get( 'peptideChange' , 49 )
 		fields = line.split( "\t" )
 		self.variantClass = fields[8]	#9	Variant_Classification
 		self.variantType = fields[9]	#10	Variant_Type
-		self.splitHGVSp( fields[47] ) #################################### Custom field, not reliable in general
+		self.splitHGVSp( fields[deltaPeptideColumn] ) #################################### Custom field, not reliable in general
+		print self.printVariant(',')
 	def splitHGVSp( self , hgvsp ):
+		#print "MAFVariant::splitHGVSp"
 		ref = ""
 		pos = ""
 		mut = ""
-		parts = hgvsp.split( '.' )
-		hgvsp = parts[-1]
-		pattern = re.compile( "([a-zA-Z]+?)([0-9]+?)([a-zA-Z]+)" )
+		#print hgvsp
+		pattern = re.compile( "(p\.)(.*)" )
 		change = pattern.match( hgvsp )
-		if change:
-			changes = change.groups()
-			ref = changes[0]
-			ref = self.convertAA( ref )
-			self.referencePeptide = ref
-			pos = changes[1]
-			self.positionPeptide = pos
-			mut = changes[-1]
-			mut = self.convertAA( mut )
-			self.alternatePeptide = mut
+		if change: #peptide
+			hgvsp = change.groups()[-1]
+			#print hgvsp
+			pattern = re.compile( "([a-zA-Z]+?)([0-9]+?)([a-zA-Z\*]+)" )
+			change = pattern.match( hgvsp )
+			if change:
+				changes = change.groups()
+				ref = changes[0]
+				#print ref + "->" ,
+				ref = self.convertAA( ref )
+				#print ref
+				self.referencePeptide = ref
+				pos = changes[1]
+				self.positionPeptide = pos
+				#print pos
+				mut = changes[-1]
+				#print mut + "->" , 
+				mut = self.convertAA( mut )
+				#print mut
+				self.alternatePeptide = mut
+		else: #intronic
+			pattern = re.compile( "(e)([0-9]+?)([\+\-][0-9]+?)" )
+			change = pattern.match( hgvsp )
+			if change:
+				changes = change.groups()
+				ref = changes[0]
+				#print ref + "->" ,
+				ref = self.convertAA( ref )
+				#print ref
+				self.referencePeptide = ref
+				pos = changes[1]
+				self.positionPeptide = pos
+				#print pos
+				mut = changes[2] 
+				#print mut + "->" , 
+				mut = self.convertAA( mut )
+				#print mut
+				self.alternatePeptide = mut
 		return { "referencePeptide" : ref , "positionPeptide" : pos , "alternatePeptide" : mut }
 	def convertAA( self , pep ):
+		#print "MAFVariant::convertAA - " + pep
+		pattern = re.compile( "(fs)" )
+		fs = pattern.match( pep )
+		if fs:
+			return "fs"
 		if pep == "Arg":
 			return "R"
 		if pep == "Asn":
@@ -121,14 +189,20 @@ class MAFVariant(variant):
 		self = variant.__init()
 
 	def samePeptideReference( self , otherVar ):
+		print "samePeptideReference - " ,
 		if self.sameGenomicReference( otherVar ):
 			if otherVar.referencePeptide == self.referencePeptide and \
 				otherVar.positionPeptide == self.positionPeptide: #same genomic position & reference
+				print "comparing ::" + str(self.printVariant(','))
+				print ":: vs ::" + str(otherVar.printVariant(','))
 				return True
 		return False
 	def samePeptideChange( self , otherVar ):
-		if self.samePeptideChange( otherVar ):
+		print "samePeptideChange - " ,
+		if self.samePeptideReference( otherVar ):
 			if otherVariant.alternatePeptide == var.alternatePeptide:
+				print "comparing ::" + self.printVariant(',')
+				print ":: vs ::" + otherVar.printVariant(',')
 				return True
 		return False
 '''
