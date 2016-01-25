@@ -113,9 +113,8 @@ class MAFVariant(variant):
 ### Peptide
 	def samePeptideReference( self , otherVar ):
 ##		print "samePeptideReference - " ,
-		if self.sameGenomicReference( otherVar ):
-			if otherVar.referencePeptide == self.referencePeptide and \
-				otherVar.positionPeptide == self.positionPeptide: #same genomic position & reference
+		if otherVar.referencePeptide == self.referencePeptide and \
+			otherVar.positionPeptide == self.positionPeptide: #same genomic position & reference
 #		#		print "comparing ::" + str(self.HGVSp())
 #		#		print ":: vs ::" + str(otherVar.HGVSp())
 				return True
@@ -411,6 +410,15 @@ class MAFVariant(variant):
 		pos = parts[0]
 		self.positionCodon = parts[0]
 		return [ pos , mut ]
+	def plausibleCodonFrame( self , otherVar ):
+		start = int(self.start)
+		#stop = self.stop
+		ostart = int(otherVar.start)
+		#ostop = otherVar.stop
+		maxShift = 2
+		if start+maxShift >= ostart and start-maxShift <= ostart:
+			return True
+		return False
 '''
 mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC",referencePeptide="A123R")
 mu.printVariant('\t')
