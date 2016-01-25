@@ -83,7 +83,7 @@ class exacAPI(webAPI):
 				variantInfo = page['variant']
 				alleleFrequency = variantInfo.get( 'allele_freq' )
 			except:
-				print "CharGer Warning: could not extract allele frequency \
-					from ExAC for " + var.genomicVar() + ""
+				print "CharGer Warning: could not extract allele frequency " ,
+				print "from ExAC for " + var.genomicVar() + ""
 		return alleleFrequency
 		print "ADS Error: could not get allele frequency from ExAC"
