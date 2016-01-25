@@ -189,18 +189,18 @@ class entrezAPI(webAPI):
 		peptideAlt = ""
 		var = MAFVariant()
 		residueMatches = re.search( "\((p\.\w+)\)" , title )
-		print "peptide variant: " ,
-		print residueMatches
+#		print "peptide variant: " ,
+#		print residueMatches
 		if residueMatches:
 			hgvsp = residueMatches.groups()[-1]
-			print hgvsp
+#			print hgvsp
 			[ peptideRef , peptidePos , peptideAlt ] = var.splitHGVSp( hgvsp )
 		codonMatches = re.search( "(c\.\d+)" , title )
-		print "codon variant: " ,
-		print codonMatches
+#		print "codon variant: " ,
+#		print codonMatches
 		if codonMatches:
 			hgvsc = codonMatches.groups()[-1]
-			print hgvsc
+#			print hgvsc
 			[ codonRef , codonPos , codonAlt ] = var.splitHGVSc( hgvsc )
 		return { "title" : title , \
 		"referencePeptide" : peptideRef , \
@@ -225,9 +225,9 @@ class entrezAPI(webAPI):
 				print "Entrez Warning: could not set ClinVar variant " + uid
 		return variants
 	def getClinVarVariantEntry( self , var , DocumentSummary ):
-		print "\tWebAPI::Entrez::entrezAPI::getClinVarVariantEntry"
+#		print "\tWebAPI::Entrez::entrezAPI::getClinVarVariantEntry"
 		titleDetails = self.parseClinVarTitle( DocumentSummary )
-		print titleDetails
+#		print titleDetails
 		var.referencePeptide = titleDetails["referencePeptide"]
 		var.positionPeptide = titleDetails["positionPeptide"]
 		var.alternatePeptide = titleDetails["alternatePeptide"]
