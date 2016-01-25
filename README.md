@@ -1,7 +1,10 @@
 # Installation
 This package uses Python 2.7.
-To install run:
-	python setup.py install
+To install navigate to the WebAPIs/ directory, then run:</br>
+	pip install .</br>
+This will automatically install the dependencies as well.</br>
+Otherwise, run:</br>
+	python setup.py install</br>
 ## Dependencies
 ### [Requests](http://docs.python-requests.org/en/latest/) 
 	pip install requests 
