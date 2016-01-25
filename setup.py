@@ -19,13 +19,18 @@ setup( \
 	download_url = 'github.com/AdamDS/WebAPIs/archive/' + \
 		version + '.tar.gz' ,
 	classifiers = [ \
-		"License :: OSI Approved :: The MIT License (MIT)" , 
+		"License :: OSI Approved :: MIT License " , 
 		"Programming Language :: Python" , 
+		"Programming Language :: Python :: 2.7" , 
 		"Development Status :: 4 - Beta" , 
 		"Intended Audience :: Developers" , 
+		"Intended Audience :: Science/Research" , 
 		"Topic :: Internet" , 
-		"Topic :: ReST" , 
-		"Topic :: Web Services" , 
+		"Topic :: Scientific/Engineering" , 
+		"Topic :: Scientific/Engineering :: Bio-Informatics" , 
+		"Topic :: Scientific/Engineering :: Chemistry" , 
+		"Topic :: Text Processing :: HTML" , 
+		"Topic :: Text Processing :: XML" , 
 	] ,
 	license = 'MIT' ,
 	#ClinicalTrials - none - cite data used: https://clinicaltrials.gov/ct2/about-site/terms-conditions
