@@ -108,7 +108,7 @@ class ensemblAPI(webAPI):
 				annotations += "\t".join( [ line.strip() , geneVariant[0] , geneVariant[1].strip() , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) + "\n"
 			else:
 				#print response
-				annotations = self.nullLine()
+				annotations = self.nullLine( 10 )
 				errors += "\t".join( [ geneVariant[0] , geneVariant[1] , result.get('error') ] ) + "\n"
 		return { "annotations" : annotations , "errors" : errors }
 	def annotateHGVSArray2tsv( self , hgvsNotatedArray , **kwargs ):
@@ -167,7 +167,7 @@ class ensemblAPI(webAPI):
 				if annotated:
 					fout.write( line.strip() + "\t" + annotated["annotations"].strip() + "\n" )
 				else:
-					fout.write( line.strip() + "\t" + self.nullLine() + "\n" )
+					fout.write( line.strip() + "\t" + self.nullLine( 10 ) + "\n" )
 	
 	def annotateHGVSArray2File( self , variantArray , outputFile ):
 		output = self.annotateHGVSArray2tsv( variantArray )
@@ -180,9 +180,13 @@ class ensemblAPI(webAPI):
 		for error in output["errors"]:
 			ferr.write( error )
 
-	def nullLine( self ):
+	def annotateVariants( self , variants , **kwargs ):
+		NotImplemented
+
+	@staticmethod
+	def nullLine( self , columns ):
 		nulls = ""
-		for i in range(0,9):
+		for i in range(0,columns-1):
 			nulls += "NULL\t"
 		return nulls.rstrip()
 
