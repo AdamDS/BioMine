@@ -11,7 +11,7 @@ class variant(object):
 		self.assembly = kwargs.get('assembly',None)
 		self.dbsnp = kwargs.get('dbsnp',None)
 	def printVariant(self,delim , **kwargs ):
-		print "variant: " ,
+#		print "variant: " ,
 		if self.gene:
 			print self.gene + delim ,
 		if self.chromosome:
@@ -66,7 +66,7 @@ class variant(object):
 		+ str(self.reference) + ">" \
 		+ str(self.alternate)
 	def mafLine2Variant( self , line , **kwargs ):
-#		print "variant::mafLine2Variant - " ,
+##		print "variant::mafLine2Variant - " ,
 		fields = line.split( "\t" )
 		self.gene = fields[0]	#1	Hugo_Symbol
 		self.chromosome = fields[4]	#5	Chromosome
@@ -108,22 +108,22 @@ class variant(object):
 		self = variant.__init()
 
 	def sameGenomicVariant( self , otherVar ):
-		print "sameGenomicVariant - " ,
+#		print "sameGenomicVariant - " ,
 		if self.sameGenomicReference( otherVar ):
 			if otherVar.alternate == self.alternate:
-				print "comparing ::" + self.genomicVar()
-				print ":: vs ::" + otherVar.genomicVar()
+		#		print "comparing ::" + self.genomicVar()
+		#		print ":: vs ::" + otherVar.genomicVar()
 				return True
-		print "not the same genomic variant"
+#		print "not the same genomic variant"
 		return False
 	def sameGenomicReference( self , otherVar ):
-		print "sameGenomicReference - " ,
+#		print "sameGenomicReference - " ,
 		if self.sameGenomicPosition( otherVar ):
 			if otherVar.reference == self.reference:
-				print "comparing ::" + self.genomicVar()
-				print ":: vs ::" + otherVar.genomicVar()
+		#		print "comparing ::" + self.genomicVar()
+		#		print ":: vs ::" + otherVar.genomicVar()
 				return True
-		print "not the same genomic reference"
+#		print "not the same genomic reference"
 		return False
 	def sameGenomicPosition( self , otherVar ):
 		if otherVar.chromosome == self.chromosome and \

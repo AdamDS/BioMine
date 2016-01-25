@@ -51,7 +51,7 @@ class entrezAPI(webAPI):
 				 subset == entrezAPI.efetch ):
 				super(entrezAPI,self).__init__(entrezAPI.endpoint,subset)
 			else:
-				print "ADSERROR: bad subset. restAPI.subset initializing to variant association results"
+		#		print "ADSERROR: bad subset. restAPI.subset initializing to variant association results"
 				super(entrezAPI,self).__init__(entrezAPI.endpoint,entrezAPI.hgvs)
 		self.database = kwargs.get("database",entrezAPI.clinvar)
 		self.queries = { entrezAPI.defaultGroup : "" }
@@ -95,6 +95,7 @@ class entrezAPI(webAPI):
 				query += "(" + self.queries[group] + ")+OR+"
 		return query
 	def prepQuery( self , userVariants ): #expects a list of variants
+		self.resetQuery()
 		for var in userVariants:
 			thisGroup = var.uniqueVar()
 			self.addQuery( var.gene , field="gene" , group=thisGroup )
@@ -118,11 +119,14 @@ class entrezAPI(webAPI):
 		self.actionReturnParameters( )
 		return self.action
 	def buildWebEnvAction( self ):
-		self.action = '&'.join( [ "db=" + self.database , "WebEnv=" + self.web_env , 
-		"query_key=" + self.query_key ] )
-		self.usehistory = ""
-		self.actionReturnParameters( )
-		return self.action
+		try:
+			self.action = '&'.join( [ "db=" + self.database , "WebEnv=" + self.web_env , 
+			"query_key=" + self.query_key ] )
+			self.usehistory = ""
+			self.actionReturnParameters( )
+			return self.action
+		except:
+			print "Entrez Error: can't use WebEnv"
 	def buildSummaryAction( self , ids ):
 		self.uid = ','.join( ids )
 		self.action = "db=" + self.database + "&id=" + self.uid
@@ -139,68 +143,95 @@ class entrezAPI(webAPI):
 		if self.usehistory:
 			self.action += "&usehistory=" + self.usehistory
 		return self.action
-	def setRetmax( self , total ):
-		if total > entrezAPI.largestBatchSize:
-			self.retmax = entrezAPI.largestBatchSize
+	def setRetmax( self , total , **kwargs ):
+		summaryBatchSize = kwargs.get( 'summaryBatchSize' , entrezAPI.largestBatchSize )
+		if total > summaryBatchSize:
+	#		print str(total) + " > " + str(summaryBatchSize)
+			self.retmax = summaryBatchSize
 		else:
+	#		print str(total) + " <= " + str(summaryBatchSize)
 			self.retmax = total
 	
-	def doBatch( self , batchSize ):
+	def doBatch( self , summaryBatchSize ):
 		self.usehistory = "y"
 		action = self.buildSearchAction( )
 		url = self.buildURL()
+#		print url
 		response = self.submit()
 		root = self.getXMLroot()
-		self.web_env = self.getEntry( root , 'WebEnv' )
-		self.query_key = self.getEntry( root , 'QueryKey' )
-		totalRecords = 0
-		totalRecords = self.getEntry( root , 'Count' )
-		self.setRetmax( totalRecords )
-		self.subset = entrezAPI.esummary
-		self.action = self.buildWebEnvAction()
-		self.buildURL()
-		summaryResponse = self.submit()
-		return self.getClinVarEntry()
+		variants = {}
+		if root != "<None/>":
+			self.web_env = self.getEntry( root , 'WebEnv' )
+			self.query_key = self.getEntry( root , 'QueryKey' )
+			totalRecords = 0
+			totalRecords = self.getEntry( root , 'Count' )
+			if int(totalRecords) > 0:
+		#		print totalRecords + "records found"
+				self.setRetmax( int(totalRecords) , summaryBatchSize=summaryBatchSize )
+				self.subset = entrezAPI.esummary
+				for self.retstart in range( 0 , int(totalRecords) , self.retmax ):
+					self.action = self.buildWebEnvAction()
+					url = self.buildURL()
+			#		print url
+					summaryResponse = self.submit()
+					variants.update( self.getClinVarEntry() )
+					#print "These are the ClinVar variants: " 
+					#print variants
+		return variants
 	
 	def parseClinVarTitle( self , DocumentSummary ):
+#		print "WebAPI::Entrez::entrezAPI::parseClinVarTitle - " ,
 		title = self.getEntry( DocumentSummary , 'title' )
-		lhs = title.split( '(' )
-		refseqID = lhs[0]
-		hgvsp = lhs[-1].rstrip( ')' )
+#		print title
+		codonPos = ""
+		peptideRef = ""
+		peptidePos = ""
+		peptideAlt = ""
 		var = MAFVariant()
-		refmut = var.splitHGVSp( hgvsp )
-		ref = refmut["referencePeptide"]
-		pos = refmut["positionPeptide"]
-		alt = refmut["alternatePeptide"]
+		residueMatches = re.search( "\((p\.\w+)\)" , title )
+		print "peptide variant: " ,
+		print residueMatches
+		if residueMatches:
+			hgvsp = residueMatches.groups()[-1]
+			print hgvsp
+			[ peptideRef , peptidePos , peptideAlt ] = var.splitHGVSp( hgvsp )
+		codonMatches = re.search( "(c\.\d+)" , title )
+		print "codon variant: " ,
+		print codonMatches
+		if codonMatches:
+			hgvsc = codonMatches.groups()[-1]
+			print hgvsc
+			[ codonRef , codonPos , codonAlt ] = var.splitHGVSc( hgvsc )
 		return { "title" : title , \
-		"referencePeptide" : ref , \
-		"positionPeptide" : pos , \
-		"alternatePeptide" : alt }
+		"referencePeptide" : peptideRef , \
+		"positionPeptide" : peptidePos , \
+		"alternatePeptide" : peptideAlt , \
+		"positionCodon" : codonPos }
 
 	def getClinVarEntry( self ):
-		print "\tgetClinVarVariantEntry"
+#		print "\tWebAPI::Entrez::entrezAPI::getClinVarEntry"
 		root = self.getXMLroot()
 		variants = {}
-		try:
-			for DocumentSummary in root.iter( 'DocumentSummary' ):
-				uid = DocumentSummary.attrib["uid"]
-				var = clinvarVariant( uid=uid )
-				self.getClinVarVariantEntry( var , DocumentSummary )
-				self.getClinVarTraitEntry( var , DocumentSummary )
-				self.getClinVarClinicalEntry( var , DocumentSummary )
-				try:
-					variants[var.genomicVar()] = var
-				except:
-					variants["null"] = var
-		except:
-			print "Entrez warning: no ClinVar variants"
+		for DocumentSummary in root.iter( 'DocumentSummary' ):
+			uid = DocumentSummary.attrib["uid"]
+			var = clinvarVariant( uid=uid )
+			self.getClinVarVariantEntry( var , DocumentSummary )
+			self.getClinVarTraitEntry( var , DocumentSummary )
+			self.getClinVarClinicalEntry( var , DocumentSummary )
+			if var.genomicVar():
+				variants[var.genomicVar()] = var
+			else:
+				variants["null"] = var
+				print "Entrez Warning: could not set ClinVar variant " + uid
 		return variants
 	def getClinVarVariantEntry( self , var , DocumentSummary ):
-		print "\tgetClinVarVariantEntry"
+		print "\tWebAPI::Entrez::entrezAPI::getClinVarVariantEntry"
 		titleDetails = self.parseClinVarTitle( DocumentSummary )
+		print titleDetails
 		var.referencePeptide = titleDetails["referencePeptide"]
 		var.positionPeptide = titleDetails["positionPeptide"]
 		var.alternatePeptide = titleDetails["alternatePeptide"]
+		var.positionCodon = titleDetails["positionCodon"]
 		for variation in DocumentSummary.iter( 'variation' ):
 			for variation_xref in DocumentSummary.iter( 'variation_xref' ):
 				dbs = self.getEntry( variation_xref , 'db_source' )
@@ -222,26 +253,34 @@ class entrezAPI(webAPI):
 		for gene in DocumentSummary.iter( 'gene' ):
 			var.gene = self.getEntry( gene , 'symbol' )
 			var.strand = self.getEntry( gene , 'strand' )
+		if not var.genomicVar():
+			print "Entrez Warning: no ClinVar variant entry"
 	def getClinVarTraitEntry( self , var , DocumentSummary ):
-		print "\tgetClinVarTraitEntry"
-		for trait in DocumentSummary.iter( 'trait' ):
-			trait_name = self.getEntry( trait , 'trait_name' )
-			trait_xrefs = {}
-			var.trait = { trait_name : trait_xrefs }
-			for trait_xref in trait.iter( 'trait_xref' ):
-				db_source = self.getEntry( trait_xref , 'db_source' )
-				db_id = self.getEntry( trait_xref , 'db_id' )
-				txr = {}
-				if trait_name in trait_xrefs:
-					txr = trait_xrefs[trait_name]
-				txr.update( { db_source : db_id } )
-				trait_xrefs.update( { trait_name : txr } )
-				var.trait.update( { trait_name : trait_xrefs } )
+#		print "\tWebAPI::Entrez::entrezAPI::getClinVarTraitEntry"
+		try:
+			for trait in DocumentSummary.iter( 'trait' ):
+				trait_name = self.getEntry( trait , 'trait_name' )
+				trait_xrefs = {}
+				var.trait = { trait_name : trait_xrefs }
+				for trait_xref in trait.iter( 'trait_xref' ):
+					db_source = self.getEntry( trait_xref , 'db_source' )
+					db_id = self.getEntry( trait_xref , 'db_id' )
+					txr = {}
+					if trait_name in trait_xrefs:
+						txr = trait_xrefs[trait_name]
+					txr.update( { db_source : db_id } )
+					trait_xrefs.update( { trait_name : txr } )
+					var.trait.update( { trait_name : trait_xrefs } )
+		except:
+			print "Entrez Warning: no ClinVar trait entry"
 	def getClinVarClinicalEntry( self , var , DocumentSummary ):
-		print "\tgetClinVarClinicalEntry"
-		for clinical_significance in DocumentSummary.iter( 'clinical_significance' ):
-			var.clinical["description"] = self.getEntry( clinical_significance , 'description' ).strip()
-			var.clinical["review_status"] = self.getEntry( clinical_significance , 'review_status' ).strip()
+#		print "\tWebAPI::Entrez::entrezAPI::getClinVarClinicalEntry"
+		try:
+			for clinical_significance in DocumentSummary.iter( 'clinical_significance' ):
+				var.clinical["description"] = self.getEntry( clinical_significance , 'description' ).strip()
+				var.clinical["review_status"] = self.getEntry( clinical_significance , 'review_status' ).strip()
+		except:
+			print "Entrez Warning: no ClinVar clinical entry"
 
 	def searchPubMed( self , query ):
 		self.subset = entrezAPI.esearch
