@@ -65,6 +65,9 @@ class variant(object):
 		+ str(self.start) \
 		+ str(self.reference) + ">" \
 		+ str(self.alternate)
+	def vcf( self , **kwargs ):
+		delim = kwargs.get( 'delim' , ' ' )
+		return delim.join( [ self.chromosome , self.start , self.dbsnp , self.reference , self.alternate , "." , "." , "." ] )
 	def mafLine2Variant( self , line , **kwargs ):
 ##		print "variant::mafLine2Variant - " ,
 		fields = line.split( "\t" )
@@ -78,7 +81,10 @@ class variant(object):
 		self.dbsnp = fields[13]
 		self.sample = fields[15]
 	def uniqueVar( self ):
-		return self.sample + "::" + self.genomicVar()
+		if self.sample:
+			return self.sample + "::" + self.genomicVar()
+		else:
+			return "nosample::" + self.genomicVar()
 
 	def isIndel( self ):
 		if self.variantType == "INS" or self.variantType == "DEL":

@@ -14,6 +14,7 @@ class webAPI(object):
 		endpoint = the endpoint
 		subset = the subset realm of the Web service
 		action = the query, file upload, etc.'''
+	nullXML = "<None></None>"
 	def __init__(self,endpoint,subset):
 		self.response = None
 		self.endpoint = endpoint
@@ -62,7 +63,10 @@ class webAPI(object):
 	def addData( self , field , value ):
 		self.data[field] = value
 	def buildData( self ):
-		json.dumps( self.data )
+#		print "WebAPI::webAPI::buildData"
+#		print self.data
+		self.data = json.dumps( self.data )
+#		print self.data
 		return self.data
 
 	def addHeader( self , field , value ):
@@ -79,11 +83,15 @@ class webAPI(object):
 		url = self.buildURL()
 		headers = self.headers #buildHeader()
 		data = self.buildData()
-		#print url
+#		print url
 		if self.headers:
 			if self.data:
 				if doPost:
+#					print url
+#					print headers
+#					print data
 					self.response = requests.post( url , headers = headers , data = data )
+#					print self.response
 				else:
 					self.response = requests.get( url , headers = headers , data = data )
 			else:
@@ -124,21 +132,20 @@ class webAPI(object):
 		page.parseStr( self.response.text )
 		return page
 	
-	def getXMLroot( self ):
-		#print self.response.text
+	def getXMLRoot( self ):
 		try:
 			return ET.fromstring( self.response.text )
 		except:
-			return "<None/>"
+			return ET.fromstring( webAPI.nullXML )
 	def getEntry( self , generator , text ):
 		try:
 			for entrygen in generator.iter( text ):
 				return entrygen.text
 		except:
-			return "<None/>"
+			return webAPI.nullXML
 	def getElement( self , generator , text ):
 		try:
 			for entrygen in generator.iter( text ):
 				return entrygen
 		except:
-			return ET.fromstring( "<None/>" )
+			return ET.fromstring( webAPI.nullXML )

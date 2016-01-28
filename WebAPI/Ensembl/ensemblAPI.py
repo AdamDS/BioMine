@@ -12,28 +12,125 @@
 from WebAPI.webAPI import webAPI
 import xml.etree.ElementTree as ET
 import json
+from WebAPI.Variant.MAFVariant import MAFVariant
+from WebAPI.Variant.vepVariant import vepVariant
 
 class ensemblAPI(webAPI):
 	endpoint = "http://grch37.rest.ensembl.org"
 	species = "human"
 	hgvs = "/vep/" + species + "/hgvs/"
+	region = "/vep/" + species + "/region/"
 	translation = "/map/translation/"
+	blosum = "Blosum62"
+	csn = "CSN"	
+	compara = "Conservation"
+	exac = "ExAC"
+	genesplicer = "GeneSplicer"
+	maxentscan = "MaxEntScan"
+	updown = "UpDownDistance"
+	callback = "callback"
+	canonical = "canonical"
+	ccds = "ccds"
+	dbnsfp = "dbNSFP"
+	dbscsnv = "dbscSNV"
+	domains = "domains"
+	hgvs = "hgvs"
+	mirna = "miRNA"
+	numbers = "numbers"
+	protein = "protein"
+	refseq = "xref_refseq"
 	def __init__(self,**kwargs):
 		subset = kwargs.get("subset",'')
+#optional defaults as given by http://rest.ensembl.org/documentation/info/vep_hgvs_get
+		blosum = kwargs.get( ensemblAPI.blosum , False )
+		csn = kwargs.get( ensemblAPI.csn , False )
+		compara = kwargs.get( ensemblAPI.compara , False )
+		exac = kwargs.get( ensemblAPI.exac , False )
+		genesplicer = kwargs.get( ensemblAPI.genesplicer , False )
+		maxentscan = kwargs.get( ensemblAPI.maxentscan , False )
+		updown = kwargs.get( ensemblAPI.updown , 5000 )
+		callback = kwargs.get( ensemblAPI.callback , "" )
+		canonical = kwargs.get( ensemblAPI.canonical , False )
+		ccds = kwargs.get( ensemblAPI.ccds , False )
+		dbnsfp = kwargs.get( ensemblAPI.dbnsfp , "" )
+		dbscsnv = kwargs.get( ensemblAPI.dbscsnv , False )
+		domains = kwargs.get( ensemblAPI.domains , False )
+		hgvs = kwargs.get( ensemblAPI.hgvs , False )
+		mirna = kwargs.get( ensemblAPI.mirna , False )
+		numbers = kwargs.get( ensemblAPI.numbers , False )
+		protein = kwargs.get( ensemblAPI.protein , False )
+		refseq = kwargs.get( ensemblAPI.refseq , False )
 		if not subset:
 			super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
 		else:
-			if ( subset == ensemblAPI.hgvs or subset == ensemblAPI.translation ):
+			if ( subset == ensemblAPI.hgvs or \
+				subset == ensemblAPI.translation or \
+				subset == ensemblAPI.region ):
 				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,subset)
 			else:
 				print "ADSERROR: bad subset. webAPI.subset initializing to variant association results"
 				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
 
-	def useGRCh38(self):
-		ensemblAPI.endpoint = "http://rest.ensembl.org"
-	def useGRCh37(self):
-		ensemblAPI.endpoint = "http://grch37.rest.ensembl.org"
+	def doAllOptions( self ):
+		"WebAPI::Ensembl::ensemblAPI::doAllOptions"
+		self.blosum = True
+		self.csn = True
+		self.compara = True
+		self.exac = True
+		self.genesplicer = True
+		self.maxentscan = True
+		self.canonical = True
+		self.ccds = True
+		self.dbscsnv = True
+		self.domains = True
+		self.hgvs = True
+		self.mirna = True
+		self.numbers = True
+		self.protein = True
+		self.refseq = True
+		self.doOptions()
 
+	def getOptions( self ):
+		return {	ensemblAPI.blosum : int(self.blosum) ,
+					ensemblAPI.csn : int(self.csn) ,
+					ensemblAPI.compara : int(self.compara) ,
+					ensemblAPI.exac : int(self.exac) ,
+					ensemblAPI.genesplicer : int(self.genesplicer) ,
+					ensemblAPI.maxentscan : int(self.maxentscan) ,
+					ensemblAPI.updown : self.updown ,
+					ensemblAPI.callback : self.callback ,
+					ensemblAPI.canonical : int(self.canonical) ,
+					ensemblAPI.ccds : int(self.ccds) ,
+					ensemblAPI.dbnsfp : self.dbnsfp ,
+					ensemblAPI.dbscsnv : int(self.dbscsnv) ,
+					ensemblAPI.domains : int(self.domains) ,
+					ensemblAPI.hgvs : int(self.hgvs) ,
+					ensemblAPI.mirna : int(self.mirna) ,
+					ensemblAPI.numbers : int(self.numbers) ,
+					ensemblAPI.protein : int(self.protein) ,
+					ensemblAPI.refseq : int(self.refseq) ,
+		}
+	def getOptionsText( self ):
+		return {	ensemblAPI.blosum : "blosum62" , #unsure
+					ensemblAPI.csn : "csn" ,
+					ensemblAPI.compara : "conservation" ,
+					ensemblAPI.exac : "exac_maf" , #maybe?
+					ensemblAPI.genesplicer : "gene_splicer" , #unsure
+					ensemblAPI.maxentscan : "MaxEntScan" ,
+					ensemblAPI.updown : "UpDownDistance" ,
+					ensemblAPI.callback : "callback" ,
+					ensemblAPI.canonical : "canonical" ,
+					ensemblAPI.ccds : "ccds" ,
+					ensemblAPI.dbnsfp : "dbnsfp" , #unsure
+					ensemblAPI.dbscsnv : "dbscSNV" , #unsure
+					ensemblAPI.domains : "domains" ,
+					ensemblAPI.hgvs : [ "hgvsc" , "hgvsp" ] ,
+					ensemblAPI.mirna : "mirna" , #unsure
+					ensemblAPI.numbers : [ "exon" , "intron" ] ,
+					ensemblAPI.protein : "protein_id" ,
+					ensemblAPI.refseq : "refseq_transcript_ids" ,
+		}
+		
 	def setSubset(self,subset):
 		self.subset = subset
 		self.action = ""
@@ -42,20 +139,116 @@ class ensemblAPI(webAPI):
 
 	def beginQuery(self):
 		self.action = ""
+	def doOptions( self ):
+#		print "WebAPI::Ensembl::ensemblAPI::doOptions"
+		self.action = "?"
+		options = self.getOptions()
+		for option in options:
+			if option == ensemblAPI.updown or \
+			option == ensemblAPI.dbnsfp or \
+			option == ensemblAPI.callback:
+				self.action += str(option) + "=" + str(options[option]) + "&"
+			elif options[option]:
+				self.action += str(option) + "=1&"
 
 	def annotateHGVSScalar2Response( self , hgvsNotated , **kwargs ):
 		out = kwargs.get( "content" , '' )
 		self.action = hgvsNotated + "?"
+		self.doOptions()
 		return self.submit( content = out )
 	def annotateHGVSArray2Dict( self , hgvsNotatedArray , **kwargs ):
 		out = kwargs.get("content",'')
 		resultDict = {}
 		for var in hgvsNotatedArray:
-			self.beginQuery();
+			self.beginQuery()
 			hgvsNotated = var.strip()
 			self.annotateHGVSScalar2Response( hgvsNotated , content = out )
 			resultDict[hgvsNotated] = self.response.text
 		return resultDict
+	def annotateVariantsPost( self , variants , **kwargs ):
+#		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
+		self.setSubset( ensemblAPI.region )
+		self.doAllOptions()
+		maxPost = 1000
+		lengthVariants = len(variants)
+		#annotatedVariants = {}
+		moreVariants = []
+		for i in range(0,lengthVariants,maxPost):
+			j = i + maxPost - 1
+			subsetVariants = variants[i:j]
+			formattedVariants = []
+			for var in subsetVariants:
+				inputVariant = var.vcf( delim=' ' )
+				formattedVariants.append( inputVariant )
+				#vepVar = vepVariant( inputVariant=inputVariant )
+				#annotatedVariants[inputVariant] = vepVar
+			self.addData( "variants" , formattedVariants )
+			self.addHeader( "Accept" , "application/json" )
+			self.addHeader( "Content-Type" , "application/json" )
+			self.submit( post=True , **kwargs )
+			if self.response.ok and self.response.text:
+				root = self.response.json()
+				print json.dumps( root , sort_keys=True , indent=4 , separators=(',', ': ') )
+				#VEPOptions = self.getOptions()
+				#VEPOptionsText = self.getOptionsText()
+				for rootElement in root:
+					var = MAFVariant()
+					var.chromosome = rootElement.get( 'seq_region_name' )
+					var.start = rootElement.get( 'start' )
+					var.stop = rootElement.get( 'end' )
+					allele_string = rootElement.get( 'allele_string' )
+					[ var.reference , var.alternate ] = allele_string.split('/')
+					var.strand = rootElement.get( 'strand' )
+					var.assembly_name = rootElement.get( 'assembly_name' )
+					var.hgvsp = rootElement.get( 'hgvsp' )
+					mostSevereConsequence = rootElement.get( 'most_severe_consequence' )
+					transcriptConsequences = rootElement.get( 'transcript_consequences' )
+					for consequence in transcriptConsequences: #list of dict's
+						otherVar = var
+						annotations = []
+						if "cdna_start" in consequence:
+							otherVar.positionCodon = consequence.get( 'cdna_start' )
+						if "transcript_id" in consequence:
+							otherVar.transcriptCodon = consequence.get( 'transcript_id' )
+						if "protein_start" in consequence:
+							otherVar.positionPeptide = consequence.get( 'protein_start' )
+						if "amino_acids" in consequence:
+							amino_acids = consequence.get( 'amino_acids' ).split('/')
+							otherVar.referencePeptide = amino_acids[0]
+							if len( amino_acids ) > 1:
+								otherVar.alternatePeptide = amino_acids[1] 
+							else:
+								otherVar.alternatePeptide = amino_acids[0]
+						if "protein_id" in consequence:
+							otherVar.transcriptPeptide = consequence.get( 'protein_id' )
+#							if "exon" in consequence:
+#								[ otherVar.exon , otherVar.totalExons ] = thisConsequence.get( 'exon' ).split('/')
+						moreVariants.append( otherVar )
+						#annotatedVariants[otherVar.vcf( delim=' ' )][otherVar.uniqueProteogenomicVar()] = otherVar
+						#annotatedVariants[otherVar.vcf( delim=' ' )]["annotations"] = annotations
+			else:
+				print "ensemblAPI Error: cannot access desired XML fields/tags for variants " ,
+				print "[" + str(i) + ":" + str(j) + "]"
+			setVars = set( moreVariants )
+			allVariants = list( setVars )
+			return allVariants
+	def parseJSON( self , json ):
+		print "WebAPI::Ensembl::ensemblAPI::parseJSON - json: " ,
+		print json
+		if type( json ) == list:
+#			print "json is a list"
+			for sub in json:
+#				print sub
+				if type( sub ) == list or type( sub ) == dict:
+					self.parseJSON( sub )
+		elif type( json ) == dict:
+#			print "json is a dict"
+			for sub in sorted(json.keys()):
+#				print sub
+				if type( json.get( sub ) ) == list or type( json.get( sub ) ) == dict:
+					self.parseJSON( json.get( sub ) )
+
+#if transcript not in transcripts dict, add new transcript annotation (transcript => [protein change , cdna ])
 
 	def HGVSAnnotationHeader( self ):
 		return "\t".join( [ "Gene" , "Mutation" , "Chromosome" , "Start" , "Stop" , "Reference" , "Variant" , "Strand" , "Mutation_Type" ] ) + "\n"
@@ -70,6 +263,7 @@ class ensemblAPI(webAPI):
 		head = kwargs.get( "header" , '' )
 		line = kwargs.get( "line" , '' )
 		self.action = hgvsNotated + "?"
+		self.doOptions()
 		self.submit( content = out )
 		#print self.response.text
 		geneVariant = hgvsNotated.split( ":" )
@@ -147,6 +341,7 @@ class ensemblAPI(webAPI):
 	#	json.dumps( variantList )
 	#	self.addHeader( "Accept" , "application/json" )
 	#	self.addData( "hgvs_notation" , variantList )
+	#	self.doOptions()
 	#	return self.submit( content = "text/xml" , data = variantList , post = True )
 	#def annotateHGVSList2tsv( self , variantArray ):
 	#	resultDict = self.annotateHGVSArray2Dict( variantArray , content = "text/xml" )
@@ -181,20 +376,34 @@ class ensemblAPI(webAPI):
 			ferr.write( error )
 
 	def annotateVariants( self , variants , **kwargs ):
-		NotImplemented
+		if variants:
+			self.subset = ensemblAPI.region
+			for var in variants:
+				if annotated:
+					annotations.update( )
 
-	@staticmethod
 	def nullLine( self , columns ):
 		nulls = ""
 		for i in range(0,columns-1):
 			nulls += "NULL\t"
 		return nulls.rstrip()
 
-def inputHeader( inputFile ):
-	inFile = open( inputFile , 'r' )
-	if inFile:
-		line = next(inFile).decode()
-		#print line
-		return line
-	else:
-		return ""
+	@classmethod
+	def setSpecies( cls , species ):
+		cls.species = species
+		cls.hgvs = "/vep/" + species + "/hgvs/"
+		cls.region = "/vep/" + species + "/region/"
+	def useGRCh38( cls ):
+		cls.endpoint = "http://rest.ensembl.org"
+	def useGRCh37( cls ):
+		cls.endpoint = "http://grch37.rest.ensembl.org"
+
+	@staticmethod
+	def inputHeader( inputFile ):
+		inFile = open( inputFile , 'r' )
+		if inFile:
+			line = next(inFile).decode()
+			#print line
+			return line
+		else:
+			return ""

@@ -158,7 +158,7 @@ class entrezAPI(webAPI):
 		url = self.buildURL()
 #		print url
 		response = self.submit()
-		root = self.getXMLroot()
+		root = self.getXMLRoot()
 		variants = {}
 		if root != "<None/>":
 			self.web_env = self.getEntry( root , 'WebEnv' )
@@ -210,7 +210,7 @@ class entrezAPI(webAPI):
 
 	def getClinVarEntry( self ):
 #		print "\tWebAPI::Entrez::entrezAPI::getClinVarEntry"
-		root = self.getXMLroot()
+		root = self.getXMLRoot()
 		variants = {}
 		for DocumentSummary in root.iter( 'DocumentSummary' ):
 			uid = DocumentSummary.attrib["uid"]
@@ -303,7 +303,7 @@ class entrezAPI(webAPI):
 		self.addQuery( rs )
 		self.subset = entrezAPI.esummary
 		self.submit()
-		root = self.getXMLroot()
+		root = self.getXMLRoot()
 		entries = {}
 		for DocSum in root.iter( 'DocSum' ):
 			print ""

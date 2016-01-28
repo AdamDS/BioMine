@@ -141,8 +141,20 @@ class MAFVariant(variant):
 				return 1
 		return 0
 	def HGVSp( self ):
-		if self.gene and self.referencePeptide:
-			return self.gene + ":p." + self.referencePeptide + self.positionPeptide + self.alternatePeptide
+#		print "WebAPI::Variant::MAFVariant::HGVSp"
+		hgvsp = ""
+		if self.transcriptPeptide:
+			hgvsp += str(self.transcriptPeptide)
+		elif self.gene:
+			hgvsp += str(self.gene)
+		hgvsp += ":p."
+		if self.reference:
+			hgvsp += str(self.referencePeptide)
+		if self.positionPeptide:
+			hgvsp += str(self.positionPeptide)
+		if self.alternate:
+			hgvsp += str(self.alternatePeptide)
+		return hgvsp
 	def splitHGVSp( self , hgvsp ):
 ##		print "WebAPI::Variant::MAFVariant::splitHGVSp - "
 ##		print hgvsp
@@ -246,23 +258,40 @@ class MAFVariant(variant):
 				return 1
 		return 0
 	def HGVSc( self ):
-		return str(self.gene) + ":c." \
-		+ str(self.codonStart) + \
-		+ str(self.reference) + ">"\
-		+ str(self.alternate)
+#		print "WebAPI::Variant::MAFVariant::HGVSc"
+		hgvsc = ""
+		if self.transcriptCodon:
+			hgvsc += str(self.transcriptCodon)
+		elif self.gene:
+			hgvsc += str(self.gene)
+		hgvsc += ":c."
+		if self.positionCodon:
+			hgvsc += str(self.positionCodon)
+		if self.reference:
+			hgvsc += str(self.reference)
+		hgvsc += ">"
+		if self.alternate:
+			hgvsc += str(self.alternate)
+		return hgvsc
 	def HGVSct( self ):
 		return str(self.transcriptCodon) + ":c." \
-		+ str(self.codonStart) \
+		+ str(self.positionCodon) \
 		+ str(self.reference) + "_" \
 		+ str(self.alternate)
-	def HGVSc( self ):
-		return self.gene + ":c." + str(self.positionCodon) + str(self.reference) + ">" + str(self.alternate)
 	def codingHGVS( self ):
+#		print "WebAPI::Variant::MAFVariant::codingHGVS"
 		if self.gene and self.referencePeptide:
 			return self.HGVSc() + ', ' + self.HGVSp()
 		return self.HGVSc()
 	def proteogenomicVar( self ):
-		print self.genomicVar() + ", " + self.codingHGVS()
+#		print "WebAPI::Variant::MAFVariant::proteogenomicVar"
+		return self.genomicVar() + ", " + self.codingHGVS()
+	def uniqueProteogenomicVar( self ):
+#		print "WebAPI::Variant::MAFVariant::uniqueProteogenomicVar"
+		if self.sample:
+			return self.sample + "::" + self.genomicVar() + ", " + self.codingHGVS()
+		else:
+			return "nosample::" + self.genomicVar() + ", " + self.codingHGVS()
 	def splitHGVSc( self , hgvsc ):
 #		print "WebAPI::Variant::MAFVariant::splitHGVSc - " ,
 #		print hgvsc
