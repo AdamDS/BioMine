@@ -71,7 +71,7 @@ class ensemblAPI(webAPI):
 				print "ADSERROR: bad subset. webAPI.subset initializing to variant association results"
 				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
 
-	def doAllOptions( self ):
+	def doAllOptions( self , **kwargs ):
 		"WebAPI::Ensembl::ensemblAPI::doAllOptions"
 		self.blosum = True
 		self.csn = True
@@ -88,7 +88,7 @@ class ensemblAPI(webAPI):
 		self.numbers = True
 		self.protein = True
 		self.refseq = True
-		self.doOptions()
+		self.doOptions( **kwargs )
 
 	def getOptions( self ):
 		return {	ensemblAPI.blosum : int(self.blosum) ,
@@ -139,17 +139,24 @@ class ensemblAPI(webAPI):
 
 	def beginQuery(self):
 		self.action = ""
-	def doOptions( self ):
+	def doOptions( self , **kwargs ):
 #		print "WebAPI::Ensembl::ensemblAPI::doOptions"
+		toData = kwargs.get( 'data' , False )
 		self.action = "?"
 		options = self.getOptions()
 		for option in options:
 			if option == ensemblAPI.updown or \
 			option == ensemblAPI.dbnsfp or \
 			option == ensemblAPI.callback:
-				self.action += str(option) + "=" + str(options[option]) + "&"
+				if toData:
+					self.addData( option , options[option] )
+				else:
+					self.action += str(option) + "=" + str(options[option]) + "&"
 			elif options[option]:
-				self.action += str(option) + "=1&"
+				if toData:
+					self.addData( option , options[option] )
+				else:
+					self.action += str(option) + "=1&"
 
 	def annotateHGVSScalar2Response( self , hgvsNotated , **kwargs ):
 		out = kwargs.get( "content" , '' )
@@ -166,87 +173,63 @@ class ensemblAPI(webAPI):
 			resultDict[hgvsNotated] = self.response.text
 		return resultDict
 	def annotateVariantsPost( self , variants , **kwargs ):
-#		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
+		#https://github.com/Ensembl/ensembl-rest/wiki/POST-Requests
+		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
 		self.setSubset( ensemblAPI.region )
-		self.doAllOptions()
+		self.doAllOptions( data=True )
+		print self.buildURL()
 		maxPost = 1000
 		lengthVariants = len(variants)
-		#annotatedVariants = {}
-		moreVariants = []
+		annotatedVariants = {} #dict of vepVariants
 		for i in range(0,lengthVariants,maxPost):
 			j = i + maxPost - 1
 			subsetVariants = variants[i:j]
 			formattedVariants = []
+			print "initialize annotatedVariants--v"
 			for var in subsetVariants:
 				inputVariant = var.vcf( delim=' ' )
+				print inputVariant
 				formattedVariants.append( inputVariant )
-				#vepVar = vepVariant( inputVariant=inputVariant )
-				#annotatedVariants[inputVariant] = vepVar
+				vepVar = vepVariant( inputVariant=inputVariant , parentVariant=var )
+				annotatedVariants[inputVariant] = vepVar
+			print "--^"
+ 			#following examples from documentation
+			print self.buildURL()
+			#self.action = ""
 			self.addData( "variants" , formattedVariants )
+			print self.data
 			self.addHeader( "Accept" , "application/json" )
 			self.addHeader( "Content-Type" , "application/json" )
+			print self.buildURL()
 			self.submit( post=True , **kwargs )
 			if self.response.ok and self.response.text:
 				root = self.response.json()
 				print json.dumps( root , sort_keys=True , indent=4 , separators=(',', ': ') )
-				#VEPOptions = self.getOptions()
-				#VEPOptionsText = self.getOptionsText()
+				print "\nparsing response"
 				for rootElement in root:
-					var = MAFVariant()
-					var.chromosome = rootElement.get( 'seq_region_name' )
-					var.start = rootElement.get( 'start' )
-					var.stop = rootElement.get( 'end' )
-					allele_string = rootElement.get( 'allele_string' )
-					[ var.reference , var.alternate ] = allele_string.split('/')
-					var.strand = rootElement.get( 'strand' )
-					var.assembly_name = rootElement.get( 'assembly_name' )
-					var.hgvsp = rootElement.get( 'hgvsp' )
-					mostSevereConsequence = rootElement.get( 'most_severe_consequence' )
-					transcriptConsequences = rootElement.get( 'transcript_consequences' )
-					for consequence in transcriptConsequences: #list of dict's
-						otherVar = var
-						annotations = []
-						if "cdna_start" in consequence:
-							otherVar.positionCodon = consequence.get( 'cdna_start' )
-						if "transcript_id" in consequence:
-							otherVar.transcriptCodon = consequence.get( 'transcript_id' )
-						if "protein_start" in consequence:
-							otherVar.positionPeptide = consequence.get( 'protein_start' )
-						if "amino_acids" in consequence:
-							amino_acids = consequence.get( 'amino_acids' ).split('/')
-							otherVar.referencePeptide = amino_acids[0]
-							if len( amino_acids ) > 1:
-								otherVar.alternatePeptide = amino_acids[1] 
-							else:
-								otherVar.alternatePeptide = amino_acids[0]
-						if "protein_id" in consequence:
-							otherVar.transcriptPeptide = consequence.get( 'protein_id' )
-#							if "exon" in consequence:
-#								[ otherVar.exon , otherVar.totalExons ] = thisConsequence.get( 'exon' ).split('/')
-						moreVariants.append( otherVar )
-						#annotatedVariants[otherVar.vcf( delim=' ' )][otherVar.uniqueProteogenomicVar()] = otherVar
-						#annotatedVariants[otherVar.vcf( delim=' ' )]["annotations"] = annotations
+					var = vepVariant()
+					var.parseEntryFromVEP( rootElement )
+					print var.inputVariant
+					annotatedVariants[var.inputVariant] = var
 			else:
 				print "ensemblAPI Error: cannot access desired XML fields/tags for variants " ,
 				print "[" + str(i) + ":" + str(j) + "]"
-			setVars = set( moreVariants )
-			allVariants = list( setVars )
-			return allVariants
-	def parseJSON( self , json ):
-		print "WebAPI::Ensembl::ensemblAPI::parseJSON - json: " ,
-		print json
-		if type( json ) == list:
+			return annotatedVariants
+	#def parseJSON( self , json ):
+#		print "WebAPI::Ensembl::ensemblAPI::parseJSON - json: " ,
+#		print json
+		#if type( json ) == list:
 #			print "json is a list"
-			for sub in json:
+			#for sub in json:
 #				print sub
-				if type( sub ) == list or type( sub ) == dict:
-					self.parseJSON( sub )
-		elif type( json ) == dict:
+				#if type( sub ) == list or type( sub ) == dict:
+					#self.parseJSON( sub )
+		#elif type( json ) == dict:
 #			print "json is a dict"
-			for sub in sorted(json.keys()):
+			#for sub in sorted(json.keys()):
 #				print sub
-				if type( json.get( sub ) ) == list or type( json.get( sub ) ) == dict:
-					self.parseJSON( json.get( sub ) )
+				#if type( json.get( sub ) ) == list or type( json.get( sub ) ) == dict:
+					#self.parseJSON( json.get( sub ) )
 
 #if transcript not in transcripts dict, add new transcript annotation (transcript => [protein change , cdna ])
 

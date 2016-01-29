@@ -73,18 +73,6 @@ def readMAF( inputFile , **kwargs ):
 		return userVariants
 	except:
 		raise Exception( "ADS Error: bad .maf file" )
-def sortVars( variants ):
-	print "sortVars N=" ,
-	strVars = {}
-	print str( len( variants ) )
-	for var in variants:
-		print var.uniqueVar()
-		strVars.update( { var.proteogenomicVar() : var } )
-	listVars = []
-	for varstr in sorted( strVars.keys() ):
-		print varstr
-		listVars.append( strVars.get( varstr ) )
-	return listVars
 
 def main( argv ):
 	values = parseArgs( argv )
@@ -100,9 +88,16 @@ def main( argv ):
 	if maf:
 		variants = readMAF( inputFile , codon=46 , peptideChange=47 )
 		annotated = ensemblInstance.annotateVariantsPost( variants )
-		sortedVars = sortVars( annotated )
-		for var in sortedVars:
-			print var.proteogenomicVar() 
+		print "annotated N=" + str(len(annotated.keys())) + " variants"
+		print annotated.keys()
+		i = 1
+		for genVar in sorted(annotated.keys()):#sortedVars:
+			var = annotated[genVar]
+			print "genVar " + str(i) + ": " ,
+			print genVar ,
+			print ": " ,
+			print var.printVariant(', ') 
+			i += 1
 	else:
 		variants = readMutations( inputFile )
 		if inputFile and outputFile:
