@@ -65,6 +65,7 @@ class webAPI(object):
 	def buildData( self ):
 #		print "WebAPI::webAPI::buildData"
 #		print self.data
+		self.headers["Accept"] = "application/json"
 		self.data = json.dumps( self.data )
 #		print self.data
 		return self.data
