@@ -89,7 +89,11 @@ class variant(object):
 		+ str(self.alternate)
 	def vcf( self , **kwargs ):
 		delim = kwargs.get( 'delim' , ' ' )
-		return delim.join( [ self.chromosome , self.start , self.dbsnp , self.reference , self.alternate , "." , "." , "." ] )
+		nullRS = kwargs.get( 'nullrs' , "." )
+		if self.dbsnp:
+			return delim.join( [ self.chromosome , str( self.start ) , self.dbsnp , self.reference , self.alternate , "." , "." , "." ] )
+		else:
+			return delim.join( [ self.chromosome , str( self.start ) , nullRS , self.reference , self.alternate , "." , "." , "." ] )
 	def mafLine2Variant( self , line , **kwargs ):
 ##		print "variant::mafLine2Variant - " ,
 		fields = line.split( "\t" )
@@ -137,26 +141,30 @@ class variant(object):
 
 	def sameGenomicVariant( self , otherVar ):
 #		print "sameGenomicVariant - " ,
+#		print str( self.alternate ) + " vs " + str( otherVar.alternate ) ,
 		if self.sameGenomicReference( otherVar ):
 			if otherVar.alternate == self.alternate:
-		#		print "comparing ::" + self.genomicVar()
-		#		print ":: vs ::" + otherVar.genomicVar()
+#				print "True"
 				return True
-#		print "not the same genomic variant"
+#		print "False"
 		return False
 	def sameGenomicReference( self , otherVar ):
 #		print "sameGenomicReference - " ,
+#		print str( self.reference ) + " vs " + str( otherVar.reference ) ,
 		if self.sameGenomicPosition( otherVar ):
 			if otherVar.reference == self.reference:
-		#		print "comparing ::" + self.genomicVar()
-		#		print ":: vs ::" + otherVar.genomicVar()
+#				print "True"
 				return True
-#		print "not the same genomic reference"
+#		print "False"
 		return False
 	def sameGenomicPosition( self , otherVar ):
+#		print "sameGenomicPosition - " ,
+#		print str( self.chromosome ) + ":" + str( self.start ) + " vs " + str( otherVar.chromosome ) + ":" + str( otherVar.start ) ,
 		if otherVar.chromosome == self.chromosome and \
-			otherVar.start == self.start:
+			str(otherVar.start) == str(self.start):
+#			print "True"
 			return True
+#		print "False"
 		return False
 '''
 mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC")

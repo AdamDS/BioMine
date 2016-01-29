@@ -174,10 +174,10 @@ class ensemblAPI(webAPI):
 		return resultDict
 	def annotateVariantsPost( self , variants , **kwargs ):
 		#https://github.com/Ensembl/ensembl-rest/wiki/POST-Requests
-		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
+#		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
 		self.setSubset( ensemblAPI.region )
 		self.doAllOptions( data=True )
-		print self.buildURL()
+#		print self.buildURL()
 		maxPost = 1000
 		lengthVariants = len(variants)
 		annotatedVariants = {} #dict of vepVariants
@@ -185,31 +185,32 @@ class ensemblAPI(webAPI):
 			j = i + maxPost - 1
 			subsetVariants = variants[i:j]
 			formattedVariants = []
-			print "initialize annotatedVariants--v"
+#			print "initialize annotatedVariants--v"
 			for var in subsetVariants:
-				inputVariant = var.vcf( delim=' ' )
-				print inputVariant
+				inputVariant = var.vcf( delim=' ' , nullrs='.' )
+#				print inputVariant
 				formattedVariants.append( inputVariant )
 				vepVar = vepVariant( inputVariant=inputVariant , parentVariant=var )
 				annotatedVariants[inputVariant] = vepVar
-			print "--^"
+#			print "--^"
  			#following examples from documentation
-			print self.buildURL()
+#			print self.buildURL()
 			#self.action = ""
 			self.addData( "variants" , formattedVariants )
-			print self.data
+#			print self.data
 			self.addHeader( "Accept" , "application/json" )
 			self.addHeader( "Content-Type" , "application/json" )
-			print self.buildURL()
+#			print self.buildURL()
 			self.submit( post=True , **kwargs )
 			if self.response.ok and self.response.text:
 				root = self.response.json()
-				print json.dumps( root , sort_keys=True , indent=4 , separators=(',', ': ') )
-				print "\nparsing response"
+#				print json.dumps( root , sort_keys=True , indent=4 , separators=(',', ': ') )
+#				print "\nparsing response"
 				for rootElement in root:
 					var = vepVariant()
 					var.parseEntryFromVEP( rootElement )
-					print var.inputVariant
+					var.setInputVariant()
+#					print var.inputVariant + "annotated\n"
 					annotatedVariants[var.inputVariant] = var
 			else:
 				print "ensemblAPI Error: cannot access desired XML fields/tags for variants " ,

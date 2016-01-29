@@ -98,7 +98,7 @@ class vepVariant(MAFVariant):
 		super(vepVariant,self).__init__(**kwargs)
 		self.inputVariant = kwargs.get('inputVariant',"")
 		self.consequences = kwargs.get('consequences',[])
-		self.annotations = kwargs.get('annotations',{})
+		self.colocatedVariants = kwargs.get('colocatedVariants',[])
 		aParentVariant = kwargs.get( 'parentVariant' , None )
 		if aParentVariant:
 			super( vepVariant , self ).copyInfo( aParentVariant )
@@ -106,7 +106,13 @@ class vepVariant(MAFVariant):
 		super( vepVariant , self ).copyInfo( copy )
 		self.inputVariant = copy.inputVariant
 		self.consequences = copy.consequences
-		self.annotations = copy.annotations
+		self.colocatedVariants = copy.colocatedVariants
+	def setInputVariant( self , **kwargs ):
+		asVCF = kwargs.get( 'vcf' , True )
+		if asVCF:
+			self.inputVariant = self.vcf( delim=' ' )
+		else:
+			self.inputVariant = self.genomicVar()
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
@@ -121,11 +127,11 @@ class vepVariant(MAFVariant):
 			for cons in sorted(self.consequences):
 				cons.printVariant(delim,**kwargs)
 			print "]" + delim ,
-		if self.annotations:
-			print "annotations => {" ,
-			for anno in sorted(self.annotations.keys()):
-				print str(anno) + " => " + str(self.annotations.get( cons ) ) + delim ,
-			print "}" + delim ,
+		if self.colocatedVariants:
+			print "colocatedVariants= [" ,
+			for anno in self.colocatedVariants:
+				print str(anno) + ", " ,
+			print "]" + delim ,
 		print ""
 	def attr(self):
 		attributes = super(vepVariant,self).attr()
@@ -133,8 +139,8 @@ class vepVariant(MAFVariant):
 			attributes.append(self.inputVariant)
 		if self.consequences:
 			attributes.append(self.consequences)
-		if self.annotations:
-			attributes.append(self.annotations)
+		if self.colocatedVariants:
+			attributes.append(self.colocatedVariants)
 		return attributes
 
 	def printConsequencesProteogenomicVar( self ):
@@ -145,8 +151,8 @@ class vepVariant(MAFVariant):
 
 	def parseEntryFromVEP( self , rootElement ):
 		''' Expect rootElement as JSON (dict) '''
-		print "WebAPI::Variant::vepVariant::parseEntryFromVEP"
-		print rootElement
+#		print "WebAPI::Variant::vepVariant::parseEntryFromVEP"
+#		print rootElement
 		self.chromosome = rootElement.get( 'seq_region_name' )
 		self.start = rootElement.get( 'start' )
 		self.stop = rootElement.get( 'end' )
@@ -158,25 +164,22 @@ class vepVariant(MAFVariant):
 			self.alternate = allele_string[0]
 		self.strand = rootElement.get( 'strand' )
 		self.assembly = rootElement.get( 'assembly_name' )
-		print "variant info set"
-		self.printVariant(', ')
+#		self.printVariant(', ')
 		mostSevereConsequence = rootElement.get( 'most_severe_consequence' )
 		transcriptConsequences = rootElement.get( 'transcript_consequences' )
 		self.setTranscriptConsequences( transcriptConsequences )
-		print "\nall parsed and set"
-		self.printVariant(', ')
-		print "\n\n"
+#		self.printVariant(', ')
 	def setTranscriptConsequences( self , transcriptConsequences ):
 		''' Expect transcriptConsequences as dict from JSON '''
-		print "WebAPI::Variant::vepVariant::setTranscriptConsequence"
-		self.printVariant(', ')
+#		print "WebAPI::Variant::vepVariant::setTranscriptConsequence"
+#		self.printVariant(', ')
 		i = 0
 		for consequence in transcriptConsequences: #list of dict's
-			print "consequence " + str(i)
+#			print "consequence " + str(i)
 			i += 1
 			otherVar = vepConsequenceVariant( parentVariant=self )
-			otherVar.printVariant('__')
+#			otherVar.printVariant('__')
 			otherVar.parseTranscriptConsequence( consequence )
 			self.consequences.append( otherVar )
-		print "consequences set"
-		self.printVariant(', ')
+#		print "consequences set"
+#		self.printVariant(', ')

@@ -73,16 +73,31 @@ class vepConsequenceVariant(MAFVariant):
 		self.totalExons = kwargs.get('totalExons',None)
 		self.ensg = kwargs.get('gene_id',"")
 		self.impact = kwargs.get('impact',"")
-		self.canonical = kwargs.get('canonical',None)
 		self.positionCDS = kwargs.get('positionCDS',None)
 		self.referenceCodons = kwargs.get('referenceCodons',"")
 		self.alternateCodons = kwargs.get('alternateCodons',"")
 		self.domains = kwargs.get('domains',{})
 		self.predictionPolyphen = kwargs.get('predictionPolyphen',"")
 		self.scorePolyphen = kwargs.get('scorePolyphen',None)
-		self.transcriptsRefSeq = kwargs.get('transcriptsRefSeq',[])
 		self.predictionSIFT = kwargs.get('predictionSIFT',"")
 		self.scoreSIFT = kwargs.get('scoreSIFT',None)
+		### Optional annotations
+		self.blosum = kwargs.get( 'blosum' , None )
+		self.csn = kwargs.get( 'csn' , None )
+		self.compara = kwargs.get( 'compara' , None )
+		self.exac = kwargs.get( 'exac' , None )
+		self.genesplicer = kwargs.get( 'genesplicer' , None )
+		self.maxentscan = kwargs.get( 'maxentscan' , None )
+		#self.updown = kwargs.get( 'updown' , None )
+		#self.callback = kwargs.get( 'callback' , None )
+		self.canonical = kwargs.get( 'canonical' , None )
+		self.ccds = kwargs.get( 'ccds' , None )
+		self.dbnsfp = kwargs.get( 'dbnsfp' , None )
+		self.dbscsnv = kwargs.get( 'dbscsnv' , None )
+		#self.mirna = kwargs.get( 'mirna' , None )
+		#self.numbers = kwargs.get( 'numbers' , None )
+		#self.protein = kwargs.get( 'protein' , None )
+		self.transcriptsRefSeq = kwargs.get('transcriptsRefSeq',[])
 		aParentVariant = kwargs.get( 'parentVariant' , None )
 		if aParentVariant:
 			super( vepConsequenceVariant , self ).copyInfo( aParentVariant )
@@ -156,8 +171,8 @@ class vepConsequenceVariant(MAFVariant):
 
 	def parseTranscriptConsequence( self , consequence ):
 		''' Expect consequence type as dict from JSON '''
-		print "WebAPI::Variant::vepConsequenceVariant::parseTranscriptConsequence"
-		print consequence
+#		print "WebAPI::Variant::vepConsequenceVariant::parseTranscriptConsequence"
+#		print consequence
 		if "amino_acids" in consequence:
 			amino_acids = consequence.get( 'amino_acids' ).split('/')
 			self.referencePeptide = amino_acids[0]
@@ -182,6 +197,8 @@ class vepConsequenceVariant(MAFVariant):
 				self.alternateCodons = codons[1]
 			else:
 				self.alternateCodons = codons[0]
+		if "conservation" in consequence:
+			self.compara = consequence.get( 'conservation' )
 		if "consequence_terms" in consequence:
 			terms = consequence.get( 'consequence_terms' )
 			for term in terms:
