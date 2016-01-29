@@ -10,27 +10,49 @@ class variant(object):
 		self.sample = kwargs.get('sample',None)
 		self.assembly = kwargs.get('assembly',None)
 		self.dbsnp = kwargs.get('dbsnp',None)
+	def copyInfo( self , copy ):
+		self.gene = copy.gene
+		self.chromosome = copy.chromosome
+		self.start = copy.start
+		self.stop = copy.stop
+		self.reference = copy.reference
+		self.alternate = copy.alternate
+		self.strand = copy.strand
+		self.sample = copy.sample
+		self.assembly = copy.assembly
+		self.dbsnp = copy.dbsnp
+		
 	def printVariant(self,delim , **kwargs ):
-#		print "variant: " ,
+		print "variant: " ,
 		if self.gene:
+			print "gene= " ,
 			print self.gene + delim ,
 		if self.chromosome:
+			print "chromosome= " ,
 			print str(self.chromosome) + delim ,
 		if self.start:
+			print "start= " ,
 			print str(self.start) + delim ,
 		if self.stop:
+			print "stop= " ,
 			print str(self.stop) + delim ,
 		if self.reference:
+			print "reference= " ,
 			print self.reference + delim ,
 		if self.alternate:
+			print "alternate= " ,
 			print self.alternate + delim ,
 		if self.strand:
-			print self.strand + delim ,
+			print "strand= " ,
+			print str(self.strand) + delim ,
 		if self.dbsnp:
+			print "dbsnp= " ,
 			print "rs" + self.dbsnp + delim ,
 		if self.sample:
+			print "sample= " ,
 			print self.sample + delim ,
 		if self.assembly:
+			print "assembly= " ,
 			print self.assembly + delim ,
 		print ""
 	def attr(self):
