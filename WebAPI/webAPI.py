@@ -8,6 +8,7 @@ from requests.auth import HTTPDigestAuth
 import xml.etree.ElementTree as ET
 import json
 import AdvancedHTMLParser
+import time
 
 class webAPI(object):
 	'''Web API class, has 
@@ -65,8 +66,9 @@ class webAPI(object):
 	def buildData( self ):
 #		print "WebAPI::webAPI::buildData"
 #		print self.data
-		self.headers["Accept"] = "application/json"
-		self.data = json.dumps( self.data )
+		if self.data:
+			self.data = json.dumps( self.data )
+			self.headers["Accept"] = "application/json"
 #		print self.data
 		return self.data
 
@@ -79,40 +81,44 @@ class webAPI(object):
 		contentHeaders = kwargs.get("content",'')
 		dataIn = kwargs.get("data",'')
 		doPost = kwargs.get("post",False)
+		#asSession = kwargs.get( "session" , False )
+		timeout = kwargs.get( "timeout" , (10,10) )
+		#if asSession:
+		#	request = requests.Session()
 		if contentHeaders:
 			self.addHeader( "Content-Type" , contentHeaders )
 		url = self.buildURL()
 		headers = self.headers #buildHeader()
 		data = self.buildData()
 #		print url
+#		print url
+#		print headers
+#		print data
 		if self.headers:
 			if self.data:
 				if doPost:
-#					print url
-#					print headers
-#					print data
-					self.response = requests.post( url , headers = headers , data = data )
+					self.response = requests.post( url , headers = headers , data = data , timeout = timeout )
 #					print self.response
 				else:
-					self.response = requests.get( url , headers = headers , data = data )
+					self.response = requests.get( url , headers = headers , data = data , timeout = timeout )
 			else:
 				if doPost:
-					self.response = requests.post( url , headers = headers )
+					self.response = requests.post( url , headers = headers , timeout = timeout )
 				else:
-					self.response = requests.get( url , headers = headers )
+					self.response = requests.get( url , headers = headers , timeout = timeout )
 		else:
 			if self.data:
 				self.buildData()
 				if doPost:
-					self.response = requests.post( url , data = data )
+					self.response = requests.post( url , data = data , timeout = timeout )
 				else:
-					self.response = requests.get( url , data = data )
+					self.response = requests.get( url , data = data , timeout = timeout )
 			else:
 				if doPost:
-					self.response = requests.post( url )
+					self.response = requests.post( url , timeout = timeout )
 				else:
-					self.response = requests.get( url )
-		#print self.response
+					self.response = requests.get( url , timeout = timeout )
+#		print self.response
 		return self.response
 
 	def submitDigest(self,username,password):
@@ -150,3 +156,10 @@ class webAPI(object):
 				return entrygen
 		except:
 			return ET.fromstring( webAPI.nullXML )
+
+	@staticmethod
+	def runTime( initialTime ):
+		return time.time() - initialTime
+	@staticmethod
+	def printRunTime( step , interval ):
+		print "Running " + step + " took " + str( interval ) + "seconds"
