@@ -9,6 +9,7 @@
 #	subset		"/variant/"
 #	action		
 
+import time
 from WebAPI.webAPI import webAPI
 import xml.etree.ElementTree as ET
 import json
@@ -46,7 +47,12 @@ class exacAPI(webAPI):
 		else:
 			self.action = query
 	def buildVariant( self , var ):
-		return '-'.join( [ var.chromosome , var.start , var.reference , var.alternate ] )
+		if var.reference == "-" or not var.reference:
+			return '-'.join( [ var.chromosome , var.start , "" , var.alternate ] )
+		if var.alternate == "-" or not var.alternate:
+			return '-'.join( [ var.chromosome , var.start , var.reference , "" ] )
+		else:
+			return '-'.join( [ var.chromosome , var.start , var.reference , var.alternate ] )
 
 	def getPage( self , var ):
 		self.buildQuery( var )
@@ -56,7 +62,10 @@ class exacAPI(webAPI):
 	def getAlleleFrequencies( self , variants ):
 		entries = {}
 		for var in variants:
+#			t = time.time()
 			entries[var.genomicVar()] = self.getAlleleFrequency( var )
+#			self.printRunTime( "getAlleleFrequency " + var.genomicVar() , self.runTime( t ) )
+			#time.sleep(1)
 		return entries
 	def getAlleleFrequency( self , var ):
 		alleleFrequency = None
@@ -77,9 +86,14 @@ class exacAPI(webAPI):
 							return float(alleleFrequency)
 		else:
 			self.buildQuery( var )
-			self.submit()
+#			print self.buildURL()
+#			t = time.time()
+			self.submit( session=True )
+#			self.printRunTime( "\tsubmit " + self.buildURL() , self.runTime( t ) )
 			try:
+#				t = time.time()
 				page = json.loads( self.response.text )
+#				self.printRunTime( "\t\tjson.loads " , self.runTime( t ) )
 				variantInfo = page['variant']
 				alleleFrequency = variantInfo.get( 'allele_freq' )
 			except:
