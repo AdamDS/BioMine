@@ -82,7 +82,7 @@ class webAPI(object):
 		dataIn = kwargs.get("data",'')
 		doPost = kwargs.get("post",False)
 		#asSession = kwargs.get( "session" , False )
-		timeout = kwargs.get( "timeout" , (10,10) )
+		timeout = kwargs.get( "timeout" , None )
 		#if asSession:
 		#	request = requests.Session()
 		if contentHeaders:

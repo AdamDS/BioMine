@@ -212,12 +212,12 @@ class vepConsequenceVariant(MAFVariant):
 				self.alternateCodons = codons[0]
 		if "conservation" in consequence:
 			self.compara = consequence.get( 'conservation' )
-		if "maxentscan_ref" in consequence:							#unsure about string
-			self.maxentscan.append( consequence.get( 'maxentscan_ref' )
-		if "maxentscan_alt" in consequence:							#unsure about string
-			self.maxentscan.append( consequence.get( 'maxentscan_alt' )
-		if "maxentscan_diff" in consequence:							#unsure about string
-			self.maxentscan.append( consequence.get( 'maxentscan_diff' )
+		if "maxentscan_ref" in consequence:
+			self.maxentscan.append( consequence.get( 'maxentscan_ref' ) )
+		if "maxentscan_alt" in consequence:
+			self.maxentscan.append( consequence.get( 'maxentscan_alt' ) )
+		if "maxentscan_diff" in consequence:
+			self.maxentscan.append( consequence.get( 'maxentscan_diff' ) )
 		if "gene_splicer" in consequence:						#unsure about string
 			self.genesplicer = consequence.get( 'gene_splicer' )
 		if "consequence_terms" in consequence:
