@@ -98,7 +98,7 @@ class vepVariant(MAFVariant):
 		super(vepVariant,self).__init__(**kwargs)
 		self.inputVariant = kwargs.get('inputVariant',"")
 		self.consequences = kwargs.get('consequences',[])
-		self.colocatedVariants = kwargs.get('colocatedVariants',[])
+		self.colocations = kwargs.get('colocations',[])
 		aParentVariant = kwargs.get( 'parentVariant' , None )
 		if aParentVariant:
 			super( vepVariant , self ).copyInfo( aParentVariant )
@@ -106,7 +106,7 @@ class vepVariant(MAFVariant):
 		super( vepVariant , self ).copyInfo( copy )
 		self.inputVariant = copy.inputVariant
 		self.consequences = copy.consequences
-		self.colocatedVariants = copy.colocatedVariants
+		self.colocations = copy.colocations
 	def setInputVariant( self , **kwargs ):
 		asVCF = kwargs.get( 'vcf' , True )
 		if asVCF:
@@ -127,9 +127,9 @@ class vepVariant(MAFVariant):
 			for cons in sorted(self.consequences):
 				cons.printVariant(delim,**kwargs)
 			print "]" + delim ,
-		if self.colocatedVariants:
-			print "colocatedVariants= [" ,
-			for anno in self.colocatedVariants:
+		if self.colocations:
+			print "colocations= [" ,
+			for anno in self.colocations:
 				print str(anno) + ", " ,
 			print "]" + delim ,
 		print ""
@@ -139,8 +139,8 @@ class vepVariant(MAFVariant):
 			attributes.append(self.inputVariant)
 		if self.consequences:
 			attributes.append(self.consequences)
-		if self.colocatedVariants:
-			attributes.append(self.colocatedVariants)
+		if self.colocations:
+			attributes.append(self.colocations)
 		return attributes
 
 	def printConsequencesProteogenomicVar( self ):
@@ -168,7 +168,16 @@ class vepVariant(MAFVariant):
 		mostSevereConsequence = rootElement.get( 'most_severe_consequence' )
 		transcriptConsequences = rootElement.get( 'transcript_consequences' )
 		self.setTranscriptConsequences( transcriptConsequences )
+		colocatedVariants = rootElement.get( 'colocated_variants' )
+#		self.setColocatedVariants( colocatedVariants )
 #		self.printVariant(', ')
+	def setColocatedVariants( self , colocatedVariants ):
+		''' Expect colocatedVariants as dict from JSON '''
+		for colocated in colocatedVariants:
+			otherVar = vepColocatedVariant( parentVariant = self )
+			otherVar.parseColocatedVariant( colocated )
+			self.colocations.append( otherVar )
+			
 	def setTranscriptConsequences( self , transcriptConsequences ):
 		''' Expect transcriptConsequences as dict from JSON '''
 #		print "WebAPI::Variant::vepVariant::setTranscriptConsequence"
@@ -178,8 +187,8 @@ class vepVariant(MAFVariant):
 #			print "consequence " + str(i)
 			i += 1
 			otherVar = vepConsequenceVariant( parentVariant=self )
-#			otherVar.printVariant('__')
 			otherVar.parseTranscriptConsequence( consequence )
+#			otherVar.printVariant('__')
 			self.consequences.append( otherVar )
 #		print "consequences set"
 #		self.printVariant(', ')

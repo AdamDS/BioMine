@@ -71,6 +71,8 @@ class vepConsequenceVariant(MAFVariant):
 		self.terms = kwargs.get('consequence_terms',[])
 		self.exon = kwargs.get('exon',None)
 		self.totalExons = kwargs.get('totalExons',None)
+		self.intron = kwargs.get('intron',None)
+		self.totalIntron = kwargs.get('totalIntrons',None)
 		self.ensg = kwargs.get('gene_id',"")
 		self.impact = kwargs.get('impact',"")
 		self.positionCDS = kwargs.get('positionCDS',None)
@@ -87,7 +89,7 @@ class vepConsequenceVariant(MAFVariant):
 		self.compara = kwargs.get( 'compara' , None )
 		self.exac = kwargs.get( 'exac' , None )
 		self.genesplicer = kwargs.get( 'genesplicer' , None )
-		self.maxentscan = kwargs.get( 'maxentscan' , None )
+		self.maxentscan = kwargs.get( 'maxentscan' , [] )
 		#self.updown = kwargs.get( 'updown' , None )
 		#self.callback = kwargs.get( 'callback' , None )
 		self.canonical = kwargs.get( 'canonical' , None )
@@ -119,10 +121,17 @@ class vepConsequenceVariant(MAFVariant):
 			print "exon= " + self.exon + delim ,
 		if self.totalExons:
 			print "totalExons= " + self.totalExons + delim ,
+		if self.intron:
+			print "intron= " + self.intron+ delim ,
 		if self.ensg:
 			print "Ensembl_gene_id= " + self.ensg + delim ,
 		if self.impact:
 			print "impact= " + self.impact + delim ,
+		if self.maxentscan:
+			print "Max_Ent_Scan[ref,alt,diff]= [ " ,
+			for val in self.maxentscan:
+				print str( val ) , "," ,
+			print " ]" + delim ,
 		if self.canonical:
 			print "canonical= " + self.canonical + delim ,
 		if self.positionCDS:
@@ -152,7 +161,7 @@ class vepConsequenceVariant(MAFVariant):
 			print "predictionSIFT= " + self.predictionSIFT + delim ,
 		if self.scoreSIFT:
 			print "scoreSIFT= " + str(self.scoreSIFT) + delim ,
-		print ""
+		print " }"
 	def attr(self):
 		attributes = super(vepConsequenceVariant,self).attr()
 		if self.biotype:
@@ -163,6 +172,10 @@ class vepConsequenceVariant(MAFVariant):
 			attributes.append(self.exon)
 		if self.totalExons:
 			attributes.append(self.totalExons)
+		if self.intron:
+			attributes.append(self.intron)
+		if self.totalIntrons:
+			attributes.append(self.totalIntrons)
 		if self.ensg:
 			attributes.append(self.ensg)
 		if self.impact:
@@ -199,6 +212,14 @@ class vepConsequenceVariant(MAFVariant):
 				self.alternateCodons = codons[0]
 		if "conservation" in consequence:
 			self.compara = consequence.get( 'conservation' )
+		if "maxentscan_ref" in consequence:							#unsure about string
+			self.maxentscan.append( consequence.get( 'maxentscan_ref' )
+		if "maxentscan_alt" in consequence:							#unsure about string
+			self.maxentscan.append( consequence.get( 'maxentscan_alt' )
+		if "maxentscan_diff" in consequence:							#unsure about string
+			self.maxentscan.append( consequence.get( 'maxentscan_diff' )
+		if "gene_splicer" in consequence:						#unsure about string
+			self.genesplicer = consequence.get( 'gene_splicer' )
 		if "consequence_terms" in consequence:
 			terms = consequence.get( 'consequence_terms' )
 			for term in terms:
@@ -214,6 +235,13 @@ class vepConsequenceVariant(MAFVariant):
 				self.totalExons = exonOfExons[1]
 			else:
 				self.totalExons = exonOfExons[0]
+		if "intron" in consequence:
+			intronOfIntrons = consequence.get( 'intron' ).split('/')
+			self.intron = intronOfIntrons[0]
+			if len( intronOfIntrons ) > 1:
+				self.totalIntrons = intronOfIntrons[1]
+			else:
+				self.totalIntrons = intronOfIntrons[0]
 		if "gene_id" in consequence:
 			self.ensg = consequence.get( 'gene_id' )
 #		if "hgvsc" in consequence:
