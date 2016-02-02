@@ -194,13 +194,9 @@ class ensemblAPI(webAPI):
 				annotatedVariants[inputVariant] = vepVar
 #			print "--^"
  			#following examples from documentation
-#			print self.buildURL()
-			#self.action = ""
 			self.addData( "variants" , formattedVariants )
-#			print self.data
 			self.addHeader( "Accept" , "application/json" )
 			self.addHeader( "Content-Type" , "application/json" )
-#			print self.buildURL()
 			self.submit( post=True , **kwargs )
 			if self.response.ok and self.response.text:
 				root = self.response.json()
@@ -210,7 +206,7 @@ class ensemblAPI(webAPI):
 					var = vepVariant()
 					var.parseEntryFromVEP( rootElement )
 					var.setInputVariant()
-#					print var.inputVariant + "annotated\n"
+#					print var.inputVariant + "annotated"
 					annotatedVariants[var.inputVariant] = var
 			else:
 				print "ensemblAPI Error: cannot access desired XML fields/tags for variants " ,

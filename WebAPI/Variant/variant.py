@@ -94,6 +94,15 @@ class variant(object):
 			return delim.join( [ self.chromosome , str( self.start ) , self.dbsnp , self.reference , self.alternate , "." , "." , "." ] )
 		else:
 			return delim.join( [ self.chromosome , str( self.start ) , nullRS , self.reference , self.alternate , "." , "." , "." ] )
+#	def vcfLine2Variant( self , record , **kwargs ):
+#		self.chromosome = record.CHROM
+#		self.start = record.CHROM
+#		self.stop = record.CHROM
+#		self.reference = record.CHROM
+#		alternates = record.ALT.split(',')
+#		if len(alternates) > 1:
+#		self.alternate = alt
+#		self.dbsnp = record.ID
 	def mafLine2Variant( self , line , **kwargs ):
 ##		print "variant::mafLine2Variant - " ,
 		fields = line.split( "\t" )

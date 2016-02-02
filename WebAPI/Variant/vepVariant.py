@@ -183,6 +183,8 @@ class vepVariant(MAFVariant):
 #		print "WebAPI::Variant::vepVariant::setTranscriptConsequence"
 #		self.printVariant(', ')
 		i = 0
+		if not transcriptConsequences:
+			return
 		for consequence in transcriptConsequences: #list of dict's
 #			print "consequence " + str(i)
 			i += 1

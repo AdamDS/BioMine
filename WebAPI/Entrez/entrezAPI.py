@@ -98,9 +98,9 @@ class entrezAPI(webAPI):
 		self.resetQuery()
 		for var in userVariants:
 			thisGroup = var.uniqueVar()
-			self.addQuery( var.gene , field="gene" , group=thisGroup )
-			self.addQuery( var.chromosome , field="chr" , group=thisGroup )
-			self.addQuery( var.start + ":" + var.stop , field="chrpos37" , group=thisGroup )
+			self.addQuery( str(var.gene) , field="gene" , group=thisGroup )
+			self.addQuery( str(var.chromosome) , field="chr" , group=thisGroup )
+			self.addQuery( str(var.start) + ":" + str(var.stop) , field="chrpos37" , group=thisGroup )
 			self.addQuery( "human" , field="orgn" , group=thisGroup )
 			#self.addQuery( var.variantClass , "vartype" )
 			#self.addQuery( var.referencePeptide + var.positionPeptide + var.alternatePeptide , "Variant name" )

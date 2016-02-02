@@ -51,5 +51,6 @@ setup( \
 	requires = [ \
 		'AdvancedHTMLParser' , 
 		'requests' ,
+		'PyVCF' ,
 	] , #auto installs with pip install
 )

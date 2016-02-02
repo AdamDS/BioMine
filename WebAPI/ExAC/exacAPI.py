@@ -48,11 +48,11 @@ class exacAPI(webAPI):
 			self.action = query
 	def buildVariant( self , var ):
 		if var.reference == "-" or not var.reference:
-			return '-'.join( [ var.chromosome , var.start , "" , var.alternate ] )
+			return '-'.join( [ var.chromosome , str(var.start) , "" , var.alternate ] )
 		if var.alternate == "-" or not var.alternate:
-			return '-'.join( [ var.chromosome , var.start , var.reference , "" ] )
+			return '-'.join( [ var.chromosome , str(var.start) , var.reference , "" ] )
 		else:
-			return '-'.join( [ var.chromosome , var.start , var.reference , var.alternate ] )
+			return '-'.join( [ var.chromosome , str(var.start) , var.reference , var.alternate ] )
 
 	def getPage( self , var ):
 		self.buildQuery( var )
