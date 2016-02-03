@@ -97,6 +97,7 @@ class vepVariant(MAFVariant):
 	def __init__(self , **kwargs):
 		super(vepVariant,self).__init__(**kwargs)
 		self.inputVariant = kwargs.get('inputVariant',"")
+		self.mostSevereConsequence = kwargs.get('mostSevereConsequence',"")
 		self.consequences = kwargs.get('consequences',[])
 		self.colocations = kwargs.get('colocations',[])
 		aParentVariant = kwargs.get( 'parentVariant' , None )
@@ -105,6 +106,7 @@ class vepVariant(MAFVariant):
 	def copyInfo( self , copy ):
 		super( vepVariant , self ).copyInfo( copy )
 		self.inputVariant = copy.inputVariant
+		self.mostSevereConsequence = copy.mostSevereConsequence
 		self.consequences = copy.consequences
 		self.colocations = copy.colocations
 	def setInputVariant( self , **kwargs ):
@@ -122,6 +124,9 @@ class vepVariant(MAFVariant):
 		if self.inputVariant:
 			print "inputVariant=" ,
 			print self.inputVariant + delim ,
+		if self.mostSevereConsequence:
+			print "mostSevereConsequence=" , 
+			print self.mostSevereConsequence + delim ,
 		if self.consequences:
 			print "consequences= ["
 			for cons in sorted(self.consequences):
@@ -137,6 +142,8 @@ class vepVariant(MAFVariant):
 		attributes = super(vepVariant,self).attr()
 		if self.inputVariant:
 			attributes.append(self.inputVariant)
+		if self.mostSevereConsequence:
+			attributes.append(self.mostSevereConsequence)
 		if self.consequences:
 			attributes.append(self.consequences)
 		if self.colocations:
@@ -165,7 +172,7 @@ class vepVariant(MAFVariant):
 		self.strand = rootElement.get( 'strand' )
 		self.assembly = rootElement.get( 'assembly_name' )
 #		self.printVariant(', ')
-		mostSevereConsequence = rootElement.get( 'most_severe_consequence' )
+		self.mostSevereConsequence = rootElement.get( 'most_severe_consequence' )
 		transcriptConsequences = rootElement.get( 'transcript_consequences' )
 		self.setTranscriptConsequences( transcriptConsequences )
 		colocatedVariants = rootElement.get( 'colocated_variants' )
