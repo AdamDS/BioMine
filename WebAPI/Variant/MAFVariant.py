@@ -10,7 +10,6 @@ class MAFVariant(variant):
 		self.transcriptPeptide = kwargs.get('transcriptPeptide',None)
 		self.positionCodon = kwargs.get('positionPeptide',None)
 		self.transcriptCodon = kwargs.get('transcriptCodon',None)
-		self.assembly = kwargs.get('assembly',None)
 		self.variantClass = kwargs.get('variantClass',None)
 		self.variantType = kwargs.get('variantType',None)
 		self.disease = kwargs.get('disease',None)
@@ -25,10 +24,29 @@ class MAFVariant(variant):
 		self.transcriptPeptide = copy.transcriptPeptide
 		self.positionCodon = copy.positionCodon
 		self.transcriptCodon = copy.transcriptCodon
-		self.assembly = copy.assembly
 		self.variantClass = copy.variantClass
 		self.variantType = copy.variantType
 		self.disease = copy.disease
+	def fillMissingInfo( self , copy ):
+		super( MAFVariant , self ).fillMissingInfo( copy )
+		if not self.referencePeptide and copy.referencePeptide:
+			self.referencePeptide = copy.referencePeptide
+		if not self.positionPeptide and copy.positionPeptide:
+			self.positionPeptide = copy.positionPeptide
+		if not self.alternatePeptide and copy.alternatePeptide:
+			self.alternatePeptide = copy.alternatePeptide
+		if not self.transcriptPeptide and copy.transcriptPeptide:
+			self.transcriptPeptide = copy.transcriptPeptide
+		if not self.positionCodon and copy.positionCodon:
+			self.positionCodon = copy.positionCodon
+		if not self.transcriptCodon and copy.transcriptCodon:
+			self.transcriptCodon = copy.transcriptCodon
+		if not self.variantClass and copy.variantClass:
+			self.variantClass = copy.variantClass
+		if not self.variantType and copy.variantType:
+			self.variantType = copy.variantType
+		if not self.disease and copy.disease:
+			self.disease = copy.disease
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
@@ -172,11 +190,11 @@ class MAFVariant(variant):
 		elif self.gene:
 			hgvsp += str(self.gene)
 		hgvsp += ":p."
-		if self.reference:
+		if self.referencePeptide:
 			hgvsp += str(self.referencePeptide)
 		if self.positionPeptide:
 			hgvsp += str(self.positionPeptide)
-		if self.alternate:
+		if self.alternatePeptide:
 			hgvsp += str(self.alternatePeptide)
 		return hgvsp
 	def splitHGVSp( self , hgvsp ):
@@ -304,9 +322,7 @@ class MAFVariant(variant):
 		+ str(self.alternate)
 	def codingHGVS( self ):
 #		print "WebAPI::Variant::MAFVariant::codingHGVS"
-		if self.gene and self.referencePeptide:
-			return self.HGVSc() + '::' + self.HGVSp()
-		return self.HGVSc()
+		return self.HGVSc() + '::' + self.HGVSp()
 	def proteogenomicVar( self ):
 #		print "WebAPI::Variant::MAFVariant::proteogenomicVar"
 		return self.genomicVar() + "::" + self.codingHGVS()

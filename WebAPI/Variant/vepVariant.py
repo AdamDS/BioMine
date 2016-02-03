@@ -104,11 +104,25 @@ class vepVariant(MAFVariant):
 		if aParentVariant:
 			super( vepVariant , self ).copyInfo( aParentVariant )
 	def copyInfo( self , copy ):
-		super( vepVariant , self ).copyInfo( copy )
+		if type( self ) == vepVariant:
+			super( vepVariant , self ).copyInfo( copy )
+		else:
+			MAFVariant.copyInfo( self , copy )
 		self.inputVariant = copy.inputVariant
 		self.mostSevereConsequence = copy.mostSevereConsequence
 		self.consequences = copy.consequences
 		self.colocations = copy.colocations
+	def fillMissingInfo( self , copy ):
+		super( vepVariant , self ).fillMissingInfo( copy )
+		if not self.inputVariant and copy.inputVariant:
+			self.inputVariant = copy.inputVariant
+		if not self.mostSevereConsequence and copy.mostSevereConsequence:
+			self.mostSevereConsequence = copy.mostSevereConsequence
+		if not self.consequences and copy.consequences:
+			self.consequences = copy.consequences
+		if not self.colocations and copy.colocations:
+			self.colocations = copy.colocations
+
 	def setInputVariant( self , **kwargs ):
 		asVCF = kwargs.get( 'vcf' , True )
 		if asVCF:

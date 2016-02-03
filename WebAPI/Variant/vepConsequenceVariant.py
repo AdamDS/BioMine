@@ -270,7 +270,7 @@ class vepConsequenceVariant(MAFVariant):
 			self.scoreSIFT = consequence.get( 'sift_score' )
 		if "strand" in consequence:
 			self.strand = consequence.get( 'strand' )
-		if "transcript" in consequence:
-			self.transcriptCodon = consequence.get( 'transcript' )
+		if "transcript_id" in consequence:
+			self.transcriptCodon = consequence.get( 'transcript_id' )
 		if "variant_allele" in consequence:
 			self.alternatePeptide = consequence.get( 'variant_allele' )

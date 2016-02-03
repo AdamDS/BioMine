@@ -21,7 +21,28 @@ class variant(object):
 		self.sample = copy.sample
 		self.assembly = copy.assembly
 		self.dbsnp = copy.dbsnp
-		
+	def fillMissingInfo( self , copy ):
+		if not self.gene and copy.gene:
+			self.gene = copy.gene
+		if not self.chromosome and copy.chromosome:
+			self.chromosome = copy.chromosome
+		if not self.start and copy.start:
+			self.start = copy.start
+		if not self.stop and copy.stop:
+			self.stop = copy.stop
+		if not self.reference and copy.reference:
+			self.reference = copy.reference
+		if not self.alternate and copy.alternate:
+			self.alternate = copy.alternate
+		if not self.strand and copy.strand:
+			self.strand = copy.strand
+		if not self.sample and copy.sample:
+			self.sample = copy.sample
+		if not self.assembly and copy.assembly:
+			self.assembly = copy.assembly
+		if not self.dbsnp and copy.dbsnp:
+			self.dbsnp = copy.dbsnp
+			
 	def printVariant(self,delim , **kwargs ):
 		print "variant: " ,
 		if self.gene:
@@ -94,15 +115,15 @@ class variant(object):
 			return delim.join( [ self.chromosome , str( self.start ) , self.dbsnp , self.reference , self.alternate , "." , "." , "." ] )
 		else:
 			return delim.join( [ self.chromosome , str( self.start ) , nullRS , self.reference , self.alternate , "." , "." , "." ] )
-#	def vcfLine2Variant( self , record , **kwargs ):
-#		self.chromosome = record.CHROM
-#		self.start = record.CHROM
-#		self.stop = record.CHROM
-#		self.reference = record.CHROM
-#		alternates = record.ALT.split(',')
-#		if len(alternates) > 1:
-#		self.alternate = alt
-#		self.dbsnp = record.ID
+	def vcfLine2Variant( self , record , **kwargs ):
+		self.chromosome = record.CHROM
+		self.start = record.CHROM
+		self.stop = record.CHROM
+		self.reference = record.CHROM
+		alternates = record.ALT.split(',')
+		if len(alternates) > 1:
+			self.alternate = alt
+		self.dbsnp = record.ID
 	def mafLine2Variant( self , line , **kwargs ):
 ##		print "variant::mafLine2Variant - " ,
 		fields = line.split( "\t" )
