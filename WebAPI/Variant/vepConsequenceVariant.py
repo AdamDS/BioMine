@@ -273,4 +273,4 @@ class vepConsequenceVariant(MAFVariant):
 		if "transcript_id" in consequence:
 			self.transcriptCodon = consequence.get( 'transcript_id' )
 		if "variant_allele" in consequence:
-			self.alternatePeptide = consequence.get( 'variant_allele' )
+			self.alternate = consequence.get( 'variant_allele' )
