@@ -91,7 +91,6 @@ class webAPI(object):
 		headers = self.headers #buildHeader()
 		data = self.buildData()
 #		print url
-#		print url
 #		print headers
 #		print data
 		if self.headers:
@@ -118,6 +117,13 @@ class webAPI(object):
 					self.response = requests.post( url , timeout = timeout )
 				else:
 					self.response = requests.get( url , timeout = timeout )
+		code = self.response.status_code
+		if code != 200:
+			if code == 204:
+				print "WebAPI Warning: no content from " + self.buildURL()
+			else:
+				print "WebAPI Warning: response from " + self.buildURL()
+				print "received status code = " + str(code)
 #		print self.response
 		return self.response
 

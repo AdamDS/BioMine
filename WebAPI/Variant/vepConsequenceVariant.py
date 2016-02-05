@@ -74,6 +74,8 @@ class vepConsequenceVariant(MAFVariant):
 		self.intron = kwargs.get('intron',None)
 		self.totalIntron = kwargs.get('totalIntrons',None)
 		self.ensg = kwargs.get('gene_id',"")
+		self.geneSymbolSource = kwargs.get('gene_symbol_source',"")
+		self.hgnc = kwargs.get('hgnc_id',"")
 		self.impact = kwargs.get('impact',"")
 		self.positionCDS = kwargs.get('positionCDS',None)
 		self.referenceCodons = kwargs.get('referenceCodons',"")
@@ -92,7 +94,7 @@ class vepConsequenceVariant(MAFVariant):
 		self.maxentscan = kwargs.get( 'maxentscan' , [] )
 		#self.updown = kwargs.get( 'updown' , None )
 		#self.callback = kwargs.get( 'callback' , None )
-		self.canonical = kwargs.get( 'canonical' , None )
+		self.canonical = kwargs.get( 'canonical' , False )
 		self.ccds = kwargs.get( 'ccds' , None )
 		self.dbnsfp = kwargs.get( 'dbnsfp' , None )
 		self.dbscsnv = kwargs.get( 'dbscsnv' , None )
@@ -125,6 +127,10 @@ class vepConsequenceVariant(MAFVariant):
 			print "intron= " + self.intron+ delim ,
 		if self.ensg:
 			print "Ensembl_gene_id= " + self.ensg + delim ,
+		if self.geneSymbolSource:
+			print "gene_symbol_source= " + self.geneSymbolSource + delim ,
+		if self.hgnc:
+			print "HGNC_ID= " + self.hgnc + delim ,
 		if self.impact:
 			print "impact= " + self.impact + delim ,
 		if self.maxentscan:
@@ -132,8 +138,7 @@ class vepConsequenceVariant(MAFVariant):
 			for val in self.maxentscan:
 				print str( val ) , "," ,
 			print " ]" + delim ,
-		if self.canonical:
-			print "canonical= " + self.canonical + delim ,
+		print "canonical= " + self.canonical + delim ,
 		if self.positionCDS:
 			print "positionCDS= " + str(self.positionCDS) + delim ,
 		if self.referenceCodons:
@@ -185,7 +190,6 @@ class vepConsequenceVariant(MAFVariant):
 	def parseTranscriptConsequence( self , consequence ):
 		''' Expect consequence type as dict from JSON '''
 #		print "WebAPI::Variant::vepConsequenceVariant::parseTranscriptConsequence"
-#		print consequence
 		if "amino_acids" in consequence:
 			amino_acids = consequence.get( 'amino_acids' ).split('/')
 			self.referencePeptide = amino_acids[0]
@@ -196,7 +200,9 @@ class vepConsequenceVariant(MAFVariant):
 		if "biotype" in consequence:
 			self.biotype = consequence.get( 'biotype' )
 		if "canonical" in consequence:
-			self.consequence = consequence.get( 'canonical' )
+			canonical = consequence.get( 'canonical' )
+			if canonical == 1:
+				self.canonical = True
 		if "ccds" in consequence:
 			self.ccds = consequence.get( 'ccds' )
 		if "cdna_start" in consequence:
@@ -244,6 +250,12 @@ class vepConsequenceVariant(MAFVariant):
 				self.totalIntrons = intronOfIntrons[0]
 		if "gene_id" in consequence:
 			self.ensg = consequence.get( 'gene_id' )
+		if "gene_symbol" in consequence:
+			self.gene = consequence.get( 'gene_symbol' )
+		if "gene_symbol_source" in consequence:
+			self.geneSymbolSource = consequence.get( 'gene_symbol_source' )
+		if "hgnc_id" in consequence:
+			self.hgnc = consequence.get( 'hgnc_id' )
 #		if "hgvsc" in consequence:
 #			hgvsc = consequence.get( 'hgvsc' )
 #			[ self.reference , self.positionCodon , self.alternate ] = self.splitHGVSc( hgvsc , xDot="[nc]\." )

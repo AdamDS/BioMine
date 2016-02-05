@@ -1,15 +1,18 @@
 class variant(object):
 	def __init__(self , **kwargs):
-		self.gene = kwargs.get('gene',None)
+		self.gene = kwargs.get('gene',"")
 		self.chromosome = kwargs.get('chromosome',None)
 		self.start = kwargs.get('start',None)
 		self.stop = kwargs.get('stop',None)
-		self.reference = kwargs.get('reference',None)
-		self.alternate = kwargs.get('alternate',None)
+		self.reference = kwargs.get('reference',"-")
+		self.alternate = kwargs.get('alternate',"-")
 		self.strand = kwargs.get('strand',None)
 		self.sample = kwargs.get('sample',None)
 		self.assembly = kwargs.get('assembly',None)
 		self.dbsnp = kwargs.get('dbsnp',None)
+	#def setReference( self , start ):
+		#if str(reference) == "0" or not start:
+			#self.start = "-"
 	def copyInfo( self , copy ):
 		self.gene = copy.gene
 		self.chromosome = copy.chromosome
@@ -22,29 +25,29 @@ class variant(object):
 		self.assembly = copy.assembly
 		self.dbsnp = copy.dbsnp
 	def fillMissingInfo( self , copy ):
-		if not self.gene and copy.gene:
+		if not self.gene:
 			self.gene = copy.gene
-		if not self.chromosome and copy.chromosome:
+		if not self.chromosome:
 			self.chromosome = copy.chromosome
-		if not self.start and copy.start:
+		if not self.start:
 			self.start = copy.start
-		if not self.stop and copy.stop:
+		if not self.stop:
 			self.stop = copy.stop
-		if not self.reference and copy.reference:
+		if not self.reference:
 			self.reference = copy.reference
-		if not self.alternate and copy.alternate:
+		if not self.alternate:
 			self.alternate = copy.alternate
-		if not self.strand and copy.strand:
+		if not self.strand:
 			self.strand = copy.strand
-		if not self.sample and copy.sample:
+		if not self.sample:
 			self.sample = copy.sample
-		if not self.assembly and copy.assembly:
+		if not self.assembly:
 			self.assembly = copy.assembly
-		if not self.dbsnp and copy.dbsnp:
+		if not self.dbsnp:
 			self.dbsnp = copy.dbsnp
 			
 	def printVariant(self,delim , **kwargs ):
-		print "variant: " ,
+		print "variant: { " ,
 		if self.gene:
 			print "gene= " ,
 			print self.gene + delim ,
@@ -75,7 +78,7 @@ class variant(object):
 		if self.assembly:
 			print "assembly= " ,
 			print self.assembly + delim ,
-		print ""
+		print " }"
 	def attr(self):
 		attributes = []
 		if self.gene:
@@ -98,11 +101,13 @@ class variant(object):
 			attributes.append(self.sample)
 		return attributes
 	def genomicVar( self ):
-		return str(self.chromosome) + ":" \
+		out = str(self.gene) + ":" \
+		+ str(self.chromosome) + ":" \
 		+ str(self.start) + "-" \
 		+ str(self.stop) \
 		+ str(self.reference) \
 		+ ">" + str(self.alternate)
+		return out
 	def HGVSg( self ):
 		return str(self.chromosome) + ":g." \
 		+ str(self.start) \
@@ -110,11 +115,17 @@ class variant(object):
 		+ str(self.alternate)
 	def vcf( self , **kwargs ):
 		delim = kwargs.get( 'delim' , ' ' )
-		nullRS = kwargs.get( 'nullrs' , "." )
-		if self.dbsnp:
-			return delim.join( [ self.chromosome , str( self.start ) , self.dbsnp , self.reference , self.alternate , "." , "." , "." ] )
-		else:
-			return delim.join( [ self.chromosome , str( self.start ) , nullRS , self.reference , self.alternate , "." , "." , "." ] )
+		null = kwargs.get( 'null' , "." )
+		ref = self.reference
+		if ref == "-":
+			ref = null
+		alt = self.alternate
+		if alt == "-":
+			alt = null
+		dbsnp = self.dbsnp
+		if not dbsnp:
+			dbsnp = null
+		return delim.join( [ self.chromosome , str( self.start ) , dbsnp , ref , alt , null , null , null ] )
 	def vcfLine2Variant( self , record , **kwargs ):
 		self.chromosome = record.CHROM
 		self.start = record.CHROM
@@ -133,7 +144,11 @@ class variant(object):
 		self.stop = fields[6]	#7	End_Position
 		self.strand = fields[7]	#8	Strand
 		self.reference = fields[10]	#11	Reference_Allele
+		if str(self.reference) == "0" or not self.reference:
+			self.reference = "-"
 		self.alternate = fields[11] if fields[11] != fields[10] else fields[12]	#12	Tumor_Seq_Allele1	#13	Tumor_Seq_Allele2
+		if str(self.alternate) == "0" or not self.alternate:
+			self.alternate = "-"
 		self.dbsnp = fields[13]
 		self.sample = fields[15]
 	def uniqueVar( self ):

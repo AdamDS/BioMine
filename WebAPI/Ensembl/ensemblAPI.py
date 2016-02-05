@@ -182,12 +182,16 @@ class ensemblAPI(webAPI):
 		lengthVariants = len(variants)
 		annotatedVariants = {} #dict of vepVariants
 		for i in range(0,lengthVariants,maxPost):
-			j = i + maxPost - 1
+			j = i - 1
+			if lengthVariants < maxPost:
+				j += lengthVariants
+			else:
+				j += maxPost
 			subsetVariants = variants[i:j]
 			formattedVariants = []
 #			print "initialize annotatedVariants--v"
 			for var in subsetVariants:
-				inputVariant = var.vcf( delim=' ' , nullrs='.' )
+				inputVariant = var.vcf( delim=' ' , null='.' )
 #				print inputVariant
 				formattedVariants.append( inputVariant )
 				vepVar = vepVariant( inputVariant=inputVariant , parentVariant=var )
@@ -197,8 +201,18 @@ class ensemblAPI(webAPI):
 			self.addData( "variants" , formattedVariants )
 			self.addHeader( "Accept" , "application/json" )
 			self.addHeader( "Content-Type" , "application/json" )
+			#attempts = 0
+			#maxAttempts = 10
+			#success = False
+			#while attempts < maxAttempts or not success:
 			self.submit( post=True , **kwargs )
+				#success = self.response.ok
+#			print type( self.response.text )
+				#print "VEP attempt " + str(attempts) + " response ok? " + str(self.response.ok) + " - response code: " + str(self.response.status_code)
+#			print str(self.response.text)
+				#attempts += 1
 			if self.response.ok and self.response.text:
+#				print str(self.response.ok)
 				root = self.response.json()
 #				print json.dumps( root , sort_keys=True , indent=4 , separators=(',', ': ') )
 #				print "\nparsing response"

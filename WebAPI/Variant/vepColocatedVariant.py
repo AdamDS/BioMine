@@ -46,8 +46,7 @@ class vepColocatedVariant(MAFVariant):
 			print "phenotypeOrDisease= " + self.phenotypeOrDisease + delim ,
 		if self.somatic:
 			print "somatic= " + self.somatic
-		print " }" ,
-		print ""
+		print " }"
 	def attr(self):
 		attributes = super(vepColocatedVariant,self).attr()
 		if self.ID:
@@ -61,7 +60,6 @@ class vepColocatedVariant(MAFVariant):
 	def parseColocatedVariant( self , colocated , vepVar ):
 		''' Expect colocated type as dict from JSON '''
 #		print "WebAPI::Variant::vepColocatedVariant::parseColocatedVariant"
-#		print colocated
 		allele_string = colocated.get( 'allele_string' )
 		self.copyInfo( vepVar , 'variant' )
 		if allele_string == "HGMD_MUTATION":

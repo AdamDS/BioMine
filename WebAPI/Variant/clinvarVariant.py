@@ -21,7 +21,6 @@ class clinvarVariant(MAFVariant):
 		self.clinical = copy.clinical
 	def fillMissingInfo( self , copy ):
 		if type( self ) == clinvarVariant:
-			print self.mro()
 			super( clinvarVariant , self ).fillMissingInfo( copy )
 		else:
 			MAFVariant.fillMissingInfo( self , copy )
@@ -36,7 +35,7 @@ class clinvarVariant(MAFVariant):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
 		if not onlyThisVariant:
 			super(clinvarVariant,self).printVariant( delim , **kwargs )
-		print "clinvarVariant: " ,
+		print "clinvarVariant: { " ,
 		if self.uid:
 			print "uid= " ,
 			print self.uid + delim ,
@@ -50,7 +49,7 @@ class clinvarVariant(MAFVariant):
 			print "description=>" + self.clinical["description"] + delim ,
 			print "review_status=>" + self.clinical["review_status"] ,
 			print "}" ,
-		print ""
+		print " }"
 	def attr(self):
 		attributes = super(clinvarVariant,self).attr()
 		if self.trait:
