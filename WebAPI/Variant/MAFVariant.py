@@ -28,24 +28,25 @@ class MAFVariant(variant):
 		self.variantType = copy.variantType
 		self.disease = copy.disease
 	def fillMissingInfo( self , copy ):
+		#print "WebAPI.Variant.MAFVariant::fillMissingInfo" ,
 		super( MAFVariant , self ).fillMissingInfo( copy )
-		if not self.referencePeptide and copy.referencePeptide:
+		if not self.referencePeptide:
 			self.referencePeptide = copy.referencePeptide
-		if not self.positionPeptide and copy.positionPeptide:
+		if not self.positionPeptide:
 			self.positionPeptide = copy.positionPeptide
-		if not self.alternatePeptide and copy.alternatePeptide:
+		if not self.alternatePeptide:
 			self.alternatePeptide = copy.alternatePeptide
-		if not self.transcriptPeptide and copy.transcriptPeptide:
+		if not self.transcriptPeptide:
 			self.transcriptPeptide = copy.transcriptPeptide
-		if not self.positionCodon and copy.positionCodon:
+		if not self.positionCodon:
 			self.positionCodon = copy.positionCodon
-		if not self.transcriptCodon and copy.transcriptCodon:
+		if not self.transcriptCodon:
 			self.transcriptCodon = copy.transcriptCodon
-		if not self.variantClass and copy.variantClass:
+		if not self.variantClass:
 			self.variantClass = copy.variantClass
-		if not self.variantType and copy.variantType:
+		if not self.variantType:
 			self.variantType = copy.variantType
-		if not self.disease and copy.disease:
+		if not self.disease:
 			self.disease = copy.disease
 
 	def printVariant(self,delim , **kwargs ):

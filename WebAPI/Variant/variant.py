@@ -6,13 +6,20 @@ class variant(object):
 		self.stop = kwargs.get('stop',None)
 		self.reference = kwargs.get('reference',"-")
 		self.alternate = kwargs.get('alternate',"-")
-		self.strand = kwargs.get('strand',None)
+		self.strand = kwargs.get('strand',"+")
 		self.sample = kwargs.get('sample',None)
 		self.assembly = kwargs.get('assembly',None)
 		self.dbsnp = kwargs.get('dbsnp',None)
 	#def setReference( self , start ):
 		#if str(reference) == "0" or not start:
 			#self.start = "-"
+	def setStrand( self , strand ):
+		if self.strand == -1:
+			self.strand = "-"
+		if self.strand == 1:
+			self.strand = "+"
+#		print self.strand
+		
 	def copyInfo( self , copy ):
 		self.gene = copy.gene
 		self.chromosome = copy.chromosome
@@ -20,11 +27,12 @@ class variant(object):
 		self.stop = copy.stop
 		self.reference = copy.reference
 		self.alternate = copy.alternate
-		self.strand = copy.strand
+		self.setStrand( copy.strand )
 		self.sample = copy.sample
 		self.assembly = copy.assembly
 		self.dbsnp = copy.dbsnp
 	def fillMissingInfo( self , copy ):
+		#print "WebAPI.Variant.variant::fillMissingInfo" ,
 		if not self.gene:
 			self.gene = copy.gene
 		if not self.chromosome:
@@ -38,7 +46,7 @@ class variant(object):
 		if not self.alternate:
 			self.alternate = copy.alternate
 		if not self.strand:
-			self.strand = copy.strand
+			self.setStrand( copy.strand )
 		if not self.sample:
 			self.sample = copy.sample
 		if not self.assembly:
@@ -142,7 +150,7 @@ class variant(object):
 		self.chromosome = fields[4]	#5	Chromosome
 		self.start = fields[5]	#6	Start_Position
 		self.stop = fields[6]	#7	End_Position
-		self.strand = fields[7]	#8	Strand
+		self.setStrand( fields[7] )	#8	Strand
 		self.reference = fields[10]	#11	Reference_Allele
 		if str(self.reference) == "0" or not self.reference:
 			self.reference = "-"

@@ -20,16 +20,23 @@ class clinvarVariant(MAFVariant):
 		self.trait = copy.trait
 		self.clinical = copy.clinical
 	def fillMissingInfo( self , copy ):
-		if type( self ) == clinvarVariant:
-			super( clinvarVariant , self ).fillMissingInfo( copy )
-		else:
-			MAFVariant.fillMissingInfo( self , copy )
-		if not self.uid and copy.uid:
-			self.uid = copy.uid
-		if not self.trait and copy.trait:
-			self.trait = copy.trait
-		if not self.clinical and copy.clinical:
-			self.clinical = copy.clinical
+		#print "WebAPI.Variant.clinvarVariant::fillMissingInfo" ,
+		super( clinvarVariant , self ).fillMissingInfo( copy )
+		if not self.uid:
+			try:
+				self.uid = copy.uid
+			except:
+				print "no uid"
+		if not self.trait:
+			try:
+				self.trait = copy.trait
+			except:
+				print "no trait"
+		if not self.clinical:
+			try:
+				self.clinical = copy.clinical
+			except:
+				print "no clinical"
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )

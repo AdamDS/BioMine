@@ -104,34 +104,41 @@ class vepVariant(MAFVariant):
 		if aParentVariant:
 			super( vepVariant , self ).copyInfo( aParentVariant )
 	def copyInfo( self , copy ):
-		if type( self ) == vepVariant:
-			super( vepVariant , self ).copyInfo( copy )
-		else:
-			MAFVariant.copyInfo( self , copy )
+		super( vepVariant , self ).copyInfo( copy )
 		self.inputVariant = copy.inputVariant
 		self.mostSevereConsequence = copy.mostSevereConsequence
 		self.consequences = copy.consequences
 		self.colocations = copy.colocations
 	def fillMissingInfo( self , copy ):
-		if type( self ) == vepVariant:
-			super( vepVariant , self ).fillMissingInfo( copy )
-		else:
-			MAFVariant.fillMissingInfo( self , copy )
-		if not self.inputVariant and copy.inputVariant:
-			self.inputVariant = copy.inputVariant
-		if not self.mostSevereConsequence and copy.mostSevereConsequence:
-			self.mostSevereConsequence = copy.mostSevereConsequence
-		if not self.consequences and copy.consequences:
-			self.consequences = copy.consequences
+		#print "WebAPI.Variant.vepVariant::fillMissingInfo" ,
+		super( vepVariant , self ).fillMissingInfo( copy )
+		if not self.inputVariant:
+			try:
+				self.inputVariant = copy.inputVariant
+			except:
+				print "no inputVariant"
+		if not self.mostSevereConsequence:
+			try:
+				self.mostSevereConsequence = copy.mostSevereConsequence
+			except:
+				print "no mostSevereConsequence"
+		if not self.consequences:
+			try:
+				self.consequences = copy.consequences
+			except:
+				print "no consequences"
 			for consequence in self.consequences:
 				if consequence.canonical:
 					print self.proteogenomicVar() + " = " + consequence.proteogenomicVar()
 					if consequence.geneSymbolSource == "HGNC":
-						MAFVariant.copyInfo( self , copy )
+						super( vepVariant , self ).copyInfo( copy )
 					print str(self.gene) + " = " + str(consequence.gene)
 					MAFVariant.fillMissingInfo( self , consequence )
-		if not self.colocations and copy.colocations:
-			self.colocations = copy.colocations
+		if not self.colocations:
+			try:
+				self.colocations = copy.colocations
+			except:
+				print "no colocations"
 
 	def setInputVariant( self , **kwargs ):
 		asVCF = kwargs.get( 'vcf' , True )
@@ -208,9 +215,11 @@ class vepVariant(MAFVariant):
 	def setTranscriptConsequences( self , transcriptConsequences ):
 		''' Expect transcriptConsequences as dict from JSON '''
 #		print "WebAPI::Variant::vepVariant::setTranscriptConsequence"
-		if not transcriptConsequences:
-			return
+		#if not transcriptConsequences:
+		#	return
 		for consequence in transcriptConsequences: #list of dict's
 			otherVar = vepConsequenceVariant( parentVariant=self )
 			otherVar.parseTranscriptConsequence( consequence )
 			self.consequences.append( otherVar )
+			if otherVar.canonical:
+				self.gene = otherVar.gene

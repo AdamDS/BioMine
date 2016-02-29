@@ -130,7 +130,7 @@ class vepConsequenceVariant(MAFVariant):
 		if self.geneSymbolSource:
 			print "gene_symbol_source= " + self.geneSymbolSource + delim ,
 		if self.hgnc:
-			print "HGNC_ID= " + self.hgnc + delim ,
+			print "HGNC_ID= " + str( self.hgnc ) + delim ,
 		if self.impact:
 			print "impact= " + self.impact + delim ,
 		if self.maxentscan:
@@ -138,7 +138,7 @@ class vepConsequenceVariant(MAFVariant):
 			for val in self.maxentscan:
 				print str( val ) , "," ,
 			print " ]" + delim ,
-		print "canonical= " + self.canonical + delim ,
+		print "canonical= " + str( self.canonical ) + delim ,
 		if self.positionCDS:
 			print "positionCDS= " + str(self.positionCDS) + delim ,
 		if self.referenceCodons:
@@ -189,7 +189,7 @@ class vepConsequenceVariant(MAFVariant):
 
 	def parseTranscriptConsequence( self , consequence ):
 		''' Expect consequence type as dict from JSON '''
-#		print "WebAPI::Variant::vepConsequenceVariant::parseTranscriptConsequence"
+		print "WebAPI::Variant::vepConsequenceVariant::parseTranscriptConsequence"
 		if "amino_acids" in consequence:
 			amino_acids = consequence.get( 'amino_acids' ).split('/')
 			self.referencePeptide = amino_acids[0]
@@ -200,8 +200,8 @@ class vepConsequenceVariant(MAFVariant):
 		if "biotype" in consequence:
 			self.biotype = consequence.get( 'biotype' )
 		if "canonical" in consequence:
-			canonical = consequence.get( 'canonical' )
-			if canonical == 1:
+			canonical = consequence.get( 'canonical' , False )
+			if canonical:
 				self.canonical = True
 		if "ccds" in consequence:
 			self.ccds = consequence.get( 'ccds' )
@@ -286,3 +286,5 @@ class vepConsequenceVariant(MAFVariant):
 			self.transcriptCodon = consequence.get( 'transcript_id' )
 		if "variant_allele" in consequence:
 			self.alternate = consequence.get( 'variant_allele' )
+		print self.proteogenomicVar() + "\t" ,
+		print self.terms
