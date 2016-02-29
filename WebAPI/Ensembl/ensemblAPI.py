@@ -177,7 +177,6 @@ class ensemblAPI(webAPI):
 #		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
 		self.setSubset( ensemblAPI.region )
 		self.doAllOptions( data=True )
-#		print self.buildURL()
 		maxPost = 1000
 		lengthVariants = len(variants)
 		annotatedVariants = {} #dict of vepVariants
@@ -187,40 +186,36 @@ class ensemblAPI(webAPI):
 				j += lengthVariants
 			else:
 				j += maxPost
-			subsetVariants = variants[i:j]
+			subsetVariants = []
+			if len( variants ) == 1:
+				subsetVariants = variants
+			else:
+				subsetVariants = variants[i:j]
 			formattedVariants = []
-#			print "initialize annotatedVariants--v"
+			nullValue = "."
+			delim = " "
 			for var in subsetVariants:
-				inputVariant = var.vcf( delim=' ' , null='.' )
-#				print inputVariant
+				inputVariant = var.vcf( delim=delim , null=nullValue )
+				if var.alternate == "-":
+					vals = inputVariant.split( delim )
+					if vals[4] == nullValue:
+						vals[4] = "-"
+					inputVariant = delim.join( vals )
 				formattedVariants.append( inputVariant )
 				vepVar = vepVariant( inputVariant=inputVariant , parentVariant=var )
 				annotatedVariants[inputVariant] = vepVar
-#			print "--^"
  			#following examples from documentation
 			self.addData( "variants" , formattedVariants )
 			self.addHeader( "Accept" , "application/json" )
 			self.addHeader( "Content-Type" , "application/json" )
-			#attempts = 0
-			#maxAttempts = 10
-			#success = False
-			#while attempts < maxAttempts or not success:
 			self.submit( post=True , **kwargs )
-				#success = self.response.ok
-#			print type( self.response.text )
-				#print "VEP attempt " + str(attempts) + " response ok? " + str(self.response.ok) + " - response code: " + str(self.response.status_code)
-#			print str(self.response.text)
-				#attempts += 1
+			print self.data
 			if self.response.ok and self.response.text:
-#				print str(self.response.ok)
 				root = self.response.json()
-#				print json.dumps( root , sort_keys=True , indent=4 , separators=(',', ': ') )
-#				print "\nparsing response"
 				for rootElement in root:
 					var = vepVariant()
 					var.parseEntryFromVEP( rootElement )
 					var.setInputVariant()
-#					print var.inputVariant + "annotated"
 					annotatedVariants[var.inputVariant] = var
 			else:
 				print "ensemblAPI Error: cannot access desired XML fields/tags for variants " ,
