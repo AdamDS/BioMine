@@ -20,6 +20,7 @@ class ensemblAPI(webAPI):
 	species = "human"
 	hgvs = "/vep/" + species + "/hgvs/"
 	region = "/vep/" + species + "/region/"
+	sequence = "/sequence/region/" + species + "/"
 	translation = "/map/translation/"
 	blosum = "Blosum62"
 	csn = "CSN"	
@@ -175,9 +176,7 @@ class ensemblAPI(webAPI):
 	def annotateVariantsPost( self , variants , **kwargs ):
 		#https://github.com/Ensembl/ensembl-rest/wiki/POST-Requests
 #		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
-		self.setSubset( ensemblAPI.region )
-		self.doAllOptions( data=True )
-		maxPost = 1000
+		maxPost = 400
 		lengthVariants = len(variants)
 		annotatedVariants = {} #dict of vepVariants
 		for i in range(0,lengthVariants,maxPost):
@@ -194,13 +193,24 @@ class ensemblAPI(webAPI):
 			formattedVariants = []
 			nullValue = "."
 			delim = " "
+			needReferences = self.checkInsertionsReference( subsetVariants , nullValue=nullValue , delim=delim )
+			self.fullReset()
+			self.setSubset( ensemblAPI.region )
+			self.doAllOptions( data=True )
 			for var in subsetVariants:
 				inputVariant = var.vcf( delim=delim , null=nullValue )
+				if var.reference == "-":
+					if var.genomicVar() in needReferences:
+						print inputVariant + "  -->  " ,
+						inputVariant = delim.join( [ var.chromosome , str( int( var.start ) + 1 ) , str( int( var.stop ) - 1 ) , var.reference + "/" + var.alternate , var.strand ] )
+					#	if vals[3] == nullValue:
+					#		inputVariant = needReferences[var.genomicVar()]
 				if var.alternate == "-":
 					vals = inputVariant.split( delim )
 					if vals[4] == nullValue:
 						vals[4] = "-"
 					inputVariant = delim.join( vals )
+				print inputVariant
 				formattedVariants.append( inputVariant )
 				vepVar = vepVariant( inputVariant=inputVariant , parentVariant=var )
 				annotatedVariants[inputVariant] = vepVar
@@ -209,7 +219,6 @@ class ensemblAPI(webAPI):
 			self.addHeader( "Accept" , "application/json" )
 			self.addHeader( "Content-Type" , "application/json" )
 			self.submit( post=True , **kwargs )
-			print self.data
 			if self.response.ok and self.response.text:
 				root = self.response.json()
 				for rootElement in root:
@@ -221,6 +230,59 @@ class ensemblAPI(webAPI):
 				print "ensemblAPI Error: cannot access desired XML fields/tags for variants " ,
 				print "[" + str(i) + ":" + str(j) + "]"
 			return annotatedVariants
+	def checkInsertionsReference( self , variants , **kwargs ):
+		self.setSubset( ensemblAPI.sequence )
+		needReferences = {}
+		inputRegions = []
+		for var in variants:
+			if var.reference == "-":
+				inputRegion = var.region()
+				needReferences[var.genomicVar()] = var.region()
+				inputRegions.append( inputRegion )
+		if needReferences:
+			self.addData( "regions" , inputRegions )
+			inputRegions = []
+			self.addHeader( "Accept" , "application/json" )
+			self.addHeader( "Content-Type" , "text/xml" )
+			self.submit( post=True , **kwargs )
+			if self.response.ok and self.response.text:
+				needReferences = self.updateMissingReferences( variants , needReferences , **kwargs )
+		return needReferences
+	def updateMissingReferences( self , variants , needReferences , **kwargs):
+		nullValue = kwargs.get( 'nullValue' , '.' )
+		delim = kwargs.get( 'delim' , ' ' )
+		for var in variants:
+			genVar = var.genomicVar()
+			if genVar in needReferences:
+				root = self.response.json()
+				for rootElement in root:
+					ID = rootElement.get( 'id' )
+					vals = ID.split( ':' )
+					if vals[5] == "1":
+						vals[5] = "+"
+					elif vals[5] == "-1":
+						vals[5] = "-"
+					inputRegion = vals[2] + ":" \
+								+ vals[3] + ".." \
+								+ vals[4] + ":" \
+								+ vals[5]
+					print var.region() + "\t----\t" + inputRegion
+					if var.region() == inputRegion:
+						vcfValues = [ vals[2] , vals[3] , nullValue ]
+						refSeq = rootElement.get( 'seq' )
+						print refSeq + "  -->  " ,
+						#vcfValues.append( refSeq[0] )
+						vcfValues.append( nullValue )
+						print vcfValues ,
+						print "  -->  " ,
+						vcfValues.append( refSeq[0] + var.alternate )
+						#vcfValues.append( var.alternate )
+						vcfValues.append( nullValue )
+						vcfValues.append( nullValue )
+						vcfValues.append( nullValue )
+						print vcfValues
+						needReferences[genVar] = delim.join( vcfValues )
+		return needReferences	
 	#def parseJSON( self , json ):
 #		print "WebAPI::Ensembl::ensemblAPI::parseJSON - json: " ,
 #		print json
