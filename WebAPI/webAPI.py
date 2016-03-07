@@ -29,6 +29,16 @@ class webAPI(object):
 		self.action = ""
 	def resetURL(self):
 		self.action = ""
+	def fullReset( self ):
+		self.resetAction()
+		self.resetData()
+		self.resetHeaders()
+	def resetAction( self ):
+		self.action = ""
+	def resetHeaders( self ):
+		self.headers = {}
+	def resetData( self ):
+		self.data = {}
 
 	def beginQuery(self):
 		self.action = ""
