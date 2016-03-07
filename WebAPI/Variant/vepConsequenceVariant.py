@@ -189,7 +189,7 @@ class vepConsequenceVariant(MAFVariant):
 
 	def parseTranscriptConsequence( self , consequence ):
 		''' Expect consequence type as dict from JSON '''
-		print "WebAPI::Variant::vepConsequenceVariant::parseTranscriptConsequence"
+		#print "WebAPI::Variant::vepConsequenceVariant::parseTranscriptConsequence"
 		if "amino_acids" in consequence:
 			amino_acids = consequence.get( 'amino_acids' ).split('/')
 			self.referencePeptide = amino_acids[0]
@@ -286,5 +286,3 @@ class vepConsequenceVariant(MAFVariant):
 			self.transcriptCodon = consequence.get( 'transcript_id' )
 		if "variant_allele" in consequence:
 			self.alternate = consequence.get( 'variant_allele' )
-		print self.proteogenomicVar() + "\t" ,
-		print self.terms

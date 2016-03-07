@@ -134,6 +134,11 @@ class variant(object):
 		if not dbsnp:
 			dbsnp = null
 		return delim.join( [ self.chromosome , str( self.start ) , dbsnp , ref , alt , null , null , null ] )
+	def region( self ):
+		return str( self.chromosome ) + ":" \
+			+ str( self.start ) + ".." \
+			+ str( self.stop ) + ":" \
+			+ str( self.strand )
 	def vcfLine2Variant( self , record , **kwargs ):
 		self.chromosome = record.CHROM
 		self.start = record.CHROM
