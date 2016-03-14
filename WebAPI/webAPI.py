@@ -24,6 +24,17 @@ class webAPI(object):
 		self.headers = {}
 		self.data = {}
 
+	def printInfo( self ):
+		print "Response = " + str( self.response ) + ", ok? " + str( self.response.ok )
+		print "Endpoint = " + self.endpoint
+		print "Subset = " + self.subset
+		print "Action = " + self.action
+		print "URL = " + self.buildURL()
+		print "Headers = " ,
+		print self.headers
+		print "Data = " ,
+		print self.data
+
 	def setSubset(self,subset):
 		self.subset = subset
 		self.action = ""
@@ -134,6 +145,7 @@ class webAPI(object):
 			else:
 				print "WebAPI Warning: response from " + self.buildURL()
 				print "received status code = " + str(code)
+				self.printInfo()
 #		print self.response
 		return self.response
 
