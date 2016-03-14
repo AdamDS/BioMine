@@ -229,7 +229,7 @@ class ensemblAPI(webAPI):
 			else:
 				print "ensemblAPI Error: cannot access desired XML fields/tags for variants " ,
 				print "[" + str(i) + ":" + str(j) + "]"
-			return annotatedVariants
+		return annotatedVariants
 	def checkInsertionsReference( self , variants , **kwargs ):
 		self.setSubset( ensemblAPI.sequence )
 		needReferences = {}
@@ -247,6 +247,9 @@ class ensemblAPI(webAPI):
 			self.submit( post=True , **kwargs )
 			if self.response.ok and self.response.text:
 				needReferences = self.updateMissingReferences( variants , needReferences , **kwargs )
+			else:
+				print "References needed: " ,
+				print needReferences
 		return needReferences
 	def updateMissingReferences( self , variants , needReferences , **kwargs):
 		nullValue = kwargs.get( 'nullValue' , '.' )
