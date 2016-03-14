@@ -177,22 +177,16 @@ class ensemblAPI(webAPI):
 		
 #		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
 		doAllOptions = kwargs.get( 'allOptions' , True )
-		maxPost = 100 #bc error 400 (bad request) or 504 (gateway/proxy server timeout)
+		maxPost = kwargs.get( 'maxPost' , 400 ) #bc error 400 (bad request) or 504 (gateway/proxy server timeout)
 		#maxPost = 400 #https://github.com/Ensembl/ensembl-rest/wiki/POST-Requests
 		#maxPost = 1000 #http://rest.ensembl.org/documentation/info/vep_region_post
 		lengthVariants = len(variants)
 		annotatedVariants = {} #dict of vepVariants
 		for i in range(0,lengthVariants,maxPost):
-			j = i - 1
+			j = i + maxPost
 			if lengthVariants < maxPost:
-				j += lengthVariants
-			else:
-				j += maxPost
-			subsetVariants = []
-			if len( variants ) == 1:
-				subsetVariants = variants
-			else:
-				subsetVariants = variants[i:j]
+				j = lengthVariants
+			subsetVariants = variants[i:j]
 			formattedVariants = []
 			nullValue = "."
 			delim = " "
@@ -204,7 +198,7 @@ class ensemblAPI(webAPI):
 				inputVariant = var.vcf( delim=delim , null=nullValue )
 				if var.reference == "-":
 					if var.genomicVar() in needReferences:
-						print inputVariant + "  -->  " ,
+						#print inputVariant + "  -->  " ,
 						inputVariant = delim.join( [ var.chromosome , str( int( var.start ) + 1 ) , str( int( var.stop ) - 1 ) , var.reference + "/" + var.alternate , var.strand ] )
 					#	if vals[3] == nullValue:
 					#		inputVariant = needReferences[var.genomicVar()]
@@ -213,7 +207,7 @@ class ensemblAPI(webAPI):
 					if vals[4] == nullValue:
 						vals[4] = "-"
 					inputVariant = delim.join( vals )
-				print inputVariant
+				#print inputVariant
 				formattedVariants.append( inputVariant )
 				vepVar = vepVariant( inputVariant=inputVariant , parentVariant=var )
 				annotatedVariants[inputVariant] = vepVar
@@ -273,21 +267,21 @@ class ensemblAPI(webAPI):
 								+ vals[3] + ".." \
 								+ vals[4] + ":" \
 								+ vals[5]
-					print var.region() + "\t----\t" + inputRegion
+					#print var.region() + "\t----\t" + inputRegion
 					if var.region() == inputRegion:
 						vcfValues = [ vals[2] , vals[3] , nullValue ]
 						refSeq = rootElement.get( 'seq' )
-						print refSeq + "  -->  " ,
+						#print refSeq + "  -->  " ,
 						#vcfValues.append( refSeq[0] )
 						vcfValues.append( nullValue )
-						print vcfValues ,
-						print "  -->  " ,
+						#print vcfValues ,
+						#print "  -->  " ,
 						vcfValues.append( refSeq[0] + var.alternate )
 						#vcfValues.append( var.alternate )
 						vcfValues.append( nullValue )
 						vcfValues.append( nullValue )
 						vcfValues.append( nullValue )
-						print vcfValues
+						#print vcfValues
 						needReferences[genVar] = delim.join( vcfValues )
 		return needReferences	
 	#def parseJSON( self , json ):
