@@ -134,6 +134,18 @@ class variant(object):
 		if not dbsnp:
 			dbsnp = null
 		return delim.join( [ self.chromosome , str( self.start ) , dbsnp , ref , alt , null , null , null ] )
+	def ensembl( self , **kwargs ):
+		NotImplemented
+		#delim = kwargs.get( 'delim' , ' ' )
+		#null = kwargs.get( 'null' , "-" )
+		#ref = self.reference
+		#alt = self.alternate
+		#if not self.stop:
+		#	lenRef = len( self.reference )
+		#	lenAlt = len( self.alternate )
+		#	stop = lenAlt - lenRef + self.start
+		#return delim.join( [ self.chromosome , str( self.start ) , str( stop ) , ref , alt , null , null , null ] )
+		
 	def region( self ):
 		return str( self.chromosome ) + ":" \
 			+ str( self.start ) + ".." \

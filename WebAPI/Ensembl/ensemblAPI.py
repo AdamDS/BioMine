@@ -174,9 +174,12 @@ class ensemblAPI(webAPI):
 			resultDict[hgvsNotated] = self.response.text
 		return resultDict
 	def annotateVariantsPost( self , variants , **kwargs ):
-		#https://github.com/Ensembl/ensembl-rest/wiki/POST-Requests
+		
 #		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
-		maxPost = 400
+		doAllOptions = kwargs.get( 'allOptions' , True )
+		maxPost = 100 #bc error 400 (bad request) or 504 (gateway/proxy server timeout)
+		#maxPost = 400 #https://github.com/Ensembl/ensembl-rest/wiki/POST-Requests
+		#maxPost = 1000 #http://rest.ensembl.org/documentation/info/vep_region_post
 		lengthVariants = len(variants)
 		annotatedVariants = {} #dict of vepVariants
 		for i in range(0,lengthVariants,maxPost):
@@ -196,7 +199,7 @@ class ensemblAPI(webAPI):
 			needReferences = self.checkInsertionsReference( subsetVariants , nullValue=nullValue , delim=delim )
 			self.fullReset()
 			self.setSubset( ensemblAPI.region )
-			self.doAllOptions( data=True )
+			self.doAllOptions( data=doAllOptions )
 			for var in subsetVariants:
 				inputVariant = var.vcf( delim=delim , null=nullValue )
 				if var.reference == "-":
@@ -230,6 +233,7 @@ class ensemblAPI(webAPI):
 				print "ensemblAPI Error: cannot access desired XML fields/tags for variants " ,
 				print "[" + str(i) + ":" + str(j) + "]"
 		return annotatedVariants
+
 	def checkInsertionsReference( self , variants , **kwargs ):
 		self.setSubset( ensemblAPI.sequence )
 		needReferences = {}
@@ -243,7 +247,7 @@ class ensemblAPI(webAPI):
 			self.addData( "regions" , inputRegions )
 			inputRegions = []
 			self.addHeader( "Accept" , "application/json" )
-			self.addHeader( "Content-Type" , "text/xml" )
+			self.addHeader( "Content-Type" , "application/json" )
 			self.submit( post=True , **kwargs )
 			if self.response.ok and self.response.text:
 				needReferences = self.updateMissingReferences( variants , needReferences , **kwargs )
@@ -373,7 +377,7 @@ class ensemblAPI(webAPI):
 			annotations += results["annotations"]
 			errors += results["errors"]
 		return { "annotations" : annotations , "errors" : errors }
-	def annotatedHGVSDict2tsv( self, resultDict , **kwargs ):
+	def annotateHGVSDict2tsv( self, resultDict , **kwargs ):
 		head = kwargs.get( "header" , True )
 		annotations = ""
 		errors = ""

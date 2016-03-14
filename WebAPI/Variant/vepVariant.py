@@ -116,29 +116,27 @@ class vepVariant(MAFVariant):
 			try:
 				self.inputVariant = copy.inputVariant
 			except:
-				print "no inputVariant"
+				pass
 		if not self.mostSevereConsequence:
 			try:
 				self.mostSevereConsequence = copy.mostSevereConsequence
 			except:
-				print "no mostSevereConsequence"
+				pass
 		if not self.consequences:
 			try:
 				self.consequences = copy.consequences
 			except:
-				print "no consequences"
+				pass
 			for consequence in self.consequences:
 				if consequence.canonical:
-					print self.proteogenomicVar() + " = " + consequence.proteogenomicVar()
 					if consequence.geneSymbolSource == "HGNC":
 						super( vepVariant , self ).copyInfo( copy )
-					print str(self.gene) + " = " + str(consequence.gene)
 					MAFVariant.fillMissingInfo( self , consequence )
 		if not self.colocations:
 			try:
 				self.colocations = copy.colocations
 			except:
-				print "no colocations"
+				pass
 
 	def setInputVariant( self , **kwargs ):
 		asVCF = kwargs.get( 'vcf' , True )
