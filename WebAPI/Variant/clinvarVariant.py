@@ -66,3 +66,12 @@ class clinvarVariant(MAFVariant):
 		if self.uid:
 			attributes.append(self.uid)
 		return attributes
+	def linkPubMed( self , **kwargs ):
+		base = "http://www.ncbi.nlm.nih.gov/pubmed?LinkName=clinvar_pubmed&from_uid="
+		print base ,
+		try:
+			print str( self.uid )
+			return ( base + str( self.uid ) )
+		except:
+			print "clinvarVariant Warning: no uid"
+			return None

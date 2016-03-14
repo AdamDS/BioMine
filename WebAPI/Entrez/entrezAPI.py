@@ -127,6 +127,7 @@ class entrezAPI(webAPI):
 			return self.action
 		except:
 			print "Entrez Error: can't use WebEnv"
+			pass
 	def buildSummaryAction( self , ids ):
 		self.uid = ','.join( ids )
 		self.action = "db=" + self.database + "&id=" + self.uid
@@ -273,6 +274,7 @@ class entrezAPI(webAPI):
 					var.trait.update( { trait_name : trait_xrefs } )
 		except:
 			print "Entrez Warning: no ClinVar trait entry"
+			pass
 	def getClinVarClinicalEntry( self , var , DocumentSummary ):
 #		print "\tWebAPI::Entrez::entrezAPI::getClinVarClinicalEntry"
 		try:
@@ -281,6 +283,14 @@ class entrezAPI(webAPI):
 				var.clinical["review_status"] = self.getEntry( clinical_significance , 'review_status' ).strip()
 		except:
 			print "Entrez Warning: no ClinVar clinical entry"
+			pass
+	def getClinVarPubMedIDs( self , var , DocumentSummary ):
+		try:
+			return var.linkPubMed()
+		except:
+			print "Entrez Error: no ClinVar uid"
+			pass
+			
 
 	def searchPubMed( self , query ):
 		self.subset = entrezAPI.esearch
