@@ -20,9 +20,9 @@
 
 import xml.etree.ElementTree as ET
 from WebAPI.webAPI import webAPI
-from WebAPI.Variant.variant import variant
-from WebAPI.Variant.MAFVariant import MAFVariant
-from WebAPI.Variant.clinvarVariant import clinvarVariant
+from Variant.variant import variant
+from Variant.MAFVariant import MAFVariant
+from Variant.clinvarVariant import clinvarVariant
 import re
 
 class entrezAPI(webAPI):

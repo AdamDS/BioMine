@@ -1,5 +1,5 @@
-from WebAPI.Variant.MAFVariant import MAFVariant
-from WebAPI.Variant.vepConsequenceVariant import vepConsequenceVariant
+from Variant.MAFVariant import MAFVariant
+from Variant.vepConsequenceVariant import vepConsequenceVariant
 #{
 #	"allele_string": "G/A",
 #	"assembly_name": "GRCh37",
@@ -110,7 +110,7 @@ class vepVariant(MAFVariant):
 		self.consequences = copy.consequences
 		self.colocations = copy.colocations
 	def fillMissingInfo( self , copy ):
-		#print "WebAPI.Variant.vepVariant::fillMissingInfo" ,
+		#print "Variant.vepVariant::fillMissingInfo" ,
 		super( vepVariant , self ).fillMissingInfo( copy )
 		if not self.inputVariant:
 			try:

@@ -1,5 +1,5 @@
 import re
-from WebAPI.Variant.variant import variant
+from Variant.variant import variant
 
 class MAFVariant(variant):
 	def __init__(self , **kwargs):
@@ -28,7 +28,7 @@ class MAFVariant(variant):
 		self.variantType = copy.variantType
 		self.disease = copy.disease
 	def fillMissingInfo( self , copy ):
-		#print "WebAPI.Variant.MAFVariant::fillMissingInfo" ,
+		#print "Variant.MAFVariant::fillMissingInfo" ,
 		super( MAFVariant , self ).fillMissingInfo( copy )
 		if not self.referencePeptide:
 			self.referencePeptide = copy.referencePeptide

@@ -14,7 +14,7 @@ from WebAPI.webAPI import webAPI
 import xml.etree.ElementTree as ET
 import json
 import AdvancedHTMLParser
-import WebAPI.Variant.variant
+import Variant.variant
 
 class exacAPI(webAPI):
 	endpoint = "http://exac.broadinstitute.org/"

@@ -2,21 +2,21 @@
 from distutils.core import setup
 version = '0.4'
 setup( \
-	name = 'WebAPIs' , 
+	name = 'BioMine' , 
 	version = version , 
 	author = 'Adam D Scott' ,
 	author_email = 'amviot@gmail.com' ,
 	maintainer = 'Adam D Scott' ,
 	maintainer_email = 'amviot@gmail.com' ,
-	url = 'github.com/AdamDS/WebAPIs' ,
+	url = 'github.com/AdamDS/BioMine' ,
 	description = 'A variety of web APIs' ,
 	long_description = 'A variety of web APIs. \
-		Currently, WebAPIs interacts with clinical and \
+		Currently, BioMine interacts with clinical and \
 		genomic type sites, but its core is not restricted \
 		to any single site or field. \
 		Works with ClinicalTrials, Ensembl, Entrez, ExAC, \
 		and relies on the use of several Variant classes.' ,
-	download_url = 'github.com/AdamDS/WebAPIs/archive/' + \
+	download_url = 'github.com/AdamDS/BioMine/archive/' + \
 		version + '.tar.gz' ,
 	classifiers = [ \
 		"License :: OSI Approved :: MIT License " , 
@@ -46,7 +46,7 @@ setup( \
 		'WebAPI.Entrez' ,
 		'WebAPI.Ensembl' ,
 		'WebAPI.ExAC' ,
-		'WebAPI.Variant' ,
+		'Variant' ,
 	] , #each of the directories with modules (aka packages)
 	requires = [ \
 		'AdvancedHTMLParser' , 

@@ -12,8 +12,8 @@
 from WebAPI.webAPI import webAPI
 import xml.etree.ElementTree as ET
 import json
-from WebAPI.Variant.MAFVariant import MAFVariant
-from WebAPI.Variant.vepVariant import vepVariant
+from Variant.MAFVariant import MAFVariant
+from Variant.vepVariant import vepVariant
 
 class ensemblAPI(webAPI):
 	endpoint = "http://grch37.rest.ensembl.org"
@@ -315,7 +315,7 @@ class ensemblAPI(webAPI):
 		head = kwargs.get( "header" , '' )
 		line = kwargs.get( "line" , '' )
 		self.action = hgvsNotated + "?"
-		self.doOptions()
+		#self.doOptions()
 		self.submit( content = out )
 		#print self.response.text
 		geneVariant = hgvsNotated.split( ":" )

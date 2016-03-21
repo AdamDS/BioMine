@@ -1,4 +1,4 @@
-from WebAPI.Variant.MAFVariant import MAFVariant
+from Variant.MAFVariant import MAFVariant
 #{
 #	"biotype": "retained_intron",
 #	"cdna_end": 392,

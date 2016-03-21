@@ -32,7 +32,7 @@ class variant(object):
 		self.assembly = copy.assembly
 		self.dbsnp = copy.dbsnp
 	def fillMissingInfo( self , copy ):
-		#print "WebAPI.Variant.variant::fillMissingInfo" ,
+		#print "Variant.variant::fillMissingInfo" ,
 		if not self.gene:
 			self.gene = copy.gene
 		if not self.chromosome:

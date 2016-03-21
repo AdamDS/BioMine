@@ -1,4 +1,4 @@
-from WebAPI.Variant.MAFVariant import MAFVariant
+from Variant.MAFVariant import MAFVariant
 #<colocated_variants id="CS114003" allele_string="HGMD_MUTATION" end="7578556" phenotype_or_disease="1" seq_region_name="17" start="7578556" strand="1"/>
 #<colocated_variants id="TP53_g.12362A>G" allele_string="T/C" end="7578556" seq_region_name="17" start="7578556" strand="1"/>
 #<colocated_variants id="TP53_g.12362A>T" allele_string="T/A" end="7578556" seq_region_name="17" start="7578556" strand="1"/>

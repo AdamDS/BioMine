@@ -1,4 +1,4 @@
-from WebAPI.Variant.MAFVariant import MAFVariant
+from Variant.MAFVariant import MAFVariant
 
 class clinvarVariant(MAFVariant):
 	pathogenic = "Pathogenic"
@@ -20,7 +20,7 @@ class clinvarVariant(MAFVariant):
 		self.trait = copy.trait
 		self.clinical = copy.clinical
 	def fillMissingInfo( self , copy ):
-		#print "WebAPI.Variant.clinvarVariant::fillMissingInfo" ,
+		#print "Variant.clinvarVariant::fillMissingInfo" ,
 		super( clinvarVariant , self ).fillMissingInfo( copy )
 		if not self.uid:
 			try:
