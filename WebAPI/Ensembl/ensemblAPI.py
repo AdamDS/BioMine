@@ -18,10 +18,10 @@ from Variant.vepVariant import vepVariant
 class ensemblAPI(webAPI):
 	endpoint = "http://grch37.rest.ensembl.org"
 	species = "human"
-	hgvs = "/vep/" + species + "/hgvs/"
-	region = "/vep/" + species + "/region/"
-	sequence = "/sequence/region/" + species + "/"
-	translation = "/map/translation/"
+	hgvsSubset = "/vep/" + species + "/hgvs/"
+	regionSubset = "/vep/" + species + "/region/"
+	sequenceSubset = "/sequence/region/" + species + "/"
+	translationSubset = "/map/translation/"
 	blosum = "Blosum62"
 	csn = "CSN"	
 	compara = "Conservation"
@@ -43,34 +43,34 @@ class ensemblAPI(webAPI):
 	def __init__(self,**kwargs):
 		subset = kwargs.get("subset",'')
 #optional defaults as given by http://rest.ensembl.org/documentation/info/vep_hgvs_get
-		blosum = kwargs.get( ensemblAPI.blosum , False )
-		csn = kwargs.get( ensemblAPI.csn , False )
-		compara = kwargs.get( ensemblAPI.compara , False )
-		exac = kwargs.get( ensemblAPI.exac , False )
-		genesplicer = kwargs.get( ensemblAPI.genesplicer , False )
-		maxentscan = kwargs.get( ensemblAPI.maxentscan , False )
-		updown = kwargs.get( ensemblAPI.updown , 5000 )
-		callback = kwargs.get( ensemblAPI.callback , "" )
-		canonical = kwargs.get( ensemblAPI.canonical , False )
-		ccds = kwargs.get( ensemblAPI.ccds , False )
-		dbnsfp = kwargs.get( ensemblAPI.dbnsfp , "" )
-		dbscsnv = kwargs.get( ensemblAPI.dbscsnv , False )
-		domains = kwargs.get( ensemblAPI.domains , False )
-		hgvs = kwargs.get( ensemblAPI.hgvs , False )
-		mirna = kwargs.get( ensemblAPI.mirna , False )
-		numbers = kwargs.get( ensemblAPI.numbers , False )
-		protein = kwargs.get( ensemblAPI.protein , False )
-		refseq = kwargs.get( ensemblAPI.refseq , False )
+		self.blosum = kwargs.get( ensemblAPI.blosum , False )
+		self.csn = kwargs.get( ensemblAPI.csn , False )
+		self.compara = kwargs.get( ensemblAPI.compara , False )
+		self.exac = kwargs.get( ensemblAPI.exac , False )
+		self.genesplicer = kwargs.get( ensemblAPI.genesplicer , False )
+		self.maxentscan = kwargs.get( ensemblAPI.maxentscan , False )
+		self.updown = kwargs.get( ensemblAPI.updown , 5000 )
+		self.callback = kwargs.get( ensemblAPI.callback , "" )
+		self.canonical = kwargs.get( ensemblAPI.canonical , False )
+		self.ccds = kwargs.get( ensemblAPI.ccds , False )
+		self.dbnsfp = kwargs.get( ensemblAPI.dbnsfp , "" )
+		self.dbscsnv = kwargs.get( ensemblAPI.dbscsnv , False )
+		self.domains = kwargs.get( ensemblAPI.domains , False )
+		self.hgvs = kwargs.get( ensemblAPI.hgvs , False )
+		self.mirna = kwargs.get( ensemblAPI.mirna , False )
+		self.numbers = kwargs.get( ensemblAPI.numbers , False )
+		self.protein = kwargs.get( ensemblAPI.protein , False )
+		self.refseq = kwargs.get( ensemblAPI.refseq , False )
 		if not subset:
-			super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
+			super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvsSubset)
 		else:
-			if ( subset == ensemblAPI.hgvs or \
-				subset == ensemblAPI.translation or \
-				subset == ensemblAPI.region ):
+			if ( subset == ensemblAPI.hgvsSubset or \
+				subset == ensemblAPI.translationSubset or \
+				subset == ensemblAPI.regionSubset ):
 				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,subset)
 			else:
 				print "ADSERROR: bad subset. webAPI.subset initializing to variant association results"
-				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvs)
+				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvsSubset)
 
 	def doAllOptions( self , **kwargs ):
 		"WebAPI::Ensembl::ensemblAPI::doAllOptions"
@@ -160,9 +160,9 @@ class ensemblAPI(webAPI):
 					self.action += str(option) + "=1&"
 
 	def annotateHGVSScalar2Response( self , hgvsNotated , **kwargs ):
-		out = kwargs.get( "content" , '' )
-		self.action = hgvsNotated + "?"
+		out = kwargs.get( "content" , 'text/xml' )
 		self.doOptions()
+		self.action = hgvsNotated + "?"
 		return self.submit( content = out )
 	def annotateHGVSArray2Dict( self , hgvsNotatedArray , **kwargs ):
 		out = kwargs.get("content",'')
@@ -192,7 +192,7 @@ class ensemblAPI(webAPI):
 			delim = " "
 			needReferences = self.checkInsertionsReference( subsetVariants , nullValue=nullValue , delim=delim )
 			self.fullReset()
-			self.setSubset( ensemblAPI.region )
+			self.setSubset( ensemblAPI.regionSubset )
 			self.doAllOptions( data=doAllOptions )
 			for var in subsetVariants:
 				inputVariant = var.vcf( delim=delim , null=nullValue )
@@ -229,7 +229,7 @@ class ensemblAPI(webAPI):
 		return annotatedVariants
 
 	def checkInsertionsReference( self , variants , **kwargs ):
-		self.setSubset( ensemblAPI.sequence )
+		self.setSubset( ensemblAPI.sequenceSubset )
 		needReferences = {}
 		inputRegions = []
 		for var in variants:
@@ -429,7 +429,7 @@ class ensemblAPI(webAPI):
 
 	def annotateVariants( self , variants , **kwargs ):
 		if variants:
-			self.subset = ensemblAPI.region
+			self.subset = ensemblAPI.regionSubset
 			for var in variants:
 				if annotated:
 					annotations.update( )
@@ -443,8 +443,8 @@ class ensemblAPI(webAPI):
 	@classmethod
 	def setSpecies( cls , species ):
 		cls.species = species
-		cls.hgvs = "/vep/" + species + "/hgvs/"
-		cls.region = "/vep/" + species + "/region/"
+		cls.hgvsSubset = "/vep/" + species + "/hgvs/"
+		cls.regionSubset = "/vep/" + species + "/region/"
 	def useGRCh38( cls ):
 		cls.endpoint = "http://rest.ensembl.org"
 	def useGRCh37( cls ):

@@ -17,7 +17,7 @@ def parseArgs( argv ):
 	tsv = False
 	maf = False
 	try:
-		opts, args = getopt.getopt( argv , "tmh:i:o:s" , ["input=" , "output=" , "hgvs="] )
+		opts, args = getopt.getopt( argv , "tmh:i:o:s:" , ["input=" , "output=" , "hgvs="] )
 	except getopt.GetoptError:
 		print "ADSERROR: Command not recognized"
 		print( helpText ) 
@@ -114,7 +114,9 @@ def main( argv ):
 				ensemblInstance.annotateHGVSScalar2Response( hgvs )
 				results = ensemblInstance.response.text
 
+	print "# OUTPUT"
 	print results
+	print "# URL"
 	print ensemblInstance.buildURL()
 
 	#print ensemblInstance.headers
