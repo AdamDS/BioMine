@@ -2,6 +2,8 @@ class variant(object):
 	def __init__(self , **kwargs):
 		self.gene = kwargs.get('gene',"")
 		self.chromosome = kwargs.get('chromosome',None)
+		if self.chromosome:
+			self.cleanChromosome()
 		self.start = kwargs.get('start',None)
 		self.stop = kwargs.get('stop',None)
 		self.reference = kwargs.get('reference',"-")
@@ -133,18 +135,25 @@ class variant(object):
 		dbsnp = self.dbsnp
 		if not dbsnp:
 			dbsnp = null
-		return delim.join( [ self.chromosome , str( self.start ) , dbsnp , ref , alt , null , null , null ] )
+		return delim.join( [ self.chromosome , \
+							str( self.start ) , \
+							dbsnp , ref , alt , \
+							null , null , null ] )
 	def ensembl( self , **kwargs ):
-		NotImplemented
-		#delim = kwargs.get( 'delim' , ' ' )
-		#null = kwargs.get( 'null' , "-" )
-		#ref = self.reference
-		#alt = self.alternate
-		#if not self.stop:
-		#	lenRef = len( self.reference )
-		#	lenAlt = len( self.alternate )
-		#	stop = lenAlt - lenRef + self.start
-		#return delim.join( [ self.chromosome , str( self.start ) , str( stop ) , ref , alt , null , null , null ] )
+		#http://useast.ensembl.org/info/docs/tools/vep/vep_formats.html#input
+		delim = kwargs.get( 'delim' , ' ' )
+		null = kwargs.get( 'null' , "-" )
+		ref = self.reference
+		alt = self.alternate
+		lenRef = len( self.reference )
+		lenAlt = len( self.alternate )
+		stop = self.start
+		if ref == "-": #insertion
+			stop = int( self.start ) - 1
+		elif alt == "-": #deletion
+			stop = int( self.start ) + lenRef
+		refalt = ref + "/" + alt
+		return delim.join( [ self.chromosome , str( self.start ) , str( stop ) , refalt , str( self.strand ) ] )
 		
 	def region( self ):
 		return str( self.chromosome ) + ":" \
@@ -152,14 +161,22 @@ class variant(object):
 			+ str( self.stop ) + ":" \
 			+ str( self.strand )
 	def vcfLine2Variant( self , record , **kwargs ):
+		#http://pyvcf.readthedocs.org/en/latest/API.html#vcf-model-record
 		self.chromosome = record.CHROM
-		self.start = record.CHROM
-		self.stop = record.CHROM
-		self.reference = record.CHROM
-		alternates = record.ALT.split(',')
+		self.cleanChromosome()
+		#start/stop should be 0-base, half-open [)
+		self.start = record.POS
+		self.stop = record.end - 1
+		self.reference = record.REF
+		alternates = record.ALT
 		if len(alternates) > 1:
-			self.alternate = alt
+			self.alternate = alternates[0] #should get ALL alternates
 		self.dbsnp = record.ID
+	def cleanChromosome( self ):
+		''' Get the chromosome number in case chr or Chr is present'''
+		chrom = self.chromosome.lower()
+		clean = chrom.replace( "chr" , "" )
+		self.chromosome = clean.upper()
 	def mafLine2Variant( self , line , **kwargs ):
 ##		print "variant::mafLine2Variant - " ,
 		fields = line.split( "\t" )

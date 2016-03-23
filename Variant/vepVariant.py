@@ -157,7 +157,7 @@ class vepVariant(MAFVariant):
 			print "mostSevereConsequence=" , 
 			print self.mostSevereConsequence + delim ,
 		if self.consequences:
-			print "consequences= ["
+			print "consequences= [" ,
 			for cons in sorted(self.consequences):
 				cons.printVariant(delim,**kwargs)
 			print "]" + delim ,

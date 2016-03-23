@@ -1,15 +1,15 @@
 #https://docs.python.org/2/distutils/examples.html
 from distutils.core import setup
-version = '0.4'
+version = "0.5"
 setup( \
 	name = 'BioMine' , 
 	version = version , 
 	author = 'Adam D Scott' ,
-	author_email = 'amviot@gmail.com' ,
+	author_email = 'adam@adamscottphd.com' ,
 	maintainer = 'Adam D Scott' ,
-	maintainer_email = 'amviot@gmail.com' ,
+	maintainer_email = 'adam@adamscottphd.com' ,
 	url = 'github.com/AdamDS/BioMine' ,
-	description = 'A variety of web APIs' ,
+	description = 'A variety of bioinformatics web APIs' ,
 	long_description = 'A variety of web APIs. \
 		Currently, BioMine interacts with clinical and \
 		genomic type sites, but its core is not restricted \
@@ -29,8 +29,6 @@ setup( \
 		"Topic :: Scientific/Engineering" , 
 		"Topic :: Scientific/Engineering :: Bio-Informatics" , 
 		"Topic :: Scientific/Engineering :: Chemistry" , 
-		"Topic :: Text Processing :: HTML" , 
-		"Topic :: Text Processing :: XML" , 
 	] ,
 	license = 'MIT' ,
 	#ClinicalTrials - none - cite data used: https://clinicaltrials.gov/ct2/about-site/terms-conditions

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # author: Adam D Scott
 # first created: 2015*11*23
+# citation: McLaren et. al. (doi:10.1093/bioinformatics/btq330)
+#	http://europepmc.org/search/?query=DOI:10.1093/bioinformatics/btq330
 #####
 #	Operation					Function				Works With
 #####
@@ -195,19 +197,20 @@ class ensemblAPI(webAPI):
 			self.setSubset( ensemblAPI.regionSubset )
 			self.doAllOptions( data=doAllOptions )
 			for var in subsetVariants:
-				inputVariant = var.vcf( delim=delim , null=nullValue )
-				if var.reference == "-":
-					if var.genomicVar() in needReferences:
+				#inputVariant = var.vcf( delim=delim , null=nullValue )
+				#if var.reference == "-":
+				#	if var.genomicVar() in needReferences:
 						#print inputVariant + "  -->  " ,
-						inputVariant = delim.join( [ var.chromosome , str( int( var.start ) + 1 ) , str( int( var.stop ) - 1 ) , var.reference + "/" + var.alternate , var.strand ] )
+				#		inputVariant = delim.join( [ var.chromosome , str( int( var.start ) + 1 ) , str( int( var.stop ) - 1 ) , var.reference + "/" + var.alternate , var.strand ] )
 					#	if vals[3] == nullValue:
 					#		inputVariant = needReferences[var.genomicVar()]
-				if var.alternate == "-":
-					vals = inputVariant.split( delim )
-					if vals[4] == nullValue:
-						vals[4] = "-"
-					inputVariant = delim.join( vals )
-				#print inputVariant
+				#if var.alternate == "-":
+				#	vals = inputVariant.split( delim )
+				#	if vals[4] == nullValue:
+				#		vals[4] = "-"
+				#	inputVariant = delim.join( vals )
+				inputVariant = var.ensembl()
+				print inputVariant
 				formattedVariants.append( inputVariant )
 				vepVar = vepVariant( inputVariant=inputVariant , parentVariant=var )
 				annotatedVariants[inputVariant] = vepVar
