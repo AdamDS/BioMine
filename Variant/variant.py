@@ -163,7 +163,7 @@ class variant(object):
 			+ str( self.stop ) + ":" \
 			+ str( self.strand )
 	def vcfLine2Variant( self , record , **kwargs ):
-		#http://pyvcf.readthedocs.org/en/latest/API.html#vcf-model-record
+		#http://pyvcf.readthedocs.org/en/latest/api.html#vcf-model-record
 		self.chromosome = record.CHROM
 		self.cleanChromosome()
 		#start/stop should be 0-base, half-open [)

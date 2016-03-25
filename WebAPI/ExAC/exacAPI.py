@@ -10,31 +10,31 @@
 #	action		
 
 import time
-from WebAPI.webAPI import webAPI
+from biomine.webapi.webapi import webapi
 import xml.etree.ElementTree as ET
 import json
 import AdvancedHTMLParser
-import Variant.variant
+import biomine.variant.variant
 
-class exacAPI(webAPI):
+class exacapi(webapi):
 	endpoint = "http://exac.broadinstitute.org/"
 	endpoint_harvard = "http://exac.hms.harvard.edu/rest/"
 	variant = "variant/"
 	gene = "gene/"
 	def __init__(self,**kwargs):
 		harvard = kwargs.get( "harvard" , False )
-		useEndpoint = exacAPI.endpoint
+		useEndpoint = exacapi.endpoint
 		if harvard:
-			useEndpoint = exacAPI.endpoint_harvard
+			useEndpoint = exacapi.endpoint_harvard
 		subset = kwargs.get("subset",'')
 		if not subset:
-			super(exacAPI,self).__init__(useEndpoint,exacAPI.variant)
+			super(exacapi,self).__init__(useEndpoint,exacapi.variant)
 		else:
-			if ( subset == exacAPI.variant ):
-				super(exacAPI,self).__init__(useEndpoint,subset)
+			if ( subset == exacapi.variant ):
+				super(exacapi,self).__init__(useEndpoint,subset)
 			else:
-				print "ADSERROR: bad subset. webAPI.subset initializing to variant association results"
-				super(exacAPI,self).__init__(useEndpoint,exacAPI.variant)
+				print "biomine ERROR: bad subset. webapi.subset initializing to variant association results"
+				super(exacapi,self).__init__(useEndpoint,exacapi.variant)
 
 	def setSubset(self,subset):
 		self.subset = subset
@@ -42,7 +42,7 @@ class exacAPI(webAPI):
 	def resetURL(self):
 		self.action = ""
 	def buildQuery( self , query ):
-		if self.subset == exacAPI.variant:
+		if self.subset == exacapi.variant:
 			self.action = self.buildVariant( query )
 		else:
 			self.action = query
@@ -56,20 +56,30 @@ class exacAPI(webAPI):
 
 	def getPage( self , var ):
 		self.buildQuery( var )
-		self.submit()
+		try:
+			self.submit()
+		except:
+			print "biomine::webapi::exac::getPage failed on: " ,
+			print var.genomicVar()
+			
 		return self.parseHTMLResponse()
 	
 	def getAlleleFrequencies( self , variants ):
 		entries = {}
 		for var in variants:
 #			t = time.time()
-			entries[var.genomicVar()] = self.getAlleleFrequency( var )
+			entries[var.genomicVar()] = 1
+			try:
+				entries[var.genomicVar()] = self.getAlleleFrequency( var )
+			except:
+				print "biomine::webapi::exac::getAlleleFrequency failed on: " ,
+				print var.genomicVar()
 #			self.printRunTime( "getAlleleFrequency " + var.genomicVar() , self.runTime( t ) )
 			#time.sleep(1)
 		return entries
 	def getAlleleFrequency( self , var ):
 		alleleFrequency = None
-		if self.endpoint == exacAPI.endpoint:
+		if self.endpoint == exacapi.endpoint:
 			page = self.getPage( var )
 			if page:
 				dl = page.getElementsByTagName( 'dl' )
@@ -97,7 +107,7 @@ class exacAPI(webAPI):
 				variantInfo = page['variant']
 				alleleFrequency = variantInfo.get( 'allele_freq' )
 			except:
-				print "CharGer Warning: could not extract allele frequency " ,
-				print "from ExAC for " + var.genomicVar() + ""
+				print "biomine Warning: could not extract allele frequency " ,
+				print "from exac for " + var.genomicVar() + ""
 		return alleleFrequency
-		print "ADS Error: could not get allele frequency from ExAC"
+		print "biomine Error: could not get allele frequency from exac"

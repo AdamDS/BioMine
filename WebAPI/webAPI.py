@@ -10,8 +10,8 @@ import json
 import AdvancedHTMLParser
 import time
 
-class webAPI(object):
-	'''Web API class, has 
+class webapi(object):
+	'''Web api class, has 
 		endpoint = the endpoint
 		subset = the subset realm of the Web service
 		action = the query, file upload, etc.'''
@@ -85,7 +85,7 @@ class webAPI(object):
 	def addData( self , field , value ):
 		self.data[field] = value
 	def buildData( self ):
-#		print "WebAPI::webAPI::buildData"
+#		print "biomine::webapi::webapi::buildData"
 #		print self.data
 		if self.data:
 			self.data = json.dumps( self.data )
@@ -114,36 +114,39 @@ class webAPI(object):
 #		print url
 #		print headers
 #		print data
-		if self.headers:
-			if self.data:
-				if doPost:
-					self.response = requests.post( url , headers = headers , data = data , timeout = timeout )
+		try:
+			if self.headers:
+				if self.data:
+					if doPost:
+						self.response = requests.post( url , headers = headers , data = data , timeout = timeout )
 #					print self.response
+					else:
+						self.response = requests.get( url , headers = headers , data = data , timeout = timeout )
 				else:
-					self.response = requests.get( url , headers = headers , data = data , timeout = timeout )
+					if doPost:
+						self.response = requests.post( url , headers = headers , timeout = timeout )
+					else:
+						self.response = requests.get( url , headers = headers , timeout = timeout )
 			else:
-				if doPost:
-					self.response = requests.post( url , headers = headers , timeout = timeout )
+				if self.data:
+					self.buildData()
+					if doPost:
+						self.response = requests.post( url , data = data , timeout = timeout )
+					else:
+						self.response = requests.get( url , data = data , timeout = timeout )
 				else:
-					self.response = requests.get( url , headers = headers , timeout = timeout )
-		else:
-			if self.data:
-				self.buildData()
-				if doPost:
-					self.response = requests.post( url , data = data , timeout = timeout )
-				else:
-					self.response = requests.get( url , data = data , timeout = timeout )
-			else:
-				if doPost:
-					self.response = requests.post( url , timeout = timeout )
-				else:
-					self.response = requests.get( url , timeout = timeout )
+					if doPost:
+						self.response = requests.post( url , timeout = timeout )
+					else:
+						self.response = requests.get( url , timeout = timeout )
+		except:
+			print "biomine::webapi::submit failed: " ,
 		code = self.response.status_code
 		if code != 200:
 			if code == 204:
-				print "WebAPI Warning: no content from " + self.buildURL()
+				print "webapi Warning: no content from " + self.buildURL()
 			else:
-				print "WebAPI Warning: response from " + self.buildURL()
+				print "webapi Warning: response from " + self.buildURL()
 				print "received status code = " + str(code)
 				self.printInfo()
 #		print self.response
@@ -171,19 +174,19 @@ class webAPI(object):
 		try:
 			return ET.fromstring( self.response.text )
 		except:
-			return ET.fromstring( webAPI.nullXML )
+			return ET.fromstring( webapi.nullXML )
 	def getEntry( self , generator , text ):
 		try:
 			for entrygen in generator.iter( text ):
 				return entrygen.text
 		except:
-			return webAPI.nullXML
+			return webapi.nullXML
 	def getElement( self , generator , text ):
 		try:
 			for entrygen in generator.iter( text ):
 				return entrygen
 		except:
-			return ET.fromstring( webAPI.nullXML )
+			return ET.fromstring( webapi.nullXML )
 
 	@staticmethod
 	def runTime( initialTime ):

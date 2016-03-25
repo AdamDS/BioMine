@@ -4,7 +4,7 @@
 
 import sys
 import getopt
-from WebAPI.Entrez.entrezAPI import entrezAPI
+from biomine.webapi.entrez.entrezapi import entrezapi
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "
@@ -18,11 +18,11 @@ def parseArgs( argv ):
 	try:
 		opts, args = getopt.getopt( argv , "h:i:d:q:o:" , ["input=" , "database=" , "query=" , "output="] )
 	except getopt.GetoptError:
-		print "ADSERROR: Command not recognized"
+		print "biomine ERROR: Command not recognized"
 		print( helpText ) 
 		sys.exit(2)
 	if not opts:
-		print "ADSERROR: Expected flagged input"
+		print "biomine ERROR: Expected flagged input"
 		print( helpText ) 
 		sys.exit(2)
 	for opt, arg in opts:
@@ -73,7 +73,7 @@ def main( argv ):
 		queries = readDBSearches( inputFile )
 	else:
 		queries = { "databases" : database , "searches" : [ query ] }
-	entrezInstance = entrezAPI()
+	entrezInstance = entrezapi()
 
 	if inputFile and outputFormat:
 		results = entrezInstance.searchPubMed( searches , outputFormat , search = search , identifier = identifier )

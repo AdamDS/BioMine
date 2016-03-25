@@ -55,35 +55,35 @@
 #	query		cond=cancer&intr=drug
 #	url			endpoint + subset + query
 
-from WebAPI.webAPI import webAPI
+from biomine.webapi.webapi import webapi
 
-class ctAPI(webAPI):
+class ctapi(webapi):
 	endpoint = "https://clinicaltrials.gov/ct2/"
 	results = "results"
 	show = "show"
 	def __init__(self,**kwargs):
 		subset = kwargs.get("subset",'')
 		if not subset:
-			super(ctAPI,self).__init__(ctAPI.endpoint,ctAPI.results)
+			super(ctapi,self).__init__(ctapi.endpoint,ctapi.results)
 		else:
-			if (subset == ctAPI.results or subset == ctAPI.show):
-				super(ctAPI,self).__init__(ctAPI.endpoint,subset)
+			if (subset == ctapi.results or subset == ctapi.show):
+				super(ctapi,self).__init__(ctapi.endpoint,subset)
 			else:
-				print "ADSERROR: bad subset. webAPI.subset initializing to results"
-				super(ctAPI,self).__init__(ctAPI.endpoint,ctAPI.results)
-		self.url = ctAPI.endpoint + self.subset
+				print "biomine ERROR: bad subset. webapi.subset initializing to results"
+				super(ctapi,self).__init__(ctapi.endpoint,ctapi.results)
+		self.url = ctapi.endpoint + self.subset
 	def __repr__(self):
-		rep = "ctAPI\n\tendpoint = " + ctAPI.endpoint
+		rep = "ctapi\n\tendpoint = " + ctapi.endpoint
 		rep += "\n\turl = " + self.url
 		return rep
 	
 	def setSubset(self,subset):
 		self.subset = subset
 		self.action = ""
-		self.url = ctAPI.endpoint + subset
+		self.url = ctapi.endpoint + subset
 	def resetURL(self):
 		self.action = ""
-		self.url = ctAPI.endpoint + self.subset
+		self.url = ctapi.endpoint + self.subset
 
 	def beginQuery(self):
 		self.action = "?"

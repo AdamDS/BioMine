@@ -1,6 +1,6 @@
 #https://docs.python.org/2/distutils/examples.html
 from distutils.core import setup
-version = "0.5"
+version = "0.6"
 setup( \
 	name = 'BioMine' , 
 	version = version , 
@@ -9,14 +9,14 @@ setup( \
 	maintainer = 'Adam D Scott' ,
 	maintainer_email = 'adam@adamscottphd.com' ,
 	url = 'github.com/AdamDS/BioMine' ,
-	description = 'A variety of bioinformatics web APIs' ,
-	long_description = 'A variety of web APIs. \
+	description = 'Bioinformatics data-mining' ,
+	long_description = 'Bioinformatics data-mining. \
 		Currently, BioMine interacts with clinical and \
 		genomic type sites, but its core is not restricted \
 		to any single site or field. \
-		Works with ClinicalTrials, Ensembl, Entrez, ExAC, \
+		Works with clinicaltrials, ensembl, entrez, exac, \
 		and relies on the use of several Variant classes.' ,
-	download_url = 'github.com/AdamDS/BioMine/archive/' + \
+	download_url = 'github.com/AdamDS/BioMine/archive/v' + \
 		version + '.tar.gz' ,
 	classifiers = [ \
 		"License :: OSI Approved :: MIT License " , 
@@ -31,20 +31,21 @@ setup( \
 		"Topic :: Scientific/Engineering :: Chemistry" , 
 	] ,
 	license = 'MIT' ,
-	#ClinicalTrials - none - cite data used: https://clinicaltrials.gov/ct2/about-site/terms-conditions
-	#Entrez - not apparent/none given - cite data used: - copyrights: https://www.ncbi.nlm.nih.gov/home/about/policies.shtml
-	#Ensembl ReST - Apache 2 - https://raw.githubusercontent.com/Ensembl/ensembl-rest/master/LICENSE
-	#ExAC - MIT - https://raw.githubusercontent.com/hms-dbmi/exac_browser/master/LICENSE
+	#clinicaltrials - none - cite data used: https://clinicaltrials.gov/ct2/about-site/terms-conditions
+	#entrez - not apparent/none given - cite data used: - copyrights: https://www.ncbi.nlm.nih.gov/home/about/policies.shtml
+	#ensembl ReST - Apache 2 - https://raw.githubusercontent.com/ensembl/ensembl-rest/master/LICENSE
+	#exac - MIT - https://raw.githubusercontent.com/hms-dbmi/exac_browser/master/LICENSE
 	#PubChem - not apparent/none given - cite data used: https://pubchem.ncbi.nlm.nih.gov/citations.html - copyrights: https://www.ncbi.nlm.nih.gov/home/about/policies.shtml
-	package_dir = { 'WebAPI' : 'WebAPI' , 
+	package_dir = { 'biomine' : 'biomine' , 
 	} ,
 	packages = [ \
-		'WebAPI' ,
-		'WebAPI.ClinicalTrials' ,
-		'WebAPI.Entrez' ,
-		'WebAPI.Ensembl' ,
-		'WebAPI.ExAC' ,
-		'Variant' ,
+		'biomine' ,
+		'biomine.webapi' ,
+		'biomine.webapi.clinicaltrials' ,
+		'biomine.webapi.entrez' ,
+		'biomine.webapi.ensembl' ,
+		'biomine.webapi.exac' ,
+		'biomine.variant' ,
 	] , #each of the directories with modules (aka packages)
 	requires = [ \
 		'AdvancedHTMLParser' , 

@@ -4,7 +4,7 @@
 
 import sys
 import getopt
-from WebAPI.Entrez.pubchemAPI import pubchemAPI
+from biomine.webapi.entrez.pubchemapi import pubchemapi
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "
@@ -18,11 +18,11 @@ def parseArgs( argv ):
 	try:
 		opts, args = getopt.getopt( argv , "h:i:o:c:d:s:" , ["input=" , "output=" , "compound=" , "identifier=" , "search="] )
 	except getopt.GetoptError:
-		print "ADSERROR: Command not recognized"
+		print "biomine ERROR: Command not recognized"
 		print( helpText ) 
 		sys.exit(2)
 	if not opts:
-		print "ADSERROR: Expected flagged input"
+		print "biomine ERROR: Expected flagged input"
 		print( helpText ) 
 		sys.exit(2)
 	for opt, arg in opts:
@@ -68,7 +68,7 @@ def main( argv ):
 
 	results = ""
 	compounds = readCompounds( inputFile )
-	pubchemInstance = pubchemAPI()
+	pubchemInstance = pubchemapi()
 
 	#print search
 	if inputFile and outputFile:

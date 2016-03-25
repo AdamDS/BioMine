@@ -1,9 +1,9 @@
 import re
-from Variant.variant import variant
+from biomine.variant.variant import variant
 
-class MAFVariant(variant):
+class mafvariant(variant):
 	def __init__(self , **kwargs):
-		super(MAFVariant,self).__init__(**kwargs)
+		super(mafvariant,self).__init__(**kwargs)
 		self.referencePeptide = kwargs.get('referencePeptide',"")
 		self.positionPeptide = kwargs.get('positionPeptide',None)
 		self.alternatePeptide = kwargs.get('alternatePeptide',"")
@@ -15,9 +15,9 @@ class MAFVariant(variant):
 		self.disease = kwargs.get('disease',None)
 		aParentVariant = kwargs.get( 'parentVariant' , None )
 		if aParentVariant:
-			super( MAFVariant , self ).copyInfo( aParentVariant )
+			super( mafvariant , self ).copyInfo( aParentVariant )
 	def copyInfo( self , copy ):
-		super( MAFVariant , self ).copyInfo( copy )
+		super( mafvariant , self ).copyInfo( copy )
 		self.referencePeptide = copy.referencePeptide
 		self.positionPeptide = copy.positionPeptide
 		self.alternatePeptide = copy.alternatePeptide
@@ -28,8 +28,8 @@ class MAFVariant(variant):
 		self.variantType = copy.variantType
 		self.disease = copy.disease
 	def fillMissingInfo( self , copy ):
-		#print "Variant.MAFVariant::fillMissingInfo" ,
-		super( MAFVariant , self ).fillMissingInfo( copy )
+		#print "Variant.mafvariant::fillMissingInfo" ,
+		super( mafvariant , self ).fillMissingInfo( copy )
 		if not self.referencePeptide:
 			self.referencePeptide = copy.referencePeptide
 		if not self.positionPeptide:
@@ -52,8 +52,8 @@ class MAFVariant(variant):
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
 		if not onlyThisVariant:
-			super(MAFVariant,self).printVariant(delim , **kwargs )
-			print "MAFVariant: { " ,
+			super(mafvariant,self).printVariant(delim , **kwargs )
+			print "mafvariant: { " ,
 			if self.referencePeptide:
 				print "referencePeptide= " ,
 				print self.referencePeptide + delim ,
@@ -84,7 +84,7 @@ class MAFVariant(variant):
 			print " }"
 	def attr(self):
 		attributes = []
-		super(MAFVariant,self).attr()
+		super(mafvariant,self).attr()
 		if self.positionPeptide:
 			attributes.append(self.positionPeptide)
 		if self.referencePeptide:
@@ -102,8 +102,8 @@ class MAFVariant(variant):
 		return attributes
 			
 	def mafLine2Variant( self , line , **kwargs ):
-#		print "WebAPI::Variant::MAFVariant::mafLine2Variant - " , 
-		super(MAFVariant,self).mafLine2Variant( line , **kwargs )
+#		print "biomine::variant::mafvariant::mafLine2Variant - " , 
+		super(mafvariant,self).mafLine2Variant( line , **kwargs )
 		codonColumn = kwargs.get( 'codon' , 48 )
 		deltaPeptideColumn = kwargs.get( 'peptideChange' , 49 )
 		fields = line.split( "\t" )
@@ -124,7 +124,7 @@ class MAFVariant(variant):
 		return lengthOfIndel
 
 	def typeIsIndel( self ):
-#		print "WebAPI::Variant::MAFVariant::typeIsIndel - " ,
+#		print "biomine::variant::mafvariant::typeIsIndel - " ,
 		if self.variantType == "INS" or self.variantType == "DEL":
 			return True
 		return False
@@ -176,7 +176,7 @@ class MAFVariant(variant):
 				return 1
 		return 0
 	def HGVSp( self ):
-#		print "WebAPI::Variant::MAFVariant::HGVSp"
+#		print "biomine::variant::mafvariant::HGVSp"
 		hgvsp = ""
 		if self.transcriptPeptide:
 			hgvsp += str(self.transcriptPeptide)
@@ -191,7 +191,7 @@ class MAFVariant(variant):
 			hgvsp += str(self.alternatePeptide)
 		return hgvsp
 	def splitHGVSp( self , hgvsp ):
-##		print "WebAPI::Variant::MAFVariant::splitHGVSp - "
+##		print "biomine::variant::mafvariant::splitHGVSp - "
 		ref = ""
 		pos = ""
 		mut = ""
@@ -220,7 +220,7 @@ class MAFVariant(variant):
 				mut = self.convertAA( mut )
 				self.alternatePeptide = mut
 			else:
-				print "WebAPI::Variant::MAFVariant Warning: could not find amino acid change or intronic change"
+				print "biomine::variant::mafvariant Warning: could not find amino acid change or intronic change"
 				print "  Hint: Is the input amino acid change column correct?"
 				print "    Problem variant: " ,
 				self.printVariant(',')
@@ -229,7 +229,7 @@ class MAFVariant(variant):
 			pos = parts[-1]
 		return [ ref , pos , mut ]
 	def convertAA( self , pep ):
-#		print "MAFVariant::convertAA - " + pep
+#		print "mafvariant::convertAA - " + pep
 		pattern = re.compile( "(fs)" )
 		fs = pattern.match( pep )
 		if fs:
@@ -258,7 +258,7 @@ class MAFVariant(variant):
 			return "Y"
 		return pep[0]
 	def hgvspIsNonCoding( self , hgvsp ):
-#		print "WebAPI::Variant::MAFVariant::hgvspIsNonCoding - " ,
+#		print "biomine::variant::mafvariant::hgvspIsNonCoding - " ,
 		pattern = re.compile( "(NULL)" )
 		match = pattern.match( hgvsp )
 		if match: #then its a complex indel
@@ -267,14 +267,14 @@ class MAFVariant(variant):
 
 ### Codon
 	def hgvscIsNonCoding( self , hgvsc ):
-#		print "WebAPI::Variant::MAFVariant::hgvscIsNonCoding - " ,
+#		print "biomine::variant::mafvariant::hgvscIsNonCoding - " ,
 		pattern = re.compile( "([NULL|\*|\+|\-])" )
 		match = pattern.match( hgvsc )
 		if match: #then its a complex indel
 			return True
 		return False
 	def hgvscIsIndel( self , hgvsc ):
-#		print "WebAPI::Variant::MAFVariant::hgvscIsIndel - " ,
+#		print "biomine::variant::mafvariant::hgvscIsIndel - " ,
 		pattern = re.compile( "(.*?[del|ins].*?)" )
 		match = pattern.match( hgvsc )
 		if match: #then its a complex indel
@@ -286,7 +286,7 @@ class MAFVariant(variant):
 				return 1
 		return 0
 	def HGVSc( self ):
-#		print "WebAPI::Variant::MAFVariant::HGVSc"
+#		print "biomine::variant::mafvariant::HGVSc"
 		hgvsc = ""
 		if self.transcriptCodon:
 			hgvsc += str(self.transcriptCodon)
@@ -307,19 +307,19 @@ class MAFVariant(variant):
 		+ str(self.reference) + "_" \
 		+ str(self.alternate)
 	def codingHGVS( self ):
-#		print "WebAPI::Variant::MAFVariant::codingHGVS"
+#		print "biomine::variant::mafvariant::codingHGVS"
 		return self.HGVSc() + '::' + self.HGVSp()
 	def proteogenomicVar( self ):
-#		print "WebAPI::Variant::MAFVariant::proteogenomicVar"
+#		print "biomine::variant::mafvariant::proteogenomicVar"
 		return self.genomicVar() + "::" + self.codingHGVS()
 	def uniqueProteogenomicVar( self ):
-#		print "WebAPI::Variant::MAFVariant::uniqueProteogenomicVar"
+#		print "biomine::variant::mafvariant::uniqueProteogenomicVar"
 		if self.sample:
 			return self.sample + "::" + self.proteogenomicVar()
 		else:
 			return "nosample::" + self.proteogenomicVar()
 	def splitHGVSc( self , hgvsc , xDot="c\." ):
-#		print "WebAPI::Variant::MAFVariant::splitHGVSc - " ,
+#		print "biomine::variant::mafvariant::splitHGVSc - " ,
 		pattern = re.compile( xDot + "(.*)" )
 		change = pattern.match( hgvsc )
 		pos = ""
@@ -347,13 +347,13 @@ class MAFVariant(variant):
 				self.positionCodon = pos
 			return [ "" , pos , "" ]
 		else:
-			print "WebAPI::Variant::MAFVariant Warning: could not find HGVS codon change"
+			print "biomine::variant::mafvariant Warning: could not find HGVS codon change"
 			print "  Hint: Is the input codon column correct?"
 			print "    Problem variant: " ,
 			self.printVariant(',')
 		return [ "" , "" , "" ]
 	def hasCodonPositionOnly( self , hgvsc ):
-#		print "WebAPI::Variant::MAFVariant::hasCodonPositionOnly - " ,
+#		print "biomine::variant::mafvariant::hasCodonPositionOnly - " ,
 		noncoding = self.hgvscIsNonCoding( hgvsc )
 		if noncoding:
 			return True
@@ -364,7 +364,7 @@ class MAFVariant(variant):
 				return False
 			return True
 	def splitNonCodingHGVSc( self , hgvsc ):
-#		print "WebAPI::Variant::MAFVariant::splitNonCodingHGVSc - " ,
+#		print "biomine::variant::mafvariant::splitNonCodingHGVSc - " ,
 		if self.hgvscIsNonCoding( hgvsc ):
 			pattern = re.compile( "([NULL|\*|\-|\+])(\d+)(.*)" )
 			match = pattern.match( hgvsc )
@@ -392,7 +392,7 @@ class MAFVariant(variant):
 			self.positionCodon = pos
 		return [ ref , pos , mut ]
 	def splitComplexHGVSc( self , hgvsc ):
-#		print "WebAPI::Variant::MAFVariant::splitComplexHGVSc - " ,
+#		print "biomine::variant::mafvariant::splitComplexHGVSc - " ,
 		pattern = re.compile( "(\d+?)\_(\d+?)del(\w+)ins([AGCT]*?)" )
 		matches = pattern.match( hgvsc )
 		parts = matches.groups()
@@ -411,7 +411,7 @@ class MAFVariant(variant):
 		self.positionCodon = parts[0]
 		return [ ref , pos , mut ]
 	def splitSimpleIndelHGVSc( self , hgvsc ):
-#		print "WebAPI::Variant::MAFVariant::splitSimpleIndelHGVSc - " ,
+#		print "biomine::variant::mafvariant::splitSimpleIndelHGVSc - " ,
 		pattern = re.compile( "(del)" )
 		matches = pattern.match( hgvsc )
 		if matches:
@@ -419,7 +419,7 @@ class MAFVariant(variant):
 		else:
 			self.splitSimpleInsertion( hgvsc )
 	def splitSimpleDeletionHGVSc( self , hgvsc ):
-#		print "WebAPI::Variant::MAFVariant::splitSimpleDeletionHGVSc - " ,
+#		print "biomine::variant::mafvariant::splitSimpleDeletionHGVSc - " ,
 		pattern = re.compile( "(\d+?)\_(\d+?)del(\w+)" )
 		matches = pattern.match( hgvsc )
 		parts = matches.groups()
@@ -432,7 +432,7 @@ class MAFVariant(variant):
 		self.positionCodon = parts[0]
 		return [ ref , pos ]
 	def splitSimpleInsertionHGVSc( self , hgvsc ):
-#		print "WebAPI::Variant::MAFVariant::splitSimpleInsertionHGVSc - " ,
+#		print "biomine::variant::mafvariant::splitSimpleInsertionHGVSc - " ,
 		pattern = re.compile( "(\d+?)\_(\d+?)ins(\w+)" )
 		matches = pattern.match( hgvsc )
 		parts = matches.groups()

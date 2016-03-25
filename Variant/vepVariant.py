@@ -1,5 +1,5 @@
-from Variant.MAFVariant import MAFVariant
-from Variant.vepConsequenceVariant import vepConsequenceVariant
+from biomine.variant.mafvariant import mafvariant
+from biomine.variant.vepconsequencevariant import vepconsequencevariant
 #{
 #	"allele_string": "G/A",
 #	"assembly_name": "GRCh37",
@@ -93,25 +93,25 @@ from Variant.vepConsequenceVariant import vepConsequenceVariant
 #       ]
 #   },
 
-class vepVariant(MAFVariant):
+class vepvariant(mafvariant):
 	def __init__(self , **kwargs):
-		super(vepVariant,self).__init__(**kwargs)
+		super(vepvariant,self).__init__(**kwargs)
 		self.inputVariant = kwargs.get('inputVariant',"")
 		self.mostSevereConsequence = kwargs.get('mostSevereConsequence',"")
 		self.consequences = kwargs.get('consequences',[])
 		self.colocations = kwargs.get('colocations',[])
 		aParentVariant = kwargs.get( 'parentVariant' , None )
 		if aParentVariant:
-			super( vepVariant , self ).copyInfo( aParentVariant )
+			super( vepvariant , self ).copyInfo( aParentVariant )
 	def copyInfo( self , copy ):
-		super( vepVariant , self ).copyInfo( copy )
+		super( vepvariant , self ).copyInfo( copy )
 		self.inputVariant = copy.inputVariant
 		self.mostSevereConsequence = copy.mostSevereConsequence
 		self.consequences = copy.consequences
 		self.colocations = copy.colocations
 	def fillMissingInfo( self , copy ):
-		#print "Variant.vepVariant::fillMissingInfo" ,
-		super( vepVariant , self ).fillMissingInfo( copy )
+		#print "Variant.vepvariant::fillMissingInfo" ,
+		super( vepvariant , self ).fillMissingInfo( copy )
 		if not self.inputVariant:
 			try:
 				self.inputVariant = copy.inputVariant
@@ -130,8 +130,8 @@ class vepVariant(MAFVariant):
 			for consequence in self.consequences:
 				if consequence.canonical:
 					if consequence.geneSymbolSource == "HGNC":
-						super( vepVariant , self ).copyInfo( copy )
-					MAFVariant.fillMissingInfo( self , consequence )
+						super( vepvariant , self ).copyInfo( copy )
+					mafvariant.fillMissingInfo( self , consequence )
 		if not self.colocations:
 			try:
 				self.colocations = copy.colocations
@@ -148,8 +148,8 @@ class vepVariant(MAFVariant):
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
 		if not onlyThisVariant:
-			super(vepVariant,self).printVariant( delim , **kwargs )
-		print "vepVariant: { " ,
+			super(vepvariant,self).printVariant( delim , **kwargs )
+		print "vepvariant: { " ,
 		if self.inputVariant:
 			print "inputVariant=" ,
 			print self.inputVariant + delim ,
@@ -168,7 +168,7 @@ class vepVariant(MAFVariant):
 			print "]" + delim ,
 		print " }"
 	def attr(self):
-		attributes = super(vepVariant,self).attr()
+		attributes = super(vepvariant,self).attr()
 		if self.inputVariant:
 			attributes.append(self.inputVariant)
 		if self.mostSevereConsequence:
@@ -187,7 +187,7 @@ class vepVariant(MAFVariant):
 
 	def parseEntryFromVEP( self , rootElement ):
 		''' Expect rootElement as JSON (dict) '''
-#		print "WebAPI::Variant::vepVariant::parseEntryFromVEP"
+#		print "biomine::variant::vepvariant::parseEntryFromVEP"
 		self.chromosome = rootElement.get( 'seq_region_name' )
 		self.start = rootElement.get( 'start' )
 		self.stop = rootElement.get( 'end' )
@@ -206,17 +206,17 @@ class vepVariant(MAFVariant):
 	def setColocatedVariants( self , colocatedVariants ):
 		''' Expect colocatedVariants as dict from JSON '''
 		for colocated in colocatedVariants:
-			otherVar = vepColocatedVariant( parentVariant = self )
+			otherVar = vepcolocatedvariant( parentVariant = self )
 			otherVar.parseColocatedVariant( colocated )
 			self.colocations.append( otherVar )
 			
 	def setTranscriptConsequences( self , transcriptConsequences ):
 		''' Expect transcriptConsequences as dict from JSON '''
-#		print "WebAPI::Variant::vepVariant::setTranscriptConsequence"
+#		print "biomine::variant::vepvariant::setTranscriptConsequence"
 		#if not transcriptConsequences:
 		#	return
 		for consequence in transcriptConsequences: #list of dict's
-			otherVar = vepConsequenceVariant( parentVariant=self )
+			otherVar = vepconsequencevariant( parentVariant=self )
 			otherVar.parseTranscriptConsequence( consequence )
 			self.consequences.append( otherVar )
 			if otherVar.canonical:

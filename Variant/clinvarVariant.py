@@ -1,27 +1,27 @@
-from Variant.MAFVariant import MAFVariant
+from biomine.variant.mafvariant import mafvariant
 
-class clinvarVariant(MAFVariant):
+class clinvarvariant(mafvariant):
 	pathogenic = "Pathogenic"
 	likelyPathogenic = "Likely Pathogenic"
 	likelyBenign = "Likely Benign"
 	benign = "Benign"
 	uncertain = "Uncertain Significance"
 	def __init__(self , **kwargs):
-		super(clinvarVariant,self).__init__(**kwargs)
+		super(clinvarvariant,self).__init__(**kwargs)
 		self.uid = kwargs.get('uid',None)
 		self.trait = kwargs.get('trait',None)
 		self.clinical = kwargs.get('clinical',{})
 		aParentVariant = kwargs.get( 'parentVariant' , None )
 		if aParentVariant:
-			super( clinvarVariant , self ).copyInfo( aParentVariant )
+			super( clinvarvariant , self ).copyInfo( aParentVariant )
 	def copyInfo( self , copy ):
-		super( clinvarVariant , self ).copyInfo( copy )
+		super( clinvarvariant , self ).copyInfo( copy )
 		self.uid = copy.uid
 		self.trait = copy.trait
 		self.clinical = copy.clinical
 	def fillMissingInfo( self , copy ):
-		#print "Variant.clinvarVariant::fillMissingInfo" ,
-		super( clinvarVariant , self ).fillMissingInfo( copy )
+		#print "Variant.clinvarvariant::fillMissingInfo" ,
+		super( clinvarvariant , self ).fillMissingInfo( copy )
 		if not self.uid:
 			try:
 				self.uid = copy.uid
@@ -41,8 +41,8 @@ class clinvarVariant(MAFVariant):
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
 		if not onlyThisVariant:
-			super(clinvarVariant,self).printVariant( delim , **kwargs )
-		print "clinvarVariant: { " ,
+			super(clinvarvariant,self).printVariant( delim , **kwargs )
+		print "clinvarvariant: { " ,
 		if self.uid:
 			print "uid= " ,
 			print self.uid + delim ,
@@ -63,7 +63,7 @@ class clinvarVariant(MAFVariant):
 			traits.append( str( self.trait[trait] ) )
 		return delim.join( traits )
 	def attr(self):
-		attributes = super(clinvarVariant,self).attr()
+		attributes = super(clinvarvariant,self).attr()
 		if self.trait:
 			attributes.append(self.trait)
 		if self.clinical:
@@ -78,5 +78,5 @@ class clinvarVariant(MAFVariant):
 			print str( self.uid )
 			return ( base + str( self.uid ) )
 		except:
-			print "clinvarVariant Warning: no uid"
+			print "clinvarvariant Warning: no uid"
 			return None

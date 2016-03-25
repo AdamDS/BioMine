@@ -1,4 +1,4 @@
-from Variant.MAFVariant import MAFVariant
+from biomine.variant.mafvariant import mafvariant
 #{
 #	"biotype": "retained_intron",
 #	"cdna_end": 392,
@@ -64,9 +64,9 @@ from Variant.MAFVariant import MAFVariant
 #   "variant_allele": "A"
 #},
 
-class vepConsequenceVariant(MAFVariant):
+class vepconsequencevariant(mafvariant):
 	def __init__(self , **kwargs):
-		super(vepConsequenceVariant,self).__init__(**kwargs)
+		super(vepconsequencevariant,self).__init__(**kwargs)
 		self.biotype = kwargs.get('biotype',"")
 		self.terms = kwargs.get('consequence_terms',[])
 		self.exon = kwargs.get('exon',None)
@@ -104,13 +104,13 @@ class vepConsequenceVariant(MAFVariant):
 		self.transcriptsRefSeq = kwargs.get('transcriptsRefSeq',[])
 		aParentVariant = kwargs.get( 'parentVariant' , None )
 		if aParentVariant:
-			super( vepConsequenceVariant , self ).copyInfo( aParentVariant )
+			super( vepconsequencevariant , self ).copyInfo( aParentVariant )
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
 		if not onlyThisVariant:
-			super(vepConsequenceVariant,self).printVariant( delim , **kwargs )
-		print "vepConsequenceVariant: { " ,
+			super(vepconsequencevariant,self).printVariant( delim , **kwargs )
+		print "vepconsequencevariant: { " ,
 		if self.biotype:
 			print "biotype=" ,
 			print self.biotype + delim ,
@@ -168,7 +168,7 @@ class vepConsequenceVariant(MAFVariant):
 			print "scoreSIFT= " + str(self.scoreSIFT) + delim ,
 		print " }"
 	def attr(self):
-		attributes = super(vepConsequenceVariant,self).attr()
+		attributes = super(vepconsequencevariant,self).attr()
 		if self.biotype:
 			attributes.append(self.biotype)
 		if self.terms:
@@ -189,7 +189,7 @@ class vepConsequenceVariant(MAFVariant):
 
 	def parseTranscriptConsequence( self , consequence ):
 		''' Expect consequence type as dict from JSON '''
-		#print "WebAPI::Variant::vepConsequenceVariant::parseTranscriptConsequence"
+		#print "biomine::variant::vepconsequencevariant::parseTranscriptConsequence"
 		if "amino_acids" in consequence:
 			amino_acids = consequence.get( 'amino_acids' ).split('/')
 			self.referencePeptide = amino_acids[0]

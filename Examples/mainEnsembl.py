@@ -4,8 +4,8 @@
 
 import sys
 import getopt
-from WebAPI.Ensembl.ensemblAPI import ensemblAPI
-from WebAPI.Variant.MAFVariant import MAFVariant
+from biomine.webapi.ensembl.ensemblapi import ensemblapi
+from biomine.variant.mafvariant import mafvariant
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "
@@ -19,11 +19,11 @@ def parseArgs( argv ):
 	try:
 		opts, args = getopt.getopt( argv , "tmh:i:o:s:" , ["input=" , "output=" , "hgvs="] )
 	except getopt.GetoptError:
-		print "ADSERROR: Command not recognized"
+		print "biomine ERROR: Command not recognized"
 		print( helpText ) 
 		sys.exit(2)
 	if not opts:
-		print "ADSERROR: Expected flagged input"
+		print "biomine ERROR: Expected flagged input"
 		print( helpText ) 
 		sys.exit(2)
 	for opt, arg in opts:
@@ -67,12 +67,12 @@ def readMAF( inputFile , **kwargs ):
 		peptideChangeColumn = kwargs.get( 'peptideChange' , 48 )
 		next(inFile)
 		for line in inFile:
-			var = MAFVariant()
+			var = mafvariant()
 			var.mafLine2Variant( line , peptideChange=peptideChangeColumn , codon=codonColumn )
 			userVariants.append( var )
 		return userVariants
 	except:
-		raise Exception( "ADS Error: bad .maf file" )
+		raise Exception( "biomine Error: bad .maf file" )
 
 def main( argv ):
 	values = parseArgs( argv )
@@ -83,7 +83,7 @@ def main( argv ):
 	maf = values["maf"]
 
 	results = ""
-	ensemblInstance = ensemblAPI()
+	ensemblInstance = ensemblapi()
 
 	if maf:
 		variants = readMAF( inputFile , codon=46 , peptideChange=47 )

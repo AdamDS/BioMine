@@ -4,8 +4,8 @@
 
 import sys
 import getopt
-from WebAPI.ExAC.exacAPI import exacAPI
-import WebAPI.Variant.variant
+from biomine.webapi.exac.exacapi import exacapi
+import biomine.variant.variant
 
 def parseArgs( argv ):
 	helpText = "python main.py" + " "
@@ -18,11 +18,11 @@ def parseArgs( argv ):
 	try:
 		opts, args = getopt.getopt( argv , "h:i:o:g:t" , ["input=" , "output=" , "genVar="] )
 	except getopt.GetoptError:
-		print "ADSERROR: Command not recognized"
+		print "biomine ERROR: Command not recognized"
 		print( helpText ) 
 		sys.exit(2)
 	if not opts:
-		print "ADSERROR: Expected flagged input"
+		print "biomine ERROR: Expected flagged input"
 		print( helpText ) 
 		sys.exit(2)
 	for opt, arg in opts:
@@ -56,7 +56,7 @@ def main( argv ):
 	tsv = values["tsv"]
 
 	results = ""
-	exacInstance = exacAPI()
+	exacInstance = exacapi()
 	print genVar
 	g = genVar.split( '-' )
 	var = variant.variant( chromosome=g[0] , start=g[1] , reference=g[2] , mutant=g[3] )

@@ -11,13 +11,13 @@
 #	subset		"/vep/human/hgvs/"
 #	action		
 
-from WebAPI.webAPI import webAPI
+from biomine.webapi.webapi import webapi
 import xml.etree.ElementTree as ET
 import json
-from Variant.MAFVariant import MAFVariant
-from Variant.vepVariant import vepVariant
+from biomine.variant.mafvariant import mafvariant
+from biomine.variant.vepvariant import vepvariant
 
-class ensemblAPI(webAPI):
+class ensemblapi(webapi):
 	endpoint = "http://grch37.rest.ensembl.org"
 	species = "human"
 	hgvsSubset = "/vep/" + species + "/hgvs/"
@@ -27,7 +27,7 @@ class ensemblAPI(webAPI):
 	blosum = "Blosum62"
 	csn = "CSN"	
 	compara = "Conservation"
-	exac = "ExAC"
+	exac = "exac"
 	genesplicer = "GeneSplicer"
 	maxentscan = "MaxEntScan"
 	updown = "UpDownDistance"
@@ -45,37 +45,37 @@ class ensemblAPI(webAPI):
 	def __init__(self,**kwargs):
 		subset = kwargs.get("subset",'')
 #optional defaults as given by http://rest.ensembl.org/documentation/info/vep_hgvs_get
-		self.blosum = kwargs.get( ensemblAPI.blosum , False )
-		self.csn = kwargs.get( ensemblAPI.csn , False )
-		self.compara = kwargs.get( ensemblAPI.compara , False )
-		self.exac = kwargs.get( ensemblAPI.exac , False )
-		self.genesplicer = kwargs.get( ensemblAPI.genesplicer , False )
-		self.maxentscan = kwargs.get( ensemblAPI.maxentscan , False )
-		self.updown = kwargs.get( ensemblAPI.updown , 5000 )
-		self.callback = kwargs.get( ensemblAPI.callback , "" )
-		self.canonical = kwargs.get( ensemblAPI.canonical , False )
-		self.ccds = kwargs.get( ensemblAPI.ccds , False )
-		self.dbnsfp = kwargs.get( ensemblAPI.dbnsfp , "" )
-		self.dbscsnv = kwargs.get( ensemblAPI.dbscsnv , False )
-		self.domains = kwargs.get( ensemblAPI.domains , False )
-		self.hgvs = kwargs.get( ensemblAPI.hgvs , False )
-		self.mirna = kwargs.get( ensemblAPI.mirna , False )
-		self.numbers = kwargs.get( ensemblAPI.numbers , False )
-		self.protein = kwargs.get( ensemblAPI.protein , False )
-		self.refseq = kwargs.get( ensemblAPI.refseq , False )
+		self.blosum = kwargs.get( ensemblapi.blosum , False )
+		self.csn = kwargs.get( ensemblapi.csn , False )
+		self.compara = kwargs.get( ensemblapi.compara , False )
+		self.exac = kwargs.get( ensemblapi.exac , False )
+		self.genesplicer = kwargs.get( ensemblapi.genesplicer , False )
+		self.maxentscan = kwargs.get( ensemblapi.maxentscan , False )
+		self.updown = kwargs.get( ensemblapi.updown , 5000 )
+		self.callback = kwargs.get( ensemblapi.callback , "" )
+		self.canonical = kwargs.get( ensemblapi.canonical , False )
+		self.ccds = kwargs.get( ensemblapi.ccds , False )
+		self.dbnsfp = kwargs.get( ensemblapi.dbnsfp , "" )
+		self.dbscsnv = kwargs.get( ensemblapi.dbscsnv , False )
+		self.domains = kwargs.get( ensemblapi.domains , False )
+		self.hgvs = kwargs.get( ensemblapi.hgvs , False )
+		self.mirna = kwargs.get( ensemblapi.mirna , False )
+		self.numbers = kwargs.get( ensemblapi.numbers , False )
+		self.protein = kwargs.get( ensemblapi.protein , False )
+		self.refseq = kwargs.get( ensemblapi.refseq , False )
 		if not subset:
-			super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvsSubset)
+			super(ensemblapi,self).__init__(ensemblapi.endpoint,ensemblapi.hgvsSubset)
 		else:
-			if ( subset == ensemblAPI.hgvsSubset or \
-				subset == ensemblAPI.translationSubset or \
-				subset == ensemblAPI.regionSubset ):
-				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,subset)
+			if ( subset == ensemblapi.hgvsSubset or \
+				subset == ensemblapi.translationSubset or \
+				subset == ensemblapi.regionSubset ):
+				super(ensemblapi,self).__init__(ensemblapi.endpoint,subset)
 			else:
-				print "ADSERROR: bad subset. webAPI.subset initializing to variant association results"
-				super(ensemblAPI,self).__init__(ensemblAPI.endpoint,ensemblAPI.hgvsSubset)
+				print "biomine ERROR: bad subset. webapi.subset initializing to variant association results"
+				super(ensemblapi,self).__init__(ensemblapi.endpoint,ensemblapi.hgvsSubset)
 
 	def doAllOptions( self , **kwargs ):
-		"WebAPI::Ensembl::ensemblAPI::doAllOptions"
+		"biomine::webapi::ensembl::ensemblapi::doAllOptions"
 		self.blosum = True
 		self.csn = True
 		self.compara = True
@@ -94,44 +94,44 @@ class ensemblAPI(webAPI):
 		self.doOptions( **kwargs )
 
 	def getOptions( self ):
-		return {	ensemblAPI.blosum : int(self.blosum) ,
-					ensemblAPI.csn : int(self.csn) ,
-					ensemblAPI.compara : int(self.compara) ,
-					ensemblAPI.exac : int(self.exac) ,
-					ensemblAPI.genesplicer : int(self.genesplicer) ,
-					ensemblAPI.maxentscan : int(self.maxentscan) ,
-					ensemblAPI.updown : self.updown ,
-					ensemblAPI.callback : self.callback ,
-					ensemblAPI.canonical : int(self.canonical) ,
-					ensemblAPI.ccds : int(self.ccds) ,
-					ensemblAPI.dbnsfp : self.dbnsfp ,
-					ensemblAPI.dbscsnv : int(self.dbscsnv) ,
-					ensemblAPI.domains : int(self.domains) ,
-					ensemblAPI.hgvs : int(self.hgvs) ,
-					ensemblAPI.mirna : int(self.mirna) ,
-					ensemblAPI.numbers : int(self.numbers) ,
-					ensemblAPI.protein : int(self.protein) ,
-					ensemblAPI.refseq : int(self.refseq) ,
+		return {	ensemblapi.blosum : int(self.blosum) ,
+					ensemblapi.csn : int(self.csn) ,
+					ensemblapi.compara : int(self.compara) ,
+					ensemblapi.exac : int(self.exac) ,
+					ensemblapi.genesplicer : int(self.genesplicer) ,
+					ensemblapi.maxentscan : int(self.maxentscan) ,
+					ensemblapi.updown : self.updown ,
+					ensemblapi.callback : self.callback ,
+					ensemblapi.canonical : int(self.canonical) ,
+					ensemblapi.ccds : int(self.ccds) ,
+					ensemblapi.dbnsfp : self.dbnsfp ,
+					ensemblapi.dbscsnv : int(self.dbscsnv) ,
+					ensemblapi.domains : int(self.domains) ,
+					ensemblapi.hgvs : int(self.hgvs) ,
+					ensemblapi.mirna : int(self.mirna) ,
+					ensemblapi.numbers : int(self.numbers) ,
+					ensemblapi.protein : int(self.protein) ,
+					ensemblapi.refseq : int(self.refseq) ,
 		}
 	def getOptionsText( self ):
-		return {	ensemblAPI.blosum : "blosum62" , #unsure
-					ensemblAPI.csn : "csn" ,
-					ensemblAPI.compara : "conservation" ,
-					ensemblAPI.exac : "exac_maf" , #maybe?
-					ensemblAPI.genesplicer : "gene_splicer" , #unsure
-					ensemblAPI.maxentscan : "MaxEntScan" ,
-					ensemblAPI.updown : "UpDownDistance" ,
-					ensemblAPI.callback : "callback" ,
-					ensemblAPI.canonical : "canonical" ,
-					ensemblAPI.ccds : "ccds" ,
-					ensemblAPI.dbnsfp : "dbnsfp" , #unsure
-					ensemblAPI.dbscsnv : "dbscSNV" , #unsure
-					ensemblAPI.domains : "domains" ,
-					ensemblAPI.hgvs : [ "hgvsc" , "hgvsp" ] ,
-					ensemblAPI.mirna : "mirna" , #unsure
-					ensemblAPI.numbers : [ "exon" , "intron" ] ,
-					ensemblAPI.protein : "protein_id" ,
-					ensemblAPI.refseq : "refseq_transcript_ids" ,
+		return {	ensemblapi.blosum : "blosum62" , #unsure
+					ensemblapi.csn : "csn" ,
+					ensemblapi.compara : "conservation" ,
+					ensemblapi.exac : "exac_maf" , #maybe?
+					ensemblapi.genesplicer : "gene_splicer" , #unsure
+					ensemblapi.maxentscan : "MaxEntScan" ,
+					ensemblapi.updown : "UpDownDistance" ,
+					ensemblapi.callback : "callback" ,
+					ensemblapi.canonical : "canonical" ,
+					ensemblapi.ccds : "ccds" ,
+					ensemblapi.dbnsfp : "dbnsfp" , #unsure
+					ensemblapi.dbscsnv : "dbscSNV" , #unsure
+					ensemblapi.domains : "domains" ,
+					ensemblapi.hgvs : [ "hgvsc" , "hgvsp" ] ,
+					ensemblapi.mirna : "mirna" , #unsure
+					ensemblapi.numbers : [ "exon" , "intron" ] ,
+					ensemblapi.protein : "protein_id" ,
+					ensemblapi.refseq : "refseq_transcript_ids" ,
 		}
 		
 	def setSubset(self,subset):
@@ -143,14 +143,14 @@ class ensemblAPI(webAPI):
 	def beginQuery(self):
 		self.action = ""
 	def doOptions( self , **kwargs ):
-#		print "WebAPI::Ensembl::ensemblAPI::doOptions"
+#		print "biomine::webapi::ensembl::ensemblapi::doOptions"
 		toData = kwargs.get( 'data' , False )
 		self.action = "?"
 		options = self.getOptions()
 		for option in options:
-			if option == ensemblAPI.updown or \
-			option == ensemblAPI.dbnsfp or \
-			option == ensemblAPI.callback:
+			if option == ensemblapi.updown or \
+			option == ensemblapi.dbnsfp or \
+			option == ensemblapi.callback:
 				if toData:
 					self.addData( option , options[option] )
 				else:
@@ -177,13 +177,13 @@ class ensemblAPI(webAPI):
 		return resultDict
 	def annotateVariantsPost( self , variants , **kwargs ):
 		
-#		print "WebAPI::Ensembl::ensemblAPI::annotateVariantsPost"
+#		print "biomine::webapi::ensembl::ensemblapi::annotateVariantsPost"
 		doAllOptions = kwargs.get( 'allOptions' , True )
 		maxPost = kwargs.get( 'maxPost' , 400 ) #bc error 400 (bad request) or 504 (gateway/proxy server timeout)
-		#maxPost = 400 #https://github.com/Ensembl/ensembl-rest/wiki/POST-Requests
+		#maxPost = 400 #https://github.com/ensembl/ensembl-rest/wiki/POST-Requests
 		#maxPost = 1000 #http://rest.ensembl.org/documentation/info/vep_region_post
 		lengthVariants = len(variants)
-		annotatedVariants = {} #dict of vepVariants
+		annotatedVariants = {} #dict of vepvariants
 		for i in range(0,lengthVariants,maxPost):
 			j = i + maxPost
 			if lengthVariants < maxPost:
@@ -194,7 +194,7 @@ class ensemblAPI(webAPI):
 			delim = " "
 			needReferences = self.checkInsertionsReference( subsetVariants , nullValue=nullValue , delim=delim )
 			self.fullReset()
-			self.setSubset( ensemblAPI.regionSubset )
+			self.setSubset( ensemblapi.regionSubset )
 			self.doAllOptions( data=doAllOptions )
 			for var in subsetVariants:
 				#inputVariant = var.vcf( delim=delim , null=nullValue )
@@ -212,8 +212,8 @@ class ensemblAPI(webAPI):
 				inputVariant = var.ensembl()
 				print inputVariant
 				formattedVariants.append( inputVariant )
-				vepVar = vepVariant( inputVariant=inputVariant , parentVariant=var )
-				annotatedVariants[inputVariant] = vepVar
+				vepvar = vepvariant( inputVariant=inputVariant , parentVariant=var )
+				annotatedVariants[inputVariant] = vepvar
  			#following examples from documentation
 			self.addData( "variants" , formattedVariants )
 			self.addHeader( "Accept" , "application/json" )
@@ -222,17 +222,17 @@ class ensemblAPI(webAPI):
 			if self.response.ok and self.response.text:
 				root = self.response.json()
 				for rootElement in root:
-					var = vepVariant()
+					var = vepvariant()
 					var.parseEntryFromVEP( rootElement )
 					var.setInputVariant()
 					annotatedVariants[var.inputVariant] = var
 			else:
-				print "ensemblAPI Error: cannot access desired XML fields/tags for variants " ,
+				print "ensemblapi Error: cannot access desired XML fields/tags for variants " ,
 				print "[" + str(i) + ":" + str(j) + "]"
 		return annotatedVariants
 
 	def checkInsertionsReference( self , variants , **kwargs ):
-		self.setSubset( ensemblAPI.sequenceSubset )
+		self.setSubset( ensemblapi.sequenceSubset )
 		needReferences = {}
 		inputRegions = []
 		for var in variants:
@@ -288,7 +288,7 @@ class ensemblAPI(webAPI):
 						needReferences[genVar] = delim.join( vcfValues )
 		return needReferences	
 	#def parseJSON( self , json ):
-#		print "WebAPI::Ensembl::ensemblAPI::parseJSON - json: " ,
+#		print "biomine::webapi::ensembl::ensemblapi::parseJSON - json: " ,
 #		print json
 		#if type( json ) == list:
 #			print "json is a list"
@@ -388,7 +388,7 @@ class ensemblAPI(webAPI):
 			errors += output["errors"]
 		return { "annotations" : annotations , "errors" : errors }
 
-	#def annotateHGVSList( self , variants ): #Ensembl hasn't made this possible...yet
+	#def annotateHGVSList( self , variants ): #ensembl hasn't made this possible...yet
 	#	self.beginQuery();
 	#	variantList = []
 	#	for var in variants:
@@ -432,7 +432,7 @@ class ensemblAPI(webAPI):
 
 	def annotateVariants( self , variants , **kwargs ):
 		if variants:
-			self.subset = ensemblAPI.regionSubset
+			self.subset = ensemblapi.regionSubset
 			for var in variants:
 				if annotated:
 					annotations.update( )

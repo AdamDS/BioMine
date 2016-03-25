@@ -23,11 +23,11 @@
 #	subset		"/compound/" , "/substance/" , "/assay/"
 #	action		"/name/
 
-from WebAPI.webAPI import webAPI
+from biomine.webapi.webapi import webapi
 import xml.etree.ElementTree as ET
 import json
 
-class pubchemAPI(webAPI):
+class pubchemapi(webapi):
 	endpoint = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
 	compound = "/compound/"
 	substance = "/substance/"
@@ -40,15 +40,15 @@ class pubchemAPI(webAPI):
 		self.dataReturn = kwargs.get("dataReturn",'') #MolecularWeight
 		self.dataFormat = kwargs.get("dataFormat",'XML') #XML
 		if not subset:
-			super(pubchemAPI,self).__init__(pubchemAPI.endpoint,pubchemAPI.compound)
+			super(pubchemapi,self).__init__(pubchemapi.endpoint,pubchemapi.compound)
 		else:
-			if ( subset == pubchemAPI.compound or
-				 subset == pubchemAPI.assay or
-				 subset == pubchemAPI.substance ):
-				super(pubchemAPI,self).__init__(pubchemAPI.endpoint,subset)
+			if ( subset == pubchemapi.compound or
+				 subset == pubchemapi.assay or
+				 subset == pubchemapi.substance ):
+				super(pubchemapi,self).__init__(pubchemapi.endpoint,subset)
 			else:
-				print "ADSERROR: bad subset. webAPI.subset initializing to variant association results"
-				super(pubchemAPI,self).__init__(pubchemAPI.endpoint,pubchemAPI.compound)
+				print "biomine ERROR: bad subset. webapi.subset initializing to variant association results"
+				super(pubchemapi,self).__init__(pubchemapi.endpoint,pubchemapi.compound)
 
 	def setSubset(self,subset):
 		self.subset = subset
