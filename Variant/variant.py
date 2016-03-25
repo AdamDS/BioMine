@@ -1,3 +1,5 @@
+#1-based closed coordinate system
+#https://wiki.nci.nih.gov/display/TCGA/Mutation+Annotation+Format+%28MAF%29+Specification
 class variant(object):
 	def __init__(self , **kwargs):
 		self.gene = kwargs.get('gene',"")

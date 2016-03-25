@@ -8,7 +8,7 @@ class MAFVariant(variant):
 		self.positionPeptide = kwargs.get('positionPeptide',None)
 		self.alternatePeptide = kwargs.get('alternatePeptide',"")
 		self.transcriptPeptide = kwargs.get('transcriptPeptide',None)
-		self.positionCodon = kwargs.get('positionPeptide',None)
+		self.positionCodon = kwargs.get('positionCodon',None)
 		self.transcriptCodon = kwargs.get('transcriptCodon',None)
 		self.variantClass = kwargs.get('variantClass',None)
 		self.variantType = kwargs.get('variantType',None)
