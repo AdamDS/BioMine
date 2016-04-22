@@ -121,10 +121,27 @@ class variant(object):
 		+ ">" + str(self.alternate)
 		return out
 	def HGVSg( self ):
-		return str(self.chromosome) + ":g." \
-		+ str(self.start) \
-		+ str(self.reference) + ">" \
-		+ str(self.alternate)
+		out = str(self.chromosome) + ":g." \
+			+ str(self.start)
+		print self.chromosome
+		print self.start
+		print self.stop
+		print self.reference
+		print self.alternate
+		if self.reference != "-" and self.alternate != "-":
+			if self.start == self.stop: #snp
+				out += str(self.reference) + ">" \
+					+ str(self.alternate)
+			else: #complex
+				out += "_" + str(self.stop) \
+					+ "del" + str(self.reference)
+		elif self.reference == "-" and self.alternate != "-":
+			out += "_" + str(self.stop) \
+				+ "ins" + str(self.alternate)
+		elif self.reference != "-" and self.alternate == "-":
+			out += "_" + str(self.stop) \
+				+ "del" + str(self.reference)
+		return out
 	def vcf( self , **kwargs ):
 		delim = kwargs.get( 'delim' , ' ' )
 		null = kwargs.get( 'null' , "." )

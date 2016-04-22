@@ -8,14 +8,14 @@ setup( \
 	author_email = 'adam@adamscottphd.com' ,
 	maintainer = 'Adam D Scott' ,
 	maintainer_email = 'adam@adamscottphd.com' ,
-	url = 'github.com/AdamDS/BioMine' ,
+	url = 'https://github.com/AdamDS/BioMine' ,
 	description = 'Bioinformatics data-mining' ,
 	long_description = 'Bioinformatics data-mining. \
 		Currently, BioMine interacts with clinical and \
 		genomic type sites, but its core is not restricted \
 		to any single site or field. \
 		Works with clinicaltrials, ensembl, entrez, exac, \
-		and relies on the use of several Variant classes.' ,
+		and relies on the use of several variant classes.' ,
 	download_url = 'github.com/AdamDS/BioMine/archive/v' + \
 		version + '.tar.gz' ,
 	classifiers = [ \
@@ -51,5 +51,7 @@ setup( \
 		'AdvancedHTMLParser' , 
 		'requests' ,
 		'PyVCF' ,
+		'TransVar' ,
 	] , #auto installs with pip install
+	dependency_links = ['https://github.com/zwdzwd/transvar/archive/v2.1.23.20160321.tar.gz']
 )
