@@ -123,24 +123,20 @@ class variant(object):
 	def HGVSg( self ):
 		out = str(self.chromosome) + ":g." \
 			+ str(self.start)
-		print self.chromosome
-		print self.start
-		print self.stop
-		print self.reference
-		print self.alternate
 		if self.reference != "-" and self.alternate != "-":
 			if self.start == self.stop: #snp
 				out += str(self.reference) + ">" \
-					+ str(self.alternate)
+				+ str(self.alternate)
 			else: #complex
 				out += "_" + str(self.stop) \
-					+ "del" + str(self.reference)
+				+ "del" + str(self.reference) \
+				+ "ins" + str(self.alternate)
 		elif self.reference == "-" and self.alternate != "-":
 			out += "_" + str(self.stop) \
-				+ "ins" + str(self.alternate)
+			+ "ins" + str(self.alternate)
 		elif self.reference != "-" and self.alternate == "-":
 			out += "_" + str(self.stop) \
-				+ "del" + str(self.reference)
+			+ "del" + str(self.reference)
 		return out
 	def vcf( self , **kwargs ):
 		delim = kwargs.get( 'delim' , ' ' )
@@ -185,12 +181,17 @@ class variant(object):
 		self.cleanChromosome()
 		#start/stop should be 0-base, half-open [)
 		self.start = record.POS
-		self.stop = record.end - 1
 		self.reference = record.REF
 		alternates = record.ALT
 		if len(alternates) > 1:
-			self.alternate = alternates[0] #should get ALL alternates
+			self.alternate = alternates[0] #TODO should get ALL alternates
 		self.dbsnp = record.ID
+		self.stop = self.start #assume SNP
+		if self.reference == "-": #insertion
+			self.stop += 1
+		else: #deletion, xNP, complex
+			if len( self.reference ) > 1:
+				self.stop = len( self.reference ) + self.start - 1
 	def cleanChromosome( self ):
 		''' Get the chromosome number in case chr or Chr is present'''
 		chrom = self.chromosome.lower()

@@ -294,16 +294,22 @@ class mafvariant(variant):
 			hgvsc += str(self.gene)
 		hgvsc += ":c."
 		if self.positionCodon:
-			hgvsc += str(self.positionCodon)
-		if self.reference:
-			hgvsc += str(self.reference)
-		hgvsc += ">"
-		if self.alternate:
-			hgvsc += str(self.alternate)
+			hgvsc += str(self.positionCodon.replace( "-" , "_" ) )
+		if self.reference != "-" and self.alternate != "-":
+			if self.start == self.stop: #snp
+				hgvsc += str(self.reference) + ">" \
+				+ str(self.alternate)
+			else: #complex
+				hgvsc += "del" + str(self.reference) \
+				+ "ins" + str(self.alternate)
+		elif self.reference == "-" and self.alternate != "-":
+			hgvsc += "ins" + str(self.alternate)
+		elif self.reference != "-" and self.alternate == "-":
+			hgvsc += "del" + str(self.reference)
 		return hgvsc
 	def HGVSct( self ):
 		return str(self.transcriptCodon) + ":c." \
-		+ str(self.positionCodon) \
+		+ str(self.positionCodon.replace( "-" , "_" ) ) \
 		+ str(self.reference) + "_" \
 		+ str(self.alternate)
 	def codingHGVS( self ):

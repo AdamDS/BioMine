@@ -87,11 +87,12 @@ class webapi(object):
 	def buildData( self ):
 #		print "biomine::webapi::webapi::buildData"
 #		print self.data
+		data = ""
 		if self.data:
-			self.data = json.dumps( self.data )
+			data = json.dumps( self.data )
 			self.headers["Accept"] = "application/json"
 #		print self.data
-		return self.data
+		return data
 
 	def addHeader( self , field , value ):
 		self.headers[field] = value
@@ -141,16 +142,19 @@ class webapi(object):
 						self.response = requests.get( url , timeout = timeout )
 		except:
 			print "biomine::webapi::submit failed: " ,
+			self.errorCheck()
+			pass
+		return self.response
+	
+	def errorCheck( self ):
 		code = self.response.status_code
 		if code != 200:
 			if code == 204:
-				print "webapi Warning: no content from " + self.buildURL()
+				print "biomine::webapi::errorCheck Warning: no content from " + self.buildURL()
 			else:
-				print "webapi Warning: response from " + self.buildURL()
+				print "biomine::webapi::errorCheck Warning: response from " + self.buildURL()
 				print "received status code = " + str(code)
 				self.printInfo()
-#		print self.response
-		return self.response
 
 	def submitDigest(self,username,password):
 		url = self.buildURL()
@@ -174,18 +178,21 @@ class webapi(object):
 		try:
 			return ET.fromstring( self.response.text )
 		except:
+			print "biomine::webapi::getXMLRoot Warning: no root xml"
 			return ET.fromstring( webapi.nullXML )
 	def getEntry( self , generator , text ):
 		try:
 			for entrygen in generator.iter( text ):
 				return entrygen.text
 		except:
+			print "biomine::webapi::getEntry Warning: no xml entry for " + text + " from " + generator.text
 			return webapi.nullXML
 	def getElement( self , generator , text ):
 		try:
 			for entrygen in generator.iter( text ):
 				return entrygen
 		except:
+			print "biomine::webapi::getElement Warning: no xml element for " + text + " from " + generator.text
 			return ET.fromstring( webapi.nullXML )
 
 	@staticmethod

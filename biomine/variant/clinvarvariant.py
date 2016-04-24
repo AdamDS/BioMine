@@ -73,10 +73,10 @@ class clinvarvariant(mafvariant):
 		return attributes
 	def linkPubMed( self , **kwargs ):
 		base = "http://www.ncbi.nlm.nih.gov/pubmed?LinkName=clinvar_pubmed&from_uid="
-		print base ,
+		#print base ,
 		try:
-			print str( self.uid )
+			#print str( self.uid )
 			return ( base + str( self.uid ) )
 		except:
-			print "clinvarvariant Warning: no uid"
+			print "biomine::variant::clinvarvariant Warning: no uid"
 			return None

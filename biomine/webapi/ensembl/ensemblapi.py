@@ -163,16 +163,21 @@ class ensemblapi(webapi):
 
 	def annotateHGVSScalar2Response( self , hgvsNotated , **kwargs ):
 		out = kwargs.get( "content" , 'text/xml' )
+		contentInURL = kwargs.get( "inURL" , True )
 		self.doOptions()
 		self.action = hgvsNotated + "?"
-		return self.submit( content = out )
+		if contentInURL:
+			self.action += "content-type=" + out
+			return self.submit()
+		else:
+			return self.submit( content = out )
 	def annotateHGVSArray2Dict( self , hgvsNotatedArray , **kwargs ):
 		out = kwargs.get("content",'')
 		resultDict = {}
 		for var in hgvsNotatedArray:
 			self.beginQuery()
 			hgvsNotated = var.strip()
-			self.annotateHGVSScalar2Response( hgvsNotated , content = out )
+			self.annotateHGVSScalar2Response( hgvsNotated , **kwargs )
 			resultDict[hgvsNotated] = self.response.text
 		return resultDict
 	def annotateVariantsPost( self , variants , **kwargs ):
@@ -287,6 +292,10 @@ class ensemblapi(webapi):
 						#print vcfValues
 						needReferences[genVar] = delim.join( vcfValues )
 		return needReferences	
+	
+	def getRefSequence( self , variants , **kwargs ):
+		for var in variants:
+			var
 	#def parseJSON( self , json ):
 #		print "biomine::webapi::ensembl::ensemblapi::parseJSON - json: " ,
 #		print json
@@ -317,9 +326,14 @@ class ensemblapi(webapi):
 		out = "text/xml"
 		head = kwargs.get( "header" , '' )
 		line = kwargs.get( "line" , '' )
+		contentInURL = kwargs.get( "inURL" , True )
 		self.action = hgvsNotated + "?"
 		#self.doOptions()
-		self.submit( content = out )
+		if contentInURL:
+			self.action += "content-type=" , out
+			self.submit()
+		else:
+			self.submit( content = out )
 		#print self.response.text
 		geneVariant = hgvsNotated.split( ":" )
 		return self.annotateHGVSScalarResponse2tsv( geneVariant , content = out , header = head , line = line )
@@ -332,43 +346,51 @@ class ensemblapi(webapi):
 		if head:
 			annotations += self.HGVSAnnotationHeader()
 			errors += self.HGVSErrorHeader()
-		root = ET.fromstring( self.response.text )
-		for result in root.iter('data'):
-			if not result.get('error'):
-				allele = result.get('allele_string')
-				alleles = ["" , ""]
-				if allele:
-					alleles = allele.split( '/' )
-				start = result.get('start')
-				if not start:
-					start = ""
-				stop = result.get('end')
-				if not stop:
-					stop = ""
-				chromosome = result.get('seq_region_name')
-				if not chromosome:
-					chromosome = ""
-				strand = result.get('strand')
-				if not strand:
-					strand = ""
-				consequence = result.get('most_severe_consequence')
-				if not consequence:
-					consequence = ""
-				annotations += "\t".join( [ line.strip() , geneVariant[0] , geneVariant[1].strip() , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) + "\n"
-			else:
-				#print response
-				annotations = self.nullLine( 10 )
-				errors += "\t".join( [ geneVariant[0] , geneVariant[1] , result.get('error') ] ) + "\n"
+		root = self.getXMLRoot()
+		print root
+		try:
+			for result in self.getElement( root , 'data' ):
+				if not self.getEntry( result , 'error' ):
+					allele = self.getEntry( result , 'allele_string' )
+					alleles = ["" , ""]
+					if allele:
+						alleles = allele.split( '/' )
+					start = self.getEntry( result , 'start' )
+					if not start:
+						start = ""
+					stop = self.getEntry( result , 'end' )
+					if not stop:
+						stop = ""
+					chromosome = self.getEntry( result , 'seq_region_name' )
+					if not chromosome:
+						chromosome = ""
+					strand = self.getEntry( result , 'strand' )
+					if not strand:
+						strand = ""
+					consequence = self.getEntry( result , 'most_severe_consequence' )
+					if not consequence:
+						consequence = ""
+					annotations += "\t".join( [ line.strip() , geneVariant[0] , geneVariant[1].strip() , chromosome , start , stop , alleles[0] , alleles[1] , strand , consequence ] ) + "\n"
+				else:
+					#print response
+					annotations = self.nullLine( 10 )
+					errors += "\t".join( [ geneVariant[0] , geneVariant[1] , result.get('error') ] ) + "\n"
+		except:
+			print "biomine::webapi::ensembl::annotateHGVSScalarResponse2tsv Warning: no root= " ,
+			print root
+			self.errorCheck()
 		return { "annotations" : annotations , "errors" : errors }
 	def annotateHGVSArray2tsv( self , hgvsNotatedArray , **kwargs ):
 		out = "text/xml"
 		head = kwargs.get( "header" , '' )
+		contentInURL = kwargs.get( "inURL" , True )
 		annotations = ""
 		errors = ""
 		for var in hgvsNotatedArray:
 			self.beginQuery();
 			hgvsNotated = var.strip()
-			self.annotateHGVSScalar2Response( hgvsNotated , content = out )
+			print "working on: " + hgvsNotated
+			self.annotateHGVSScalar2Response( hgvsNotated , content = out , **kwargs )
 			results = self.annotateHGVSScalarResponse2tsv( hgvsNotated.split( ":" ) , content = out , header = head )
 			head = False
 			annotations += results["annotations"]
@@ -413,14 +435,14 @@ class ensemblapi(webapi):
 				columns = line.split( "\t" )
 				fields = [ columns[col1] , columns[col2] ]
 				#print fields[0] + ":" + fields[1] + "\t\t" + line
-				annotated = self.annotateHGVSScalar2tsv( ':'.join( fields ) )
+				annotated = self.annotateHGVSScalar2tsv( ':'.join( fields ) , **kwargs )
 				if annotated:
 					fout.write( line.strip() + "\t" + annotated["annotations"].strip() + "\n" )
 				else:
 					fout.write( line.strip() + "\t" + self.nullLine( 10 ) + "\n" )
 	
-	def annotateHGVSArray2File( self , variantArray , outputFile ):
-		output = self.annotateHGVSArray2tsv( variantArray )
+	def annotateHGVSArray2File( self , variantArray , outputFile , **kwargs ):
+		output = self.annotateHGVSArray2tsv( variantArray , **kwargs )
 		fout = open( outputFile , 'w' )
 		fout.write( self.HGVSAnnotationHeader() )
 		for annotation in output["annotations"]:
@@ -429,6 +451,20 @@ class ensemblapi(webapi):
 		ferr.write( self.HGVSErrorHeader() )
 		for error in output["errors"]:
 			ferr.write( error )
+
+	def annotateHGVSindel( self , variant , **kwargs ):
+		NotImplemented
+		#calculate the start and stop c positions
+		#for insertions (inframe):
+			#get an example set of bases for the amino acid inserted
+			#(could try each set and maybe take most damaging, if different outcomes)
+		#for deletions (inframe):
+			#get sequence of bases from start and stop using Sequence subset
+		#for frameshifts:
+			#insert/delete one and/or two random bases, assure change is not a stop codon
+		#use the sequence and c positions to get VEP annotation
+		#annotate each possiblility for a single indel
+		#maybe take most damaging if different outcomes
 
 	def annotateVariants( self , variants , **kwargs ):
 		if variants:
