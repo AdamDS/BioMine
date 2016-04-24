@@ -155,6 +155,11 @@ class webapi(object):
 				print "biomine::webapi::errorCheck Warning: response from " + self.buildURL()
 				print "received status code = " + str(code)
 				self.printInfo()
+	def testURL( self ):
+		response = self.submit()
+		if response.status_code < 300:
+			return True
+		return False
 
 	def submitDigest(self,username,password):
 		url = self.buildURL()

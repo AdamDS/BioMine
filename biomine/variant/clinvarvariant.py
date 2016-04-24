@@ -1,4 +1,6 @@
 from biomine.variant.mafvariant import mafvariant
+import re
+from biomine.webapi import webapi
 
 class clinvarvariant(mafvariant):
 	pathogenic = "Pathogenic"
@@ -72,11 +74,26 @@ class clinvarvariant(mafvariant):
 			attributes.append(self.uid)
 		return attributes
 	def linkPubMed( self , **kwargs ):
-		base = "http://www.ncbi.nlm.nih.gov/pubmed?LinkName=clinvar_pubmed&from_uid="
-		#print base ,
 		try:
-			#print str( self.uid )
-			return ( base + str( self.uid ) )
+			return self.testLink()
 		except:
 			print "biomine::variant::clinvarvariant Warning: no uid"
 			return None
+	def testLink( self , **kwargs ):
+		base = "http://www.ncbi.nlm.nih.gov/"
+		subset = "pubmed?"
+		action = "LinkName=clinvar_pubmed&from_uid=" + str( self.uid )
+		pm = webapi( base , subset )
+		pm.action = action
+		if pm.testURL():
+			return self.checkPubMedItems( pm )
+		print "biomine::variant::clinvarvariant Warning: no site with uid " ,
+		return None
+	def checkPubMedItems( self , pm ):
+		#TODO checks not yet working
+		#pattern = re.compile( "(No\ items\ found)" )
+		#found = pattern.match( pm.response.text )
+		#if found:
+		#	print "biomine::variant::clinvarvariant Warning: no items with uid " ,
+		#	return None
+		return pm.buildURL()
