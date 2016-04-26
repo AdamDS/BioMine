@@ -1,6 +1,6 @@
 #https://docs.python.org/2/distutils/examples.html
 from distutils.core import setup
-version = "0.6"
+version = "0.7"
 setup( \
 	name = 'BioMine' , 
 	version = version , 
@@ -16,7 +16,7 @@ setup( \
 		to any single site or field. \
 		Works with clinicaltrials, ensembl, entrez, exac, \
 		and relies on the use of several variant classes.' ,
-	download_url = 'github.com/AdamDS/BioMine/archive/v' + \
+	download_url = 'https://github.com/AdamDS/BioMine/archive/v' + \
 		version + '.tar.gz' ,
 	classifiers = [ \
 		"License :: OSI Approved :: MIT License " , 
