@@ -47,6 +47,7 @@ setup( \
 		'biomine.webapi.exac' ,
 		'biomine.variant' ,
 		'biomine.parsers' ,
+		'biomine.writers' ,
 	] , #each of the directories with modules (aka packages)
 	requires = [ \
 		'AdvancedHTMLParser' , 
