@@ -35,7 +35,11 @@ class exacparser(object):
 			exacDone=False # currently only has 1000G
 
 	def readVCF( self , inputFile , **kwargs ):
-		inFile = vcf.Reader( open( inputFile , 'r' ) )
+		inFile = None;
+		if ( re.match( "\.gz" , inputFile ) ):
+			inFile = vcf.Reader( open( inputFile , 'r' ) , compressed=True )
+		else:
+			inFile = vcf.Reader( open( inputFile , 'r' ) )
 		preVEP = []
 		vepDone = False
 		#vepInfo = OD()

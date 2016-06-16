@@ -18,15 +18,42 @@ class mafvariant(variant):
 			super( mafvariant , self ).copyInfo( aParentVariant )
 	def copyInfo( self , copy ):
 		super( mafvariant , self ).copyInfo( copy )
-		self.referencePeptide = copy.referencePeptide
-		self.positionPeptide = copy.positionPeptide
-		self.alternatePeptide = copy.alternatePeptide
-		self.transcriptPeptide = copy.transcriptPeptide
-		self.positionCodon = copy.positionCodon
-		self.transcriptCodon = copy.transcriptCodon
-		self.variantClass = copy.variantClass
-		self.variantType = copy.variantType
-		self.disease = copy.disease
+		try:
+			self.referencePeptide = copy.referencePeptide
+		except:
+			pass
+		try:
+			self.positionPeptide = copy.positionPeptide
+		except:
+			pass
+		try:
+			self.alternatePeptide = copy.alternatePeptide
+		except:
+			pass
+		try:
+			self.transcriptPeptide = copy.transcriptPeptide
+		except:
+			pass
+		try:
+			self.positionCodon = copy.positionCodon
+		except:
+			pass
+		try:
+			self.transcriptCodon = copy.transcriptCodon
+		except:
+			pass
+		try:
+			self.variantClass = copy.variantClass
+		except:
+			pass
+		try:
+			self.variantType = copy.variantType
+		except:
+			pass
+		try:
+			self.disease = copy.disease
+		except:
+			pass
 	def fillMissingInfo( self , copy ):
 		#print "Variant.mafvariant::fillMissingInfo" ,
 		super( mafvariant , self ).fillMissingInfo( copy )

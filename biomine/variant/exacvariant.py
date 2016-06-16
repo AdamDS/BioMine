@@ -108,10 +108,27 @@ class populationmeasures( object ):
 		self.het = 0
 		self.hom = 0
 		self.valueType = kwargs.get( "valueType" , "AC" )
+	def __str__( self , **kwargs ):
+		delim = kwargs.get( 'delim' , "\t" )
+		string = str( self.total ) + delim ,
+		str( self.afr ) + delim ,
+		str( self.amr ) + delim ,
+		str( self.eas ) + delim ,
+		str( self.fin ) + delim ,
+		str( self.nfe ) + delim ,
+		str( self.oth ) + delim ,
+		str( self.sas ) + delim ,
+		str( self.adj )
+		if self.valueType == "AC":
+			string += delim + str( self.het ) + delim ,
+			str( self.hom )
+		return string
 	def __all__( self , **kwargs ):
 		annotated = kwargs.get( 'annotated' , False )
+		asStr = kwargs.get( 'str' , False )
 		if annotated:
 			return [ self.annotated( ) , \
+					 self.annotated( pop=populationmeasures.adj ) , \
 					 self.annotated( pop=populationmeasures.afr ) , \
 					 self.annotated( pop=populationmeasures.amr ) , \
 					 self.annotated( pop=populationmeasures.eas ) , \
@@ -119,21 +136,33 @@ class populationmeasures( object ):
 					 self.annotated( pop=populationmeasures.nfe ) , \
 					 self.annotated( pop=populationmeasures.oth ) , \
 					 self.annotated( pop=populationmeasures.sas ) , \
-					 self.annotated( pop=populationmeasures.adj ) , \
 					 self.annotated( pop=populationmeasures.het ) , \
 					 self.annotated( pop=populationmeasures.hom ) ]
 		else:
-			return [ self.total , \
-					 self.afr , \
-					 self.amr , \
-					 self.eas , \
-					 self.fin , \
-					 self.nfe , \
-					 self.oth , \
-					 self.sas , \
-					 self.adj , \
-					 self.het , \
-					 self.hom ]
+			if asStr:
+				return [ str( self.total ) , \
+						 str( self.afr ) , \
+						 str( self.amr ) , \
+						 str( self.eas ) , \
+						 str( self.fin ) , \
+						 str( self.nfe ) , \
+						 str( self.oth ) , \
+						 str( self.sas ) , \
+						 str( self.adj ) , \
+						 str( self.het ) , \
+						 str( self.hom ) ]
+			else:
+				return [ self.total , \
+						 self.afr , \
+						 self.amr , \
+						 self.eas , \
+						 self.fin , \
+						 self.nfe , \
+						 self.oth , \
+						 self.sas , \
+						 self.adj , \
+						 self.het , \
+						 self.hom ]
 	def annotated( self , **kwargs ):
 		pop = kwargs.get( 'pop' , '' )
 		delim = kwargs.get( 'delim' , "=" )
@@ -178,13 +207,6 @@ class populationmeasures( object ):
 			value = valuesStr[whichAlternate]
 		else:
 			value = valuesStr
-		#hasMultiple = re.match( "\,\w*" , valuesStr )
-		#if hasMultiple:
-		#	values = valuesStr.split( "," )
-		#	value = float( values[whichAlternate] )
-		#else:
-		#	value = float( valuesStr )
-		#value = info.get( name , 0 )
 		if pop == populationmeasures.afr:
 			self.afr = value
 		if pop == populationmeasures.amr:

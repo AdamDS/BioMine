@@ -140,6 +140,7 @@ class webapi(object):
 						self.response = requests.post( url , timeout = timeout )
 					else:
 						self.response = requests.get( url , timeout = timeout )
+			self.errorCheck()
 		except:
 			print "biomine::webapi::submit failed: " ,
 			self.errorCheck()
@@ -147,6 +148,9 @@ class webapi(object):
 		return self.response
 	
 	def errorCheck( self ):
+		if not self.response.status_code:
+			print "biomine::webapi::errorCheck Warning: no status code when trying " + self.buildURL()
+			return
 		code = self.response.status_code
 		if code != 200:
 			if code == 204:
