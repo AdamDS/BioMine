@@ -250,10 +250,11 @@ class exacparser(object):
 				self.setAlleleMeasures( var , info , alti = alti , **kwargs )
 			
 				if ( writeToFile ):
-					if ( splitByChromosome ):
-						outFH = open( writeToFile + ".chr" + str( var.chromosome ) + ".tsv" , 'w' )
-					else:
-						outFH = open( writeToFile + ".tsv" , 'w' )
+					if ( not outFH ):
+						if ( splitByChromosome ):
+							outFH = open( writeToFile + ".chr" + str( var.chromosome ) + ".tsv" , 'w' )
+						else:
+							outFH = open( writeToFile + ".tsv" , 'w' )
 					outFH.write( "Chromosome\tStart\tStop\tReference\tAlternate\t" \
 						+ "Frequency\t" \
 						+ "AC_AFR\tAC_AMR\tAC_EAS\tAC_FIN\tAC_NFE\tAC_OTH\tAC_SAS\t" \
