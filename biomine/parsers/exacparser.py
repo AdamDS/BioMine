@@ -35,6 +35,9 @@ class exacparser(object):
 			exacDone=False # currently only has 1000G
 
 	def readVCF( self , inputFile , **kwargs ):
+		writeToFile = kwargs.get( 'writeToFile' , "" )
+		splitByChromosome = kwargs.get( 'splitByChromosome' , True )
+		outFH = None
 		inFile = None;
 		if ( re.match( "\.gz" , inputFile ) ):
 			inFile = vcf.Reader( open( inputFile , 'r' ) , compressed=True )
@@ -246,8 +249,45 @@ class exacparser(object):
 				#"""
 				self.setAlleleMeasures( var , info , alti = alti , **kwargs )
 			
-				self.variants.append( var )
+				if ( writeToFile ):
+					if ( splitByChromosome ):
+						outFH = open( writeToFile + ".chr" + str( var.chromosome ) + ".tsv" , 'w' )
+					else:
+						outFH = open( writeToFile + ".tsv" , 'w' )
+					outFH.write( "Chromosome\tStart\tStop\tReference\tAlternate\t" \
+						+ "Frequency\t" \
+						+ "AC_AFR\tAC_AMR\tAC_EAS\tAC_FIN\tAC_NFE\tAC_OTH\tAC_SAS\t" \
+						+ "AC_Adj\tAC_Het\tAC_Hom\t" \
+						+ "AN_AFR\tAN_AMR\tAN_EAS\tAN_FIN\tAN_NFE\tAN_OTH\tAN_SAS\tAN_Adj\t" \
+						+ "Gene\tENST_ID\tENSP_ID\tReference_Peptide\tPosition_Peptide\tAlternate_Peptide\n" )
+					self.writeField( outFH , var.chromosome )
+					self.writeField( outFH , var.start )
+					self.writeField( outFH , var.stop )
+					self.writeField( outFH , var.reference )
+					self.writeField( outFH , var.alternate )
+					self.writeField( outFH , var.frequency )
+					self.writeField( outFH , var.counts.afr )
+					self.writeField( outFH , var.counts.amr )
+					self.writeField( outFH , var.counts.eas )
+					self.writeField( outFH , var.counts.fin )
+					self.writeField( outFH , var.counts.nfe )
+					self.writeField( outFH , var.counts.oth )
+					self.writeField( outFH , var.counts.sas )
+					self.writeField( outFH , var.counts.adj )
+					self.writeField( outFH , var.counts.het )
+					self.writeField( outFH , var.counts.hom )
+					self.writeField( outFH , var.numbers.afr )
+					self.writeField( outFH , var.numbers.amr )
+					self.writeField( outFH , var.numbers.eas )
+					self.writeField( outFH , var.numbers.fin )
+					self.writeField( outFH , var.numbers.nfe )
+					self.writeField( outFH , var.numbers.oth )
+					self.writeField( outFH , var.numbers.sas )
+				else:
+					self.variants.append( var )
 
+		if ( outFH ):
+			outFH.close()
 		return None
 
 	def getVCFKeyIndex( self , values , field ):
@@ -285,3 +325,11 @@ class exacparser(object):
 	@staticmethod
 	def setFrequency( var , info , **kwargs ):
 		var.setFrequency( info , **kwargs )
+
+	@staticmethod
+	def writeField( out , value , last=False ):
+		if ( last ):
+			out.write( str( value ) + "\n" )
+		else:
+			out.write( str( value ) + "\t" )
+
