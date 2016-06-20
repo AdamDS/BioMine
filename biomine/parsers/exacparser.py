@@ -103,7 +103,7 @@ class exacparser(object):
 							else: #mismatch
 								mismatch = True
 							#print '  '.join( ( "forward: " , str( positionOfMismatch ) , str( referenceIndex ) , str( referenceBase ) , \
-								str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
+							#	str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
 							referenceIndex += 1
 							alternateIndex += 1
 							if ( referenceIndex < lengthOfReference ):
@@ -126,7 +126,7 @@ class exacparser(object):
 							else: #mismatch
 								mismatch = True
 							#print '  '.join( ( "reverse: " , str( revPositionOfMismatch ) , str( referenceIndex ) , str( referenceBase ) , \
-								str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
+							#	str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
 							referenceIndex -= 1
 							alternateIndex -= 1
 							if ( referenceIndex > 0 ):
@@ -138,7 +138,7 @@ class exacparser(object):
 							else:
 								alternateBase = "-"
 						#print str( positionOfMismatch ) + "\t" + str( revPositionOfMismatch ) + \
-							"\t" + str( lengthOfReference ) + "\t" + str( lengthOfAlternate )
+						#	"\t" + str( lengthOfReference ) + "\t" + str( lengthOfAlternate )
 						ref = reference
 						if ( ( positionOfMismatch - 1 ) < ( revPositionOfMismatch + 1 ) ): #insertion
 							#C>CGAGA, p==1, revPositionOfMismatch==0
