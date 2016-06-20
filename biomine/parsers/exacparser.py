@@ -12,6 +12,7 @@ from biomine.variant.variant import variant
 from biomine.variant.exacvariant import exacvariant
 import vcf
 import re
+import os.path
 
 class exacparser(object):
 	''' Example usage:
@@ -36,8 +37,8 @@ class exacparser(object):
 
 	def readVCF( self , inputFile , **kwargs ):
 		writeToFile = kwargs.get( 'writeToFile' , "" )
-		splitByChromosome = kwargs.get( 'splitByChromosome' , True )
-		outFH = None
+		writeFunction = kwargs.get( 'writeFunction' , None )
+		outFH = open( writeToFile , 'a' ).close()
 		inFile = None;
 		if ( re.match( "\.gz" , inputFile ) ):
 			inFile = vcf.Reader( open( inputFile , 'r' ) , compressed=True )
@@ -67,6 +68,7 @@ class exacparser(object):
 								#vepInfo[key] = None
 								self.vcfKeyIndex[key] = i
 								i = i + 1
+		lastChr = "asdfasdfasdf"
 		for record in inFile:
 			chrom = record.CHROM
 			reference = record.REF
@@ -78,22 +80,119 @@ class exacparser(object):
 			for alternate in alternates:
 				alti += 1
 				alt = str( alternate )
+				begin = start
+				end = stop
 				if alt == "None":
 					alt = None
-				if record.is_indel and not record.is_deletion: #insertion
-					reference = "-"
-					alt = alt[1:len(alt)]
-					stop = stop + 1
+				if record.is_indel: #indel
+					refBases = str( reference )
+					altBases = str( alternate )
+					lengthOfReference = len( refBases )
+					lengthOfAlternate = len( altBases )
+					if ( lengthOfReference > 1 or lengthOfAlternate > 1 ):
+						positionOfMismatch = 0
+						referenceIndex = 0
+						alternateIndex = 0
+						referenceBase = refBases[ referenceIndex ]
+						alternateBase = altBases[ alternateIndex ]
+						mismatch = False
+						#print '  '.join( ( reference , alt , str( start ) , str( stop ) ) )
+						while ( not mismatch and ( referenceIndex < lengthOfReference and alternateIndex < lengthOfAlternate ) ):
+							if ( referenceBase == alternateBase ): #match & haven't mismatched
+								positionOfMismatch += 1
+							else: #mismatch
+								mismatch = True
+							#print '  '.join( ( "forward: " , str( positionOfMismatch ) , str( referenceIndex ) , str( referenceBase ) , \
+								str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
+							referenceIndex += 1
+							alternateIndex += 1
+							if ( referenceIndex < lengthOfReference ):
+								referenceBase = refBases[ referenceIndex ]
+							else:
+								referenceBase = "-"
+							if ( alternateIndex < lengthOfAlternate ):
+								alternateBase = altBases[ alternateIndex ]
+							else:
+								alternateBase = "-"
+						revPositionOfMismatch = lengthOfAlternate
+						referenceIndex = lengthOfReference - 1
+						alternateIndex = lengthOfAlternate - 1
+						referenceBase = refBases[ referenceIndex ]
+						alternateBase = altBases[ alternateIndex ]
+						mismatch = False
+						while ( not mismatch and ( referenceIndex >= 0 and alternateIndex >= 0 ) ):
+							if ( referenceBase == alternateBase ): #match & haven't mismatched
+								revPositionOfMismatch -= 1
+							else: #mismatch
+								mismatch = True
+							#print '  '.join( ( "reverse: " , str( revPositionOfMismatch ) , str( referenceIndex ) , str( referenceBase ) , \
+								str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
+							referenceIndex -= 1
+							alternateIndex -= 1
+							if ( referenceIndex > 0 ):
+								referenceBase = refBases[ referenceIndex ]
+							else:
+								referenceBase = "-"
+							if ( alternateIndex > 0 ):
+								alternateBase = altBases[ alternateIndex ]
+							else:
+								alternateBase = "-"
+						#print str( positionOfMismatch ) + "\t" + str( revPositionOfMismatch ) + \
+							"\t" + str( lengthOfReference ) + "\t" + str( lengthOfAlternate )
+						ref = reference
+						if ( ( positionOfMismatch - 1 ) < ( revPositionOfMismatch + 1 ) ): #insertion
+							#C>CGAGA, p==1, revPositionOfMismatch==0
+							#CG>CGAGA, p==2, revPositionOfMismatch==1
+							if ( positionOfMismatch == 1 and revPositionOfMismatch == 1 ):
+								ref = ref[positionOfMismatch:lengthOfReference]
+								alt = "-"
+								begin = start + positionOfMismatch
+							elif ( positionOfMismatch == 0 and revPositionOfMismatch == 0 ):
+								ref = ref[ positionOfMismatch ]
+								alt = alt[ revPositionOfMismatch ]
+								end = begin
+							elif ( positionOfMismatch == revPositionOfMismatch ):
+								#CCCCT>CCCCTCCCT
+								ref = "-"
+								alt = alt[ revPositionOfMismatch : lengthOfAlternate ]
+								begin = start + positionOfMismatch - 1
+								end = begin + 1
+							else:
+								if ( ( positionOfMismatch - revPositionOfMismatch ) == 1 ):
+									#TAA>TA
+									ref = ref[ positionOfMismatch : lengthOfReference + 1 ]
+									begin = start + positionOfMismatch
+									alt = "-"
+									end = begin + lengthOfReference - lengthOfAlternate - 1
+								else:
+									#G>GCACACA
+									#CCCCT>CCCCTCCCTCCCT
+									ref = "-"
+									begin = start + positionOfMismatch - 1
+									alt = alt[ positionOfMismatch : lengthOfAlternate ]
+									end = begin + 1
+						elif ( positionOfMismatch > revPositionOfMismatch ):
+							#TT>CGAGA, p==0, revPositionOfMismatch==1
+							ref = ref[ positionOfMismatch : lengthOfReference ]
+							alt = "-"
+							begin = start + positionOfMismatch
+							end = begin + lengthOfReference - lengthOfAlternate - 1
+						else:
+							ref = "-"
+							alt = alt[ positionOfMismatch : lengthOfAlternate ] 
+							end = begin + 1
+						#print '  '.join( ( ref , alt , str( begin ) , str( end ) ) )
+						#print ""
 				elif record.is_deletion:
 					reference = reference[1:len(reference)] #assumes only one base overlap
 					alt = "-"
-					start = start + 1
-					stop = stop
+					begin = start + 1
+					end = stop
 
 				parentVar = variant( \
 					chromosome = chrom , \
-					start = start , \
-					stop = stop , \
+					start = begin , \
+					stop = end , \
 					dbsnp = record.ID , \
 					reference = reference , \
 					alternate = alt , \
@@ -159,8 +258,8 @@ class exacparser(object):
 
 						vcv = vepconsequencevariant( \
 							chromosome = chrom , \
-							start = start , \
-							stop = stop , \
+							start = begin , \
+							stop = end , \
 							dbsnp = record.ID , \
 							reference = reference , \
 							alternate = alt , \
@@ -249,48 +348,16 @@ class exacparser(object):
 				#"""
 				self.setAlleleMeasures( var , info , alti = alti , **kwargs )
 			
-				if ( writeToFile ):
-					if ( not outFH ):
-						if ( splitByChromosome ):
-							outFH = open( writeToFile + ".chr" + str( var.chromosome ) + ".tsv" , 'w' )
-						else:
-							outFH = open( writeToFile + ".tsv" , 'w' )
-					outFH.write( "Chromosome\tStart\tStop\tReference\tAlternate\t" \
-						+ "Frequency\t" \
-						+ "AC_AFR\tAC_AMR\tAC_EAS\tAC_FIN\tAC_NFE\tAC_OTH\tAC_SAS\t" \
-						+ "AC_Adj\tAC_Het\tAC_Hom\t" \
-						+ "AN_AFR\tAN_AMR\tAN_EAS\tAN_FIN\tAN_NFE\tAN_OTH\tAN_SAS\tAN_Adj\t" \
-						+ "Gene\tENST_ID\tENSP_ID\tReference_Peptide\tPosition_Peptide\tAlternate_Peptide\n" )
-					self.writeField( outFH , var.chromosome )
-					self.writeField( outFH , var.start )
-					self.writeField( outFH , var.stop )
-					self.writeField( outFH , var.reference )
-					self.writeField( outFH , var.alternate )
-					self.writeField( outFH , var.frequency )
-					self.writeField( outFH , var.counts.afr )
-					self.writeField( outFH , var.counts.amr )
-					self.writeField( outFH , var.counts.eas )
-					self.writeField( outFH , var.counts.fin )
-					self.writeField( outFH , var.counts.nfe )
-					self.writeField( outFH , var.counts.oth )
-					self.writeField( outFH , var.counts.sas )
-					self.writeField( outFH , var.counts.adj )
-					self.writeField( outFH , var.counts.het )
-					self.writeField( outFH , var.counts.hom )
-					self.writeField( outFH , var.numbers.afr )
-					self.writeField( outFH , var.numbers.amr )
-					self.writeField( outFH , var.numbers.eas )
-					self.writeField( outFH , var.numbers.fin )
-					self.writeField( outFH , var.numbers.nfe )
-					self.writeField( outFH , var.numbers.oth )
-					self.writeField( outFH , var.numbers.sas , last=True )
+				if ( writeToFile and writeFunction ):
+					lastChr = writeFunction( writeToFile , var , outFH , lastChr , **kwargs )
 				else:
 					self.variants.append( var )
 
-		if ( outFH ):
-			outFH.close()
+		if ( type( outFH ) is 'file' ):
+			if ( not outFH.closed ):
+				outFH.close()
 		return None
-
+	
 	def getVCFKeyIndex( self , values , field ):
 		if field in self.vcfKeyIndex:
 			return values[self.vcfKeyIndex[field]]
