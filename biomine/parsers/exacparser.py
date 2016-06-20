@@ -78,6 +78,7 @@ class exacparser(object):
 			info = record.INFO
 			alti = -1
 			for alternate in alternates:
+				ref = reference
 				alti += 1
 				alt = str( alternate )
 				begin = start
@@ -139,7 +140,6 @@ class exacparser(object):
 								alternateBase = "-"
 						#print str( positionOfMismatch ) + "\t" + str( revPositionOfMismatch ) + \
 						#	"\t" + str( lengthOfReference ) + "\t" + str( lengthOfAlternate )
-						ref = reference
 						if ( ( positionOfMismatch - 1 ) < ( revPositionOfMismatch + 1 ) ): #insertion
 							#C>CGAGA, p==1, revPositionOfMismatch==0
 							#CG>CGAGA, p==2, revPositionOfMismatch==1
@@ -194,7 +194,7 @@ class exacparser(object):
 					start = begin , \
 					stop = end , \
 					dbsnp = record.ID , \
-					reference = reference , \
+					reference = ref , \
 					alternate = alt , \
 				)
 
