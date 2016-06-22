@@ -38,7 +38,10 @@ class exacparser(object):
 	def readVCF( self , inputFile , **kwargs ):
 		writeToFile = kwargs.get( 'writeToFile' , "" )
 		writeFunction = kwargs.get( 'writeFunction' , None )
-		outFH = open( writeToFile , 'a' ).close()
+		bufferSize = kwargs.get( 'bufferSize' , 1000 )
+		outFH = open( writeToFile , 'a' )
+		if ( outFH.closed ):
+			print "file handle closed: " + writeToFile
 		inFile = None;
 		if ( re.match( "\.gz" , inputFile ) ):
 			inFile = vcf.Reader( open( inputFile , 'r' ) , compressed=True )
@@ -349,13 +352,28 @@ class exacparser(object):
 				self.setAlleleMeasures( var , info , alti = alti , **kwargs )
 			
 				if ( writeToFile and writeFunction ):
-					lastChr = writeFunction( writeToFile , var , outFH , lastChr , **kwargs )
+					if ( len( self.variants ) > bufferSize ):
+						print "have " + str( len( self.variants ) ) + "; now write"
+						for v in self.variants:
+							lastChr = writeFunction( writeToFile , v , outFH , lastChr , **kwargs )
+						self.variants = []
+						print "flushed variants (" + str( len( self.variants ) ) + ")"
+						self.variants.append( var )
+					else:
+						self.variants.append( var )
 				else:
 					self.variants.append( var )
 
+		if ( len( self.variants ) > 0 and writeToFile and writeFunction ):
+			print "last " + str( len( self.variants ) ) + "; now write"
+			for v in self.variants:
+				lastChr = writeFunction( writeToFile , v , outFH , lastChr , **kwargs )
+			self.variants = []
+			print "flushed variants (" + str( len( self.variants ) ) + ")"
 		if ( type( outFH ) is 'file' ):
 			if ( not outFH.closed ):
 				outFH.close()
+				print "biomine closed"
 		return None
 	
 	def getVCFKeyIndex( self , values , field ):
