@@ -13,12 +13,48 @@ from biomine.variant.exacvariant import exacvariant
 import vcf
 import re
 import os.path
+import gc
 
 class exacparser(object):
 	''' Example usage:
 			vars = exacvariants()
 			vars.getInputData( vcf=file )
 	'''
+	severeRank = [ 	"transcript_ablation" , \
+					"splice_acceptor_variant" , \
+					"splice_donor_variant" , \
+					"stop_gained" , \
+					"frameshift_variant" , \
+					"stop_lost" , \
+					"start_lost" , \
+					"transcript_amplification" , \
+					"inframe_insertion" , \
+					"inframe_deletion" , \
+					"missense_variant" , \
+					"protein_altering_variant" , \
+					"splice_region_variant" , \
+					"incomplete_terminal_codon_variant" , \
+					"stop_retained_variant" , \
+					"synonymous_variant" , \
+					"coding_sequence_variant" , \
+					"mature_miRNA_variant" , \
+					"5_prime_UTR_variant" , \
+					"3_prime_UTR_variant" , \
+					"non_coding_transcript_exon_variant" , \
+					"intron_variant" , \
+					"NMD_transcript_variant" , \
+					"non_coding_transcript_variant" , \
+					"upstream_gene_variant" , \
+					"downstream_gene_variant" , \
+					"TFBS_ablation" , \
+					"TFBS_amplification" , \
+					"TF_binding_site_variant" , \
+					"regulatory_region_ablation" , \
+					"regulatory_region_amplification" , \
+					"feature_elongation" , \
+					"regulatory_region_variant" , \
+					"feature_truncation" , \
+					"intergenic_variant" ]
 	def __init__( self , **kwargs ):
 		self.variants = kwargs.get( 'variants' , [] )
 		#self.clinvarVariants = kwargs.get( 'clinvarVariants' , {} )
@@ -28,17 +64,19 @@ class exacparser(object):
 ### Retrieve input data from user ###
 	def getInputData( self  , **kwargs ):
 		vcfFile = kwargs.get( 'vcf' , "" )
-		preVEP = []
 		vepDone = False
 		exacDone = False
 		if vcfFile:
 			vepDone = self.readVCF( vcfFile , **kwargs )
 			exacDone=False # currently only has 1000G
+		return ( vepDone , exacDone )
 
 	def readVCF( self , inputFile , **kwargs ):
-		writeToFile = kwargs.get( 'writeToFile' , "" )
-		writeFunction = kwargs.get( 'writeFunction' , None )
-		bufferSize = kwargs.get( 'bufferSize' , 1000 )
+		( inFile , outFH ) = self.initializeFile( inputFile , **kwargs )
+		self.getVCFMetaData( inFile , **kwargs )
+		self.getVCFVariants( inFile , outFH=outFH , **kwargs )
+	def initializeFile( self , inputFile , **kwargs ):
+		writeToFile = kwargs.get( 'writeToFile' , "default.exacparsed" )
 		outFH = open( writeToFile , 'a' )
 		if ( outFH.closed ):
 			print "file handle closed: " + writeToFile
@@ -47,13 +85,12 @@ class exacparser(object):
 			inFile = vcf.Reader( open( inputFile , 'r' ) , compressed=True )
 		else:
 			inFile = vcf.Reader( open( inputFile , 'r' ) )
-		preVEP = []
+		return ( inFile , outFH )
+	def getVCFMetaData( self , inFile , **kwargs ):
 		vepDone = False
-		#vepInfo = OD()
-		self.vcfHeaderInfo = []
 		metadata = inFile.metadata
 		for pairs in metadata:
-			if pairs == 'VEP':
+			if pairs == 'VEP': #TODO: make this a function, passed as an argument to getVCFMetaData
 				print "This .vcf has VEP annotations!"
 				infos = inFile.infos
 				for info_ID in infos.items():
@@ -67,309 +104,301 @@ class exacparser(object):
 							self.vcfKeyIndex = {}
 							i = 0
 							for key in self.vcfHeaderInfo:
-								#print str(i) + " => " + key
-								#vepInfo[key] = None
 								self.vcfKeyIndex[key] = i
 								i = i + 1
-		lastChr = "asdfasdfasdf"
+	def getVCFVariants( self , inFile , **kwargs ): 
 		for record in inFile:
-			chrom = record.CHROM
-			reference = record.REF
-			alternates = record.ALT
-			start = record.start + 1 #1-base beginning of ref
-			stop = record.end #0-base ending of ref
-			info = record.INFO
-			alti = -1
-			for alternate in alternates:
-				ref = reference
-				alti += 1
-				alt = str( alternate )
-				begin = start
-				end = stop
-				if alt == "None":
-					alt = None
-				if record.is_indel: #indel
-					refBases = str( reference )
-					altBases = str( alternate )
-					lengthOfReference = len( refBases )
-					lengthOfAlternate = len( altBases )
-					if ( lengthOfReference > 1 or lengthOfAlternate > 1 ):
-						positionOfMismatch = 0
-						referenceIndex = 0
-						alternateIndex = 0
-						referenceBase = refBases[ referenceIndex ]
-						alternateBase = altBases[ alternateIndex ]
-						mismatch = False
-						#print '  '.join( ( reference , alt , str( start ) , str( stop ) ) )
-						while ( not mismatch and ( referenceIndex < lengthOfReference and alternateIndex < lengthOfAlternate ) ):
-							if ( referenceBase == alternateBase ): #match & haven't mismatched
-								positionOfMismatch += 1
-							else: #mismatch
-								mismatch = True
-							#print '  '.join( ( "forward: " , str( positionOfMismatch ) , str( referenceIndex ) , str( referenceBase ) , \
-							#	str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
-							referenceIndex += 1
-							alternateIndex += 1
-							if ( referenceIndex < lengthOfReference ):
-								referenceBase = refBases[ referenceIndex ]
-							else:
-								referenceBase = "-"
-							if ( alternateIndex < lengthOfAlternate ):
-								alternateBase = altBases[ alternateIndex ]
-							else:
-								alternateBase = "-"
-						revPositionOfMismatch = lengthOfAlternate
-						referenceIndex = lengthOfReference - 1
-						alternateIndex = lengthOfAlternate - 1
-						referenceBase = refBases[ referenceIndex ]
-						alternateBase = altBases[ alternateIndex ]
-						mismatch = False
-						while ( not mismatch and ( referenceIndex >= 0 and alternateIndex >= 0 ) ):
-							if ( referenceBase == alternateBase ): #match & haven't mismatched
-								revPositionOfMismatch -= 1
-							else: #mismatch
-								mismatch = True
-							#print '  '.join( ( "reverse: " , str( revPositionOfMismatch ) , str( referenceIndex ) , str( referenceBase ) , \
-							#	str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
-							referenceIndex -= 1
-							alternateIndex -= 1
-							if ( referenceIndex > 0 ):
-								referenceBase = refBases[ referenceIndex ]
-							else:
-								referenceBase = "-"
-							if ( alternateIndex > 0 ):
-								alternateBase = altBases[ alternateIndex ]
-							else:
-								alternateBase = "-"
-						#print str( positionOfMismatch ) + "\t" + str( revPositionOfMismatch ) + \
-						#	"\t" + str( lengthOfReference ) + "\t" + str( lengthOfAlternate )
-						if ( ( positionOfMismatch - 1 ) < ( revPositionOfMismatch + 1 ) ): #insertion
-							#C>CGAGA, p==1, revPositionOfMismatch==0
-							#CG>CGAGA, p==2, revPositionOfMismatch==1
-							if ( positionOfMismatch == 1 and revPositionOfMismatch == 1 ):
-								ref = ref[positionOfMismatch:lengthOfReference]
-								alt = "-"
-								begin = start + positionOfMismatch
-							elif ( positionOfMismatch == 0 and revPositionOfMismatch == 0 ):
-								ref = ref[ positionOfMismatch ]
-								alt = alt[ revPositionOfMismatch ]
-								end = begin
-							elif ( positionOfMismatch == revPositionOfMismatch ):
-								#CCCCT>CCCCTCCCT
-								ref = "-"
-								alt = alt[ revPositionOfMismatch : lengthOfAlternate ]
-								begin = start + positionOfMismatch - 1
-								end = begin + 1
-							else:
-								if ( ( positionOfMismatch - revPositionOfMismatch ) == 1 ):
-									#TAA>TA
-									ref = ref[ positionOfMismatch : lengthOfReference + 1 ]
-									begin = start + positionOfMismatch
-									alt = "-"
-									end = begin + lengthOfReference - lengthOfAlternate - 1
-								else:
-									#G>GCACACA
-									#CCCCT>CCCCTCCCTCCCT
-									ref = "-"
-									begin = start + positionOfMismatch - 1
-									alt = alt[ positionOfMismatch : lengthOfAlternate ]
-									end = begin + 1
-						elif ( positionOfMismatch > revPositionOfMismatch ):
-							#TT>CGAGA, p==0, revPositionOfMismatch==1
-							ref = ref[ positionOfMismatch : lengthOfReference ]
-							alt = "-"
-							begin = start + positionOfMismatch
-							end = begin + lengthOfReference - lengthOfAlternate - 1
-						else:
-							ref = "-"
-							alt = alt[ positionOfMismatch : lengthOfAlternate ] 
-							end = begin + 1
-						#print '  '.join( ( ref , alt , str( begin ) , str( end ) ) )
-						#print ""
-				elif record.is_deletion:
-					reference = reference[1:len(reference)] #assumes only one base overlap
+			self.collectAlternates( record , **kwargs )
+		self.finalWriteVariants( **kwargs )
+	def collectAlternates( self , record , **kwargs ):
+		chrom = record.CHROM
+		reference = record.REF
+		info = record.INFO
+		alternates = record.ALT
+		alti = -1
+		for alternate in alternates:
+			alti += 1
+			begin = record.start
+			end = record.end
+			( begin , end , ref , alt ) = self.getPositionsAndAlleles( record , alti , **kwargs )
+			self.getVariant( record , begin , end , ref , alt , alti , **kwargs )
+	def getVariant( self , record , begin , end , ref , alt , alti , **kwargs ):
+		var = exacvariant( \
+			chromosome = record.CHROM , \
+			start = begin , \
+			stop = end , \
+			dbsnp = record.ID , \
+			reference = ref , \
+			alternate = alt , \
+		)
+		self.getCSQ( var , record , begin , end , ref , alt , alti , **kwargs )
+		self.setWriteVariant( var , **kwargs )
+	def getPositionsAndAlleles( self , record , alti , **kwargs ):
+		begin = record.start + 1 #1-base beginning of ref
+		end = record.end #0-base ending of ref
+		ref = record.REF
+		alt = record.ALT[alti]
+		if record.is_indel: #indel
+			positionOfMismatch = self.forwardMismatchDetection( ref , alt , **kwargs )
+			revPositionOfMismatch = self.reverseMismatchDetection( ref , alt , **kwargs )
+			( begin , end , ref , alt ) = self.determineOverlap( positionOfMismatch , revPositionOfMismatch , ref , alt , begin , alti , **kwargs )
+		elif record.is_deletion:
+			begin = start + 1
+			end = stop
+			ref = ref[1:] #assumes only one base overlap
+			alt = "-"
+		return ( begin , end , ref , alt )
+	def forwardMismatchDetection( self , reference , alternate , **kwargs ):
+		refBases = str( reference )
+		altBases = str( alternate )
+		lengthOfReference = len( refBases )
+		lengthOfAlternate = len( altBases )
+		positionOfMismatch = 0
+		if ( lengthOfReference > 1 or lengthOfAlternate > 1 ):
+			referenceIndex = 0
+			alternateIndex = 0
+			referenceBase = refBases[ referenceIndex ]
+			alternateBase = altBases[ alternateIndex ]
+			mismatch = False
+			while ( not mismatch and ( referenceIndex < lengthOfReference and alternateIndex < lengthOfAlternate ) ):
+				if ( referenceBase == alternateBase ): #match & haven't mismatched
+					positionOfMismatch += 1
+				else: #mismatch
+					mismatch = True
+				#print '  '.join( ( "forward: " , str( positionOfMismatch ) , str( referenceIndex ) , str( referenceBase ) , \
+				#	str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
+				referenceIndex += 1
+				alternateIndex += 1
+				if ( referenceIndex < lengthOfReference ):
+					referenceBase = refBases[ referenceIndex ]
+				else:
+					referenceBase = "-"
+				if ( alternateIndex < lengthOfAlternate ):
+					alternateBase = altBases[ alternateIndex ]
+				else:
+					alternateBase = "-"
+		return positionOfMismatch
+	def reverseMismatchDetection( self , reference , alternate , **kwargs ):
+		refBases = str( reference )
+		altBases = str( alternate )
+		lengthOfReference = len( refBases )
+		lengthOfAlternate = len( altBases )
+		revPositionOfMismatch = lengthOfAlternate
+		referenceIndex = lengthOfReference - 1
+		alternateIndex = lengthOfAlternate - 1
+		referenceBase = refBases[ referenceIndex ]
+		alternateBase = altBases[ alternateIndex ]
+		mismatch = False
+		while ( not mismatch and ( referenceIndex >= 0 and alternateIndex >= 0 ) ):
+			if ( referenceBase == alternateBase ): #match & haven't mismatched
+				revPositionOfMismatch -= 1
+			else: #mismatch
+				mismatch = True
+			#print '  '.join( ( "reverse: " , str( revPositionOfMismatch ) , str( referenceIndex ) , str( referenceBase ) , \
+			#	str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
+			referenceIndex -= 1
+			alternateIndex -= 1
+			if ( referenceIndex > 0 ):
+				referenceBase = refBases[ referenceIndex ]
+			else:
+				referenceBase = "-"
+			if ( alternateIndex > 0 ):
+				alternateBase = altBases[ alternateIndex ]
+			else:
+				alternateBase = "-"
+		return revPositionOfMismatch
+	def determineOverlap( self , positionOfMismatch , revPositionOfMismatch , reference , alternate , start , alti , **kwargs ):
+		ref = reference
+		alt = str( alternate )
+		begin = start
+		end = start
+		if alt == "None":
+			alt = None
+		lengthOfReference = len( ref )
+		lengthOfAlternate = len( alt )
+		if ( ( positionOfMismatch - 1 ) < ( revPositionOfMismatch + 1 ) ): #C>CGAGA , CG>CGAGA
+			if ( positionOfMismatch == 1 and revPositionOfMismatch == 1 ):
+				ref = ref[positionOfMismatch:lengthOfReference]
+				alt = "-"
+				begin = start + positionOfMismatch
+			elif ( positionOfMismatch == 0 and revPositionOfMismatch == 0 ):
+				ref = ref[ positionOfMismatch ]
+				alt = alt[ revPositionOfMismatch ]
+			elif ( positionOfMismatch == revPositionOfMismatch ): #CCCCT>CCCCTCCCT
+				ref = "-"
+				alt = alt[ revPositionOfMismatch : lengthOfAlternate ]
+				begin = start + positionOfMismatch - 1
+				end += 1
+			else:
+				if ( ( positionOfMismatch - revPositionOfMismatch ) == 1 ): #TAA>TA
+					ref = ref[ positionOfMismatch : lengthOfReference + 1 ]
+					begin = start + positionOfMismatch
 					alt = "-"
-					begin = start + 1
-					end = stop
+					end += lengthOfReference - lengthOfAlternate - 1
+				else: #G>GCACACA , CCCCT>CCCCTCCCTCCCT
+					ref = "-"
+					begin = start + positionOfMismatch - 1
+					alt = alt[ positionOfMismatch : lengthOfAlternate ]
+					end += 1
+		elif ( positionOfMismatch > revPositionOfMismatch ): #TT>CGAGA, p==0, revPositionOfMismatch==1
+			ref = ref[ positionOfMismatch : lengthOfReference ]
+			alt = "-"
+			begin = start + positionOfMismatch
+			end += lengthOfReference - lengthOfAlternate - 1
+		else:
+			ref = "-"
+			alt = alt[ positionOfMismatch : lengthOfAlternate ] 
+			end += 1
+		return ( begin , end , ref , alt )
 
-				parentVar = variant( \
-					chromosome = chrom , \
+	def getCSQ( self , var , record , begin , end , ref , alt , alti , **kwargs ):
+		info = record.INFO
+		csq = info.get( 'CSQ' , "noCSQ" )
+		preVEP = []
+		if not csq == "noCSQ":
+			vepDone = True
+			exacDone = True
+			var.vepVariant = vepvariant()
+			for thisCSQ in csq:
+				values = thisCSQ.split( "|" )
+				var.vcfInfo = values
+				aas = [None , None] 
+				if self.getVCFKeyIndex( values , "Amino_acids" ): #8 => Amino_acids
+					aas = self.getVCFKeyIndex( values , "Amino_acids" ).split("/") 
+					if len( aas ) > 1:
+						aas[0] = mafvariant().convertAA( aas[0] )
+						aas[1] = mafvariant().convertAA( aas[1] )
+					else:
+						#28 => HGVSc
+						#29 => HGVSp
+						hgvsp = self.getVCFKeyIndex( values , "HGVSp" ).split( ":" )
+						changep = None
+						if len( hgvsp ) > 1:
+							changep = re.match( "p\." , hgvsp[1] )
+						if changep:
+							aas = mafvariant().splitHGVSp( hgvsp[1] )
+							aas[0] = mafvariant().convertAA( aas[0] )
+							aas[2] = mafvariant().convertAA( aas[2] )
+						else:
+							aas.append( None )
+							needVEP = True
+							preVEP.append( var )
+				exons = [None , None]
+				if self.getVCFKeyIndex( values , "EXON" ): #25 => EXON
+					exons = self.getVCFKeyIndex( values , "EXON" ).split( "/" )
+					if len( exons ) == 1:
+						exons.append(None)
+				introns = [None , None]
+				if self.getVCFKeyIndex( values , "INTRON" ): #26 => INTRON
+					introns = self.getVCFKeyIndex( values , "INTRON" ).split( "/" )
+					if len( introns ) == 1:
+						introns.append(None)
+				siftStuff = [None , None]
+				if self.getVCFKeyIndex( values , "SIFT" ):
+					siftStuff = self.getVCFKeyIndex( values , "SIFT" ).split( "(" ) 
+					if len( siftStuff ) == 1:
+						siftStuff.append( None )
+					else:
+						siftStuff[1] = siftStuff[1].rstrip( ")" )
+				polyPhenStuff = [None , None]
+				if self.getVCFKeyIndex( values , "PolyPhen" ):
+					polyPhenStuff = self.getVCFKeyIndex( values , "PolyPhen" ).split( "(" ) 
+					if len( polyPhenStuff ) == 1:
+						polyPhenStuff.append( None )
+					else:
+						polyPhenStuff[1] = polyPhenStuff[1].rstrip( ")" )
+
+				vcv = vepconsequencevariant( \
+					chromosome = record.CHROM , \
 					start = begin , \
 					stop = end , \
 					dbsnp = record.ID , \
 					reference = ref , \
 					alternate = alt , \
+					gene_id=self.getVCFKeyIndex( values , "Gene" ) , \
+					transcriptCodon=self.getVCFKeyIndex( values , "Feature" ) , \
+					consequence_terms=self.getVCFKeyIndex( values , "Consequence" ).split( "&" ) , \
+					positionCodon=self.getVCFKeyIndex( values , "cDNA_position" ) , \
+					positionPeptide=self.getVCFKeyIndex( values , "Protein_position" ) , \
+					referencePeptide=aas[0] , \
+					alternatePeptide=aas[1] , \
+					strand=self.getVCFKeyIndex( values , "STRAND" ) , \
+					gene=self.getVCFKeyIndex( values , "SYMBOL" ) , \
+					gene_symbol_source=self.getVCFKeyIndex( values , "SYMBOL_SOURCE" ) , \
+					hgnc_id=self.getVCFKeyIndex( values , "HGNC_ID" ) , \
+					biotype=self.getVCFKeyIndex( values , "BIOTYPE" ) , \
+					canonical=self.getVCFKeyIndex( values , "CANONICAL" ) , \
+					ccds=self.getVCFKeyIndex( values , "CCDS" ) , \
+					transcriptPeptide=self.getVCFKeyIndex( values , "ENSP" ) , \
+					predictionSIFT=siftStuff[0] , \
+					scoreSIFT=siftStuff[1] , \
+					predictionPolyphen=polyPhenStuff[0] , \
+					scorePolyphen=polyPhenStuff[1] , \
+					exon=exons[0] , \
+					totalExons=exons[1] , \
+					intron=introns[0] , \
+					totalIntrons=introns[1] , \
 				)
 
-				var = exacvariant( \
-					parentVariant=parentVar
-				)
-				#"""
-				csq = info.get( 'CSQ' , "noCSQ" )
-				if not csq == "noCSQ":
-					vepDone = True
-					exacDone = True
-					var.vepVariant = vepvariant()
-					for thisCSQ in csq:
-						values = thisCSQ.split( "|" )
-						var.vcfInfo = values
-						aas = [None , None] 
-						if self.getVCFKeyIndex( values , "Amino_acids" ): #8 => Amino_acids
-							aas = self.getVCFKeyIndex( values , "Amino_acids" ).split("/") 
-							if len( aas ) > 1:
-								aas[0] = mafvariant().convertAA( aas[0] )
-								aas[1] = mafvariant().convertAA( aas[1] )
-							else:
-								#28 => HGVSc
-								#29 => HGVSp
-								hgvsp = self.getVCFKeyIndex( values , "HGVSp" ).split( ":" )
-								changep = None
-								if len( hgvsp ) > 1:
-									changep = re.match( "p\." , hgvsp[1] )
-								if changep:
-									aas = mafvariant().splitHGVSp( hgvsp[1] )
-									aas[0] = mafvariant().convertAA( aas[0] )
-									aas[2] = mafvariant().convertAA( aas[2] )
-								else:
-									aas.append( None )
-									needVEP = True
-									preVEP.append( var )
-						exons = [None , None]
-						if self.getVCFKeyIndex( values , "EXON" ): #25 => EXON
-							exons = self.getVCFKeyIndex( values , "EXON" ).split( "/" )
-							if len( exons ) == 1:
-								exons.append(None)
-						introns = [None , None]
-						if self.getVCFKeyIndex( values , "INTRON" ): #26 => INTRON
-							introns = self.getVCFKeyIndex( values , "INTRON" ).split( "/" )
-							if len( introns ) == 1:
-								introns.append(None)
-						siftStuff = [None , None]
-						if self.getVCFKeyIndex( values , "SIFT" ):
-							siftStuff = self.getVCFKeyIndex( values , "SIFT" ).split( "(" ) 
-							if len( siftStuff ) == 1:
-								siftStuff.append( None )
-							else:
-								siftStuff[1] = siftStuff[1].rstrip( ")" )
-						polyPhenStuff = [None , None]
-						if self.getVCFKeyIndex( values , "PolyPhen" ):
-							polyPhenStuff = self.getVCFKeyIndex( values , "PolyPhen" ).split( "(" ) 
-							if len( polyPhenStuff ) == 1:
-								polyPhenStuff.append( None )
-							else:
-								polyPhenStuff[1] = polyPhenStuff[1].rstrip( ")" )
+				var.alleleFrequency = self.getVCFKeyIndex( values , "GMAF" )
+				var.vepVariant.consequences.append( vcv )
+			self.determineMostSevere( var , **kwargs )
+			self.setAlleleMeasures( var , info , alti = alti , **kwargs )
+		return None
 
-						vcv = vepconsequencevariant( \
-							chromosome = chrom , \
-							start = begin , \
-							stop = end , \
-							dbsnp = record.ID , \
-							reference = reference , \
-							alternate = alt , \
-							gene_id=self.getVCFKeyIndex( values , "Gene" ) , \
-							transcriptCodon=self.getVCFKeyIndex( values , "Feature" ) , \
-							consequence_terms=self.getVCFKeyIndex( values , "Consequence" ).split( "&" ) , \
-							positionCodon=self.getVCFKeyIndex( values , "cDNA_position" ) , \
-							positionPeptide=self.getVCFKeyIndex( values , "Protein_position" ) , \
-							referencePeptide=aas[0] , \
-							alternatePeptide=aas[1] , \
-							strand=self.getVCFKeyIndex( values , "STRAND" ) , \
-							gene=self.getVCFKeyIndex( values , "SYMBOL" ) , \
-							gene_symbol_source=self.getVCFKeyIndex( values , "SYMBOL_SOURCE" ) , \
-							hgnc_id=self.getVCFKeyIndex( values , "HGNC_ID" ) , \
-							biotype=self.getVCFKeyIndex( values , "BIOTYPE" ) , \
-							canonical=self.getVCFKeyIndex( values , "CANONICAL" ) , \
-							ccds=self.getVCFKeyIndex( values , "CCDS" ) , \
-							transcriptPeptide=self.getVCFKeyIndex( values , "ENSP" ) , \
-							predictionSIFT=siftStuff[0] , \
-							scoreSIFT=siftStuff[1] , \
-							predictionPolyphen=polyPhenStuff[0] , \
-							scorePolyphen=polyPhenStuff[1] , \
-							exon=exons[0] , \
-							totalExons=exons[1] , \
-							intron=introns[0] , \
-							totalIntrons=introns[1] , \
-						)
-
-						var.alleleFrequency = self.getVCFKeyIndex( values , "GMAF" )
-						var.vepVariant.consequences.append( vcv )
-
-				severeRank = [ 	"transcript_ablation" , \
-								"splice_acceptor_variant" , \
-								"splice_donor_variant" , \
-								"stop_gained" , \
-								"frameshift_variant" , \
-								"stop_lost" , \
-								"start_lost" , \
-								"transcript_amplification" , \
-								"inframe_insertion" , \
-								"inframe_deletion" , \
-								"missense_variant" , \
-								"protein_altering_variant" , \
-								"splice_region_variant" , \
-								"incomplete_terminal_codon_variant" , \
-								"stop_retained_variant" , \
-								"synonymous_variant" , \
-								"coding_sequence_variant" , \
-								"mature_miRNA_variant" , \
-								"5_prime_UTR_variant" , \
-								"3_prime_UTR_variant" , \
-								"non_coding_transcript_exon_variant" , \
-								"intron_variant" , \
-								"NMD_transcript_variant" , \
-								"non_coding_transcript_variant" , \
-								"upstream_gene_variant" , \
-								"downstream_gene_variant" , \
-								"TFBS_ablation" , \
-								"TFBS_amplification" , \
-								"TF_binding_site_variant" , \
-								"regulatory_region_ablation" , \
-								"regulatory_region_amplification" , \
-								"feature_elongation" , \
-								"regulatory_region_variant" , \
-								"feature_truncation" , \
-								"intergenic_variant" ]
-
-				mostSevere = None
-				rankMostSevere = 10000
-				mostSevereCons = severeRank[-1]
-				for cons in var.vepVariant.consequences:
-					for term in cons.terms:
-						if term in severeRank:
-							rank = severeRank.index( term )
-						else:
-							rank = 10000
-						if rank < rankMostSevere:
-							mostSevere = cons
-							rankMostSevere = rank
-							mostSevereCons = term
-						elif rank == rankMostSevere:
-							if cons.canonical:
-								mostSevere = cons
-
-				self.setMostSevere( var , mostSevere , mostSevereCons )
-				#"""
-				self.setAlleleMeasures( var , info , alti = alti , **kwargs )
-			
-				if ( writeToFile and writeFunction ):
-					if ( len( self.variants ) > bufferSize ):
-						print "have " + str( len( self.variants ) ) + "; now write"
-						for v in self.variants:
-							lastChr = writeFunction( writeToFile , v , outFH , lastChr , **kwargs )
-						self.variants = []
-						print "flushed variants (" + str( len( self.variants ) ) + ")"
-						self.variants.append( var )
-					else:
-						self.variants.append( var )
+	def determineMostSevere( self , var , **kwargs ):
+		mostSevere = None
+		rankMostSevere = 10000
+		mostSevereCons = exacparser.severeRank[-1]
+		for cons in var.vepVariant.consequences:
+			for term in cons.terms:
+				if term in exacparser.severeRank:
+					rank = exacparser.severeRank.index( term )
 				else:
-					self.variants.append( var )
+					rank = 10000
+				if rank < rankMostSevere:
+					mostSevere = cons
+					rankMostSevere = rank
+					mostSevereCons = term
+				elif rank == rankMostSevere:
+					if cons.canonical:
+						mostSevere = cons
+		self.setMostSevere( var , mostSevere , mostSevereCons , **kwargs )
+		return None
+			
+	def setWriteVariant( self , var , **kwargs ):
+		writeToFile = kwargs.get( 'writeToFile' , "" )
+		writeFunction = kwargs.get( 'writeFunction' , None )
+		bufferSize = kwargs.get( 'bufferSize' , 1000 )
+		if ( writeToFile and writeFunction ):
+			if ( len( self.variants ) > bufferSize ):
+				print gc.get_count()
+				print "have " + str( len( self.variants ) ) + "; now write"
+				for v in self.variants:
+					writeFunction( v , **kwargs )
+				print gc.get_count()
+				print gc.garbage
+				self.variants = []
+				print "flushed variants (" + str( len( self.variants ) ) + ")"
+				self.variants.append( var )
+			else:
+				self.variants.append( var )
+		else:
+			self.variants.append( var )
+		return None
 
+	def finalWriteVariants( self , **kwargs ):
+		writeToFile = kwargs.get( 'writeToFile' , "" )
+		writeFunction = kwargs.get( 'writeFunction' , None )
+		bufferSize = kwargs.get( 'bufferSize' , 1000 )
+		outFH = kwargs.get( 'outFH' , None )
 		if ( len( self.variants ) > 0 and writeToFile and writeFunction ):
 			print "last " + str( len( self.variants ) ) + "; now write"
 			for v in self.variants:
-				lastChr = writeFunction( writeToFile , v , outFH , lastChr , **kwargs )
-			self.variants = []
-			print "flushed variants (" + str( len( self.variants ) ) + ")"
+				writeFunction( v , **kwargs )
+			if ( bufferSize > 0 ):
+				self.variants = []
+				print "flushed variants (" + str( len( self.variants ) ) + ")"
 		if ( type( outFH ) is 'file' ):
 			if ( not outFH.closed ):
 				outFH.close()
@@ -398,7 +427,6 @@ class exacparser(object):
 			var.positionCodon = mostSevere.positionCodon
 			var.vepVariant.mostSevereConsequence = mostSevereCons
 			var.variantClass = mostSevereCons
-		return var
 	
 	@staticmethod
 	def setCounts( var , info , **kwargs ):
