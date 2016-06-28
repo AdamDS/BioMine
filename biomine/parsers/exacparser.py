@@ -218,34 +218,49 @@ class exacparser(object):
 		lengthOfAlternate = len( alt )
 		if ( ( positionOfMismatch - 1 ) < ( revPositionOfMismatch + 1 ) ): #C>CGAGA , CG>CGAGA
 			if ( positionOfMismatch == 1 and revPositionOfMismatch == 1 ):
+				print "case1: " + ref + "\t" + alt
 				ref = ref[positionOfMismatch:lengthOfReference]
 				alt = "-"
 				begin = start + positionOfMismatch
 			elif ( positionOfMismatch == 0 and revPositionOfMismatch == 0 ):
+				print "case2: " + ref + "\t" + alt
 				ref = ref[ positionOfMismatch ]
 				alt = alt[ revPositionOfMismatch ]
 			elif ( positionOfMismatch == revPositionOfMismatch ): #CCCCT>CCCCTCCCT
+				print "case3: " + ref + "\t" + alt
 				ref = "-"
 				alt = alt[ revPositionOfMismatch : lengthOfAlternate ]
 				begin = start + positionOfMismatch - 1
 				end += 1
 			else:
-				if ( ( positionOfMismatch - revPositionOfMismatch ) == 1 ): #TAA>TA
+				if ( ( positionOfMismatch < revPositionOfMismatch ) ): #TAA>TA , TCCC>T
+					print "case4: " + ref + "\t" + alt
 					ref = ref[ positionOfMismatch : lengthOfReference + 1 ]
 					begin = start + positionOfMismatch
 					alt = "-"
 					end += lengthOfReference - lengthOfAlternate - 1
 				else: #G>GCACACA , CCCCT>CCCCTCCCTCCCT
+					print "case5: " + ref + "\t" + alt
 					ref = "-"
 					begin = start + positionOfMismatch - 1
 					alt = alt[ positionOfMismatch : lengthOfAlternate ]
 					end += 1
 		elif ( positionOfMismatch > revPositionOfMismatch ): #TT>CGAGA, p==0, revPositionOfMismatch==1
-			ref = ref[ positionOfMismatch : lengthOfReference ]
-			alt = "-"
-			begin = start + positionOfMismatch
-			end += lengthOfReference - lengthOfAlternate - 1
+			if ( len( ref ) >= len( alt ) ):
+				print "case6: " + ref + "\t" + alt
+				ref = ref[ positionOfMismatch : lengthOfReference ]
+				alt = "-"
+				begin = start + positionOfMismatch
+				end += lengthOfReference - lengthOfAlternate - 1
+			else:
+				print "case7: " ,
+				print '\t'.join( ( ref , str( positionOfMismatch ) , alt , str( revPositionOfMismatch ) ) )
+				ref = "-"
+				alt = alt[ positionOfMismatch : lengthOfAlternate + 1 ]
+				begin += positionOfMismatch -1
+				end = begin + 1
 		else:
+			print "case8: " + ref + "\t" + alt
 			ref = "-"
 			alt = alt[ positionOfMismatch : lengthOfAlternate ] 
 			end += 1
