@@ -114,6 +114,8 @@ class exacparser(object):
 		chrom = record.CHROM
 		reference = record.REF
 		info = record.INFO
+		qual = record.QUAL
+		filtr = record.FILTER
 		alternates = record.ALT
 		alti = -1
 		for alternate in alternates:
@@ -121,7 +123,7 @@ class exacparser(object):
 			begin = record.start
 			end = record.end
 			( begin , end , ref , alt ) = self.getPositionsAndAlleles( record , alti , **kwargs )
-			self.getVariant( record , begin , end , ref , alt , alti , **kwargs )
+			self.getVariant( record , begin , end , ref , alt , alti , qual=qual , filtr=filtr , info=info , **kwargs )
 	def getVariant( self , record , begin , end , ref , alt , alti , **kwargs ):
 		var = exacvariant( \
 			chromosome = record.CHROM , \
@@ -132,7 +134,7 @@ class exacparser(object):
 			alternate = alt , \
 		)
 		self.getCSQ( var , record , begin , end , ref , alt , alti , **kwargs )
-		self.setWriteVariant( var , **kwargs )
+		self.setWriteVariant( var , pos=record.POS , ref=record.REF , alt=record.ALT[alti] , **kwargs )
 	def getPositionsAndAlleles( self , record , alti , **kwargs ):
 		begin = record.start + 1 #1-base beginning of ref
 		end = record.end #0-base ending of ref
@@ -207,6 +209,10 @@ class exacparser(object):
 			else:
 				alternateBase = "-"
 		return revPositionOfMismatch
+	def errprint( self , case , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end ):
+		print "case" + str( case ) + ": " + '\t'.join( ( str( begin ) , ref , str( positionOfMismatch ) , str( end ) , alt , str( revPositionOfMismatch ) ) )
+	def errfollowup( self , case , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end ):
+		print "followup" + str( case ) + ": " + '\t'.join( ( str( begin ) , ref , str( positionOfMismatch ) , str( end ) , alt , str( revPositionOfMismatch ) ) )
 	def determineOverlap( self , positionOfMismatch , revPositionOfMismatch , reference , alternate , start , alti , **kwargs ):
 		ref = reference
 		alt = str( alternate )
@@ -214,56 +220,127 @@ class exacparser(object):
 		end = start
 		if alt == "None":
 			alt = None
+		( begin , end , ref , alt ) = self.overlapLogic( positionOfMismatch , revPositionOfMismatch , ref , alt , begin , end )
+		return ( begin , end , ref , alt )
+
+	def mismatchDetection( self , reference , alternate , **kwargs ):
+		reverse = kwargs.get( 'reverse' , False )
+		refBases = str( reference )
+		altBases = str( alternate )
+		if ( reverse ):
+			refBases = str( reference[::-1] )
+			altBases = str( alternate[::-1] )
+		lengthOfReference = len( refBases )
+		lengthOfAlternate = len( altBases )
+		positionOfMismatch = 0
+		if ( lengthOfReference > 1 or lengthOfAlternate > 1 ):
+			referenceIndex = 0
+			alternateIndex = 0
+			referenceBase = refBases[ referenceIndex ]
+			alternateBase = altBases[ alternateIndex ]
+			mismatch = False
+			while ( not mismatch and ( referenceIndex < lengthOfReference and alternateIndex < lengthOfAlternate ) ):
+				if ( referenceBase == alternateBase ): #match & haven't mismatched
+					positionOfMismatch += 1
+				else: #mismatch
+					mismatch = True
+				#print '  '.join( ( "forward: " , str( positionOfMismatch ) , str( referenceIndex ) , str( referenceBase ) , \
+				#	str( alternateIndex ) , str( alternateBase ) , str( mismatch ) ) )
+				referenceIndex += 1
+				alternateIndex += 1
+				if ( referenceIndex < lengthOfReference ):
+					referenceBase = refBases[ referenceIndex ]
+				else:
+					referenceBase = "-"
+				if ( alternateIndex < lengthOfAlternate ):
+					alternateBase = altBases[ alternateIndex ]
+				else:
+					alternateBase = "-"
+		return ( positionOfMismatch , refBases[ positionOfMismatch : ] , altBases[ positionOfMismatch : ] )
+
+	def overlapLogic2( self , positionOfMismatch , revPositionOfMismatch , ref , alt , begin , end ):
+		lengthOfReference = len( ref )
+		lengthOfAlternate = len( alt )
+		if ( lengthOfReference < lengthOfAlternate ): #C>CGAGA|1,5 , CCCCT>CCCCTCCCT , CCCCCACCCCA>CCCCCACCCCACCCCA , CCC>CCCCC , ATATAT>ATGCATATAT|-:GCAT
+			ref = "-"
+			begin += positionOfMismatch + 1
+			end = begin + 1
+			if ( positionOfMismatch < revPositionOfMismatch ):
+				alt = alt[ positionOfMismatch : lengthOfAlternate ] #1:5 , 5:9 , 11:15
+			elif ( positionOfMismatch > revPositionOfMismatch ):
+				alt = alt[ revPositionOfMismatch : revPositionOfMismatch + 1 ]
+			else:
+				alt = alt[ revPositionOfMismatch : revPositionOfMismatch + 1 ]
+		elif ( lengthOfReference > lengthOfAlternate ): #CCCCCACCCCA>C , TAA>TA , GTCCTCCTCGCCC>GTCCTCGCCC , AAAAA>AA|2,4
+			ref = ref[ positionOfMismatch : revPositionOfMismatch ]
+			begin += positionOfMismatch + 1
+			alt = "-"
+			end = begin + lengthOfReference
+		else: #TAA>TAG , TAA>TGA , TAA>GAA , TAA>GCA , TAA>TGC , TAA>GAG
+			ref = ref[ positionOfMismatch : revPositionOfMismatch ]
+			begin += positionOfMismatch + 1
+			alt = alt[ positionOfMismatch : revPositionOfMismatch ]
+			end = begin + 1
+		return ( begin , end , ref , alt )
+
+	def overlapLogic( self , positionOfMismatch , revPositionOfMismatch , ref , alt , begin , end ):
 		lengthOfReference = len( ref )
 		lengthOfAlternate = len( alt )
 		if ( ( positionOfMismatch - 1 ) < ( revPositionOfMismatch + 1 ) ): #C>CGAGA , CG>CGAGA
-			if ( positionOfMismatch == 1 and revPositionOfMismatch == 1 ):
-				print "case1: " + ref + "\t" + alt
-				ref = ref[positionOfMismatch:lengthOfReference]
+			if ( positionOfMismatch == 1 and revPositionOfMismatch == 1 ): #CCCCCACCCCA>C
+				self.errprint( 1 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
+				ref = ref[ positionOfMismatch : ]
 				alt = "-"
-				begin = start + positionOfMismatch
+				begin += positionOfMismatch
+				self.errfollowup( 1 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 			elif ( positionOfMismatch == 0 and revPositionOfMismatch == 0 ):
-				print "case2: " + ref + "\t" + alt
+				self.errprint( 2 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 				ref = ref[ positionOfMismatch ]
 				alt = alt[ revPositionOfMismatch ]
+				self.errfollowup( 2 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 			elif ( positionOfMismatch == revPositionOfMismatch ): #CCCCT>CCCCTCCCT
-				print "case3: " + ref + "\t" + alt
+				self.errprint( 3 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 				ref = "-"
-				alt = alt[ revPositionOfMismatch : lengthOfAlternate ]
-				begin = start + positionOfMismatch - 1
-				end += 1
+				alt = alt[ revPositionOfMismatch : ]
+				begin += positionOfMismatch - 1
+				end = begin + 1
+				self.errfollowup( 3 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 			else:
-				if ( ( positionOfMismatch < revPositionOfMismatch ) ): #TAA>TA , TCCC>T
-					print "case4: " + ref + "\t" + alt
-					ref = ref[ positionOfMismatch : lengthOfReference + 1 ]
-					begin = start + positionOfMismatch
-					alt = "-"
-					end += lengthOfReference - lengthOfAlternate - 1
-				else: #G>GCACACA , CCCCT>CCCCTCCCTCCCT
-					print "case5: " + ref + "\t" + alt
+				if ( ( positionOfMismatch < revPositionOfMismatch ) ): #G>GCACACA , CCCCT>CCCCTCCCTCCC
+					self.errprint( 4 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 					ref = "-"
-					begin = start + positionOfMismatch - 1
-					alt = alt[ positionOfMismatch : lengthOfAlternate ]
-					end += 1
+					begin += positionOfMismatch
+					alt = alt[ positionOfMismatch : revPositionOfMismatch ]
+					end = begin + 1
+					self.errfollowup( 4 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
+				else: #TAA>TA , TCCC>T
+					self.errprint( 5 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
+					ref = ref[ revPositionOfMismatch : positionOfMismatch ]
+					begin += positionOfMismatch + 1
+					alt = "-"
+					end += lengthOfReference
+					self.errfollowup( 5 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 		elif ( positionOfMismatch > revPositionOfMismatch ): #TT>CGAGA, p==0, revPositionOfMismatch==1
-			if ( len( ref ) >= len( alt ) ):
-				print "case6: " + ref + "\t" + alt
-				ref = ref[ positionOfMismatch : lengthOfReference ]
+			if ( len( ref ) >= len( alt ) ): #CCCTCCTCCTCGT>CCCTCCTCGT , GTCCTCCTCGCCC>GTCCTCGCCC
+				self.errprint( 6 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
+				ref = ref[ positionOfMismatch : lengthOfReference - lengthOfAlternate + positionOfMismatch ]
 				alt = "-"
-				begin = start + positionOfMismatch
-				end += lengthOfReference - lengthOfAlternate - 1
-			else:
-				print "case7: " ,
-				print '\t'.join( ( ref , str( positionOfMismatch ) , alt , str( revPositionOfMismatch ) ) )
+				begin += positionOfMismatch + 1
+				end = begin - len( ref ) + 1
+				self.errfollowup( 6 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
+			else: #CCCCCACCCCA>CCCCCACCCCACCCCA
+				self.errprint( 7 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 				ref = "-"
-				alt = alt[ positionOfMismatch : lengthOfAlternate + 1 ]
+				alt = alt[ positionOfMismatch : ]
 				begin += positionOfMismatch -1
 				end = begin + 1
+				self.errfollowup( 7 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 		else:
-			print "case8: " + ref + "\t" + alt
+			self.errprint( 8 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 			ref = "-"
-			alt = alt[ positionOfMismatch : lengthOfAlternate ] 
+			alt = alt[ positionOfMismatch : ] 
 			end += 1
+			self.errfollowup( 8 , ref , alt , positionOfMismatch , revPositionOfMismatch , begin , end )
 		return ( begin , end , ref , alt )
 
 	def getCSQ( self , var , record , begin , end , ref , alt , alti , **kwargs ):
