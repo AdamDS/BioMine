@@ -14,6 +14,7 @@
 from biomine.webapi.webapi import webapi
 import xml.etree.ElementTree as ET
 import json
+import time
 from biomine.variant.mafvariant import mafvariant
 from biomine.variant.vepvariant import vepvariant
 
@@ -184,11 +185,12 @@ class ensemblapi(webapi):
 		
 #		print "biomine::webapi::ensembl::ensemblapi::annotateVariantsPost"
 		doAllOptions = kwargs.get( 'allOptions' , True )
-		maxPost = kwargs.get( 'maxPost' , 400 ) #bc error 400 (bad request) or 504 (gateway/proxy server timeout)
+		maxPost = kwargs.get( 'maxPost' , 150 ) #bc error 400 (bad request), 403 (banned), or 504 (gateway/proxy server timeout)
 		#maxPost = 400 #https://github.com/ensembl/ensembl-rest/wiki/POST-Requests
 		#maxPost = 1000 #http://rest.ensembl.org/documentation/info/vep_region_post
 		lengthVariants = len(variants)
 		annotatedVariants = {} #dict of vepvariants
+		timeAtSubmit = 0
 		for i in range(0,lengthVariants,maxPost):
 			j = i + maxPost
 			if lengthVariants < maxPost:
@@ -202,18 +204,6 @@ class ensemblapi(webapi):
 			self.setSubset( ensemblapi.regionSubset )
 			self.doAllOptions( data=doAllOptions )
 			for var in subsetVariants:
-				#inputVariant = var.vcf( delim=delim , null=nullValue )
-				#if var.reference == "-":
-				#	if var.genomicVar() in needReferences:
-						#print inputVariant + "  -->  " ,
-				#		inputVariant = delim.join( [ var.chromosome , str( int( var.start ) + 1 ) , str( int( var.stop ) - 1 ) , var.reference + "/" + var.alternate , var.strand ] )
-					#	if vals[3] == nullValue:
-					#		inputVariant = needReferences[var.genomicVar()]
-				#if var.alternate == "-":
-				#	vals = inputVariant.split( delim )
-				#	if vals[4] == nullValue:
-				#		vals[4] = "-"
-				#	inputVariant = delim.join( vals )
 				inputVariant = var.ensembl()
 				print inputVariant
 				formattedVariants.append( inputVariant )
@@ -223,18 +213,42 @@ class ensemblapi(webapi):
 			self.addData( "variants" , formattedVariants )
 			self.addHeader( "Accept" , "application/json" )
 			self.addHeader( "Content-Type" , "application/json" )
-			self.submit( post=True , **kwargs )
-			if self.response.ok and self.response.text:
-				root = self.response.json()
-				for rootElement in root:
-					var = vepvariant()
-					var.parseEntryFromVEP( rootElement )
-					var.setInputVariant()
-					annotatedVariants[var.inputVariant] = var
-			else:
-				print "ensemblapi Error: cannot access desired XML fields/tags for variants " ,
+			[ annotatedVariants , attempts , success , timeAtSubmit ] = self.trySubmit( timeAtSubmit , **kwargs )
+			if not success:
+				print "BioMine::webapi::ensembl::ensemblapi Error: cannot access desired XML fields/tags for variants " ,
 				print "[" + str(i) + ":" + str(j) + "]"
 		return annotatedVariants
+
+	def trySubmit( self , lastSubmitTime , **kwargs ):
+		annotatedVariants = {}
+		attempts = 0
+		keepGoing = True
+		timeAtSubmit = lastSubmitTime
+		timeSinceSubmit = time.time()
+		waitTime = 0
+		frequencyLimit = 1/15 #max seconds between requests: 15 requests/second
+		for attempts in range(0,30):
+			if timeSinceSubmit - timeAtSubmit > waitTime:
+				attempts += 1
+				timeAtSubmit = time.time()
+				self.submit( post=True , **kwargs )
+				if self.response.ok and self.response.text:
+					root = self.response.json()
+					keepGoing = False
+					for rootElement in root:
+						var = vepvariant()
+						var.parseEntryFromVEP( rootElement )
+						var.setInputVariant()
+						annotatedVariants[var.inputVariant] = var
+					return [ annotatedVariants , attempts , True , timeAtSubmit ]
+				else:
+					try:
+						waitTime = self.headers['X-RateLimit-Remaining']
+					except:
+						print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query due to " + str( self.status_code ) + ": " + self.reason )
+						return [ annotatedVariants , attempts , False , timeAtSubmit ]
+		print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query after " + str( attempts ) + " attempts. Stopping due to " + str( self.status_code ) + ": " + self.reason )
+		return [ annotatedVariants , attempts , False , timeAtSubmit ]
 
 	def checkInsertionsReference( self , variants , **kwargs ):
 		self.setSubset( ensemblapi.sequenceSubset )
