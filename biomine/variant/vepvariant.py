@@ -126,12 +126,15 @@ class vepvariant(mafvariant):
 			try:
 				self.consequences = copy.consequences
 			except:
+				print( "BioMine::variant::vepvariant::fillMissingInfo Warning: no consequences with which to fill" )
 				pass
 			for consequence in self.consequences:
 				if consequence.canonical:
 					if consequence.geneSymbolSource == "HGNC":
-						super( vepvariant , self ).copyInfo( copy )
+						super( vepvariant , self ).fillMissingInfo( copy )
 					mafvariant.fillMissingInfo( self , consequence )
+					print( str( consequence.terms[0] ) )
+					self.variantClass = consequence.terms[0]
 		if not self.colocations:
 			try:
 				self.colocations = copy.colocations
@@ -205,19 +208,27 @@ class vepvariant(mafvariant):
 		colocatedVariants = rootElement.get( 'colocated_variants' )
 	def setColocatedVariants( self , colocatedVariants ):
 		''' Expect colocatedVariants as dict from JSON '''
-		for colocated in colocatedVariants:
-			otherVar = vepcolocatedvariant( parentVariant = self )
-			otherVar.parseColocatedVariant( colocated )
-			self.colocations.append( otherVar )
+		try:
+			for colocated in colocatedVariants:
+				otherVar = vepcolocatedvariant( parentVariant = self )
+				otherVar.parseColocatedVariant( colocated )
+				self.colocations.append( otherVar )
+		except:
+			print( "BioMine Warning: Cannot set colocated variants - no colocations of " + self.genomicVar() )
+			pass
 			
 	def setTranscriptConsequences( self , transcriptConsequences ):
 		''' Expect transcriptConsequences as dict from JSON '''
 #		print "biomine::variant::vepvariant::setTranscriptConsequence"
 		#if not transcriptConsequences:
 		#	return
-		for consequence in transcriptConsequences: #list of dict's
-			otherVar = vepconsequencevariant( parentVariant=self )
-			otherVar.parseTranscriptConsequence( consequence )
-			self.consequences.append( otherVar )
-			if otherVar.canonical:
-				self.gene = otherVar.gene
+		try:
+			for consequence in transcriptConsequences: #list of dict's
+				otherVar = vepconsequencevariant( parentVariant=self )
+				otherVar.parseTranscriptConsequence( consequence )
+				self.consequences.append( otherVar )
+				if otherVar.canonical:
+					self.gene = otherVar.gene
+		except:
+			print( "BioMine Warning: Cannot set transcript consequences - no consequence for " + self.genomicVar() )
+			pass

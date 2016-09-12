@@ -58,23 +58,50 @@ class mafvariant(variant):
 		#print "Variant.mafvariant::fillMissingInfo" ,
 		super( mafvariant , self ).fillMissingInfo( copy )
 		if not self.referencePeptide:
-			self.referencePeptide = copy.referencePeptide
+			try:
+				self.referencePeptide = copy.referencePeptide
+			except:
+				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no referencePeptide with which to fill" )
 		if not self.positionPeptide:
-			self.positionPeptide = copy.positionPeptide
+			try:
+				self.positionPeptide = copy.positionPeptide
+			except:
+				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no positionPeptide with which to fill" )
 		if not self.alternatePeptide:
-			self.alternatePeptide = copy.alternatePeptide
+			try:
+				self.alternatePeptide = copy.alternatePeptide
+			except:
+				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no alternatePeptide with which to fill" )
 		if not self.transcriptPeptide:
-			self.transcriptPeptide = copy.transcriptPeptide
+			try:
+				self.transcriptPeptide = copy.transcriptPeptide
+			except:
+				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no transcriptPeptide with which to fill" )
 		if not self.positionCodon:
-			self.positionCodon = copy.positionCodon
+			try:
+				self.positionCodon = copy.positionCodon
+			except:
+				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no positionCodon with which to fill" )
 		if not self.transcriptCodon:
-			self.transcriptCodon = copy.transcriptCodon
+			try:
+				self.transcriptCodon = copy.transcriptCodon
+			except:
+				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no transcriptCodon with which to fill" )
 		if not self.variantClass:
-			self.variantClass = copy.variantClass
+			try:
+				self.variantClass = copy.variantClass
+			except:
+				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no variantClass with which to fill" )
 		if not self.variantType:
-			self.variantType = copy.variantType
+			try:
+				self.variantType = copy.variantType
+			except:
+				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no variantType with which to fill" )
 		if not self.disease:
-			self.disease = copy.disease
+			try:
+				self.disease = copy.disease
+			except:
+				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no disease with which to fill" )
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
@@ -224,7 +251,7 @@ class mafvariant(variant):
 		mut = ""
 		isNon = self.hgvspIsNonCoding( hgvsp )
 		if not isNon:
-			changep = re.match( "p\.([a-zA-Z]+?)([0-9]+?)([a-zA-Z\*\=]+)" , hgvsp )
+			changep = re.match( "p\.([a-zA-Z]+?)([0-9]+?)([a-zA-Z\*\=\_]+?)" , hgvsp )
 			changee = re.match( "(e)([0-9]+?)([\+\-][0-9]+?)" , hgvsp )
 			if changep: #peptide
 				changes = changep.groups()
