@@ -62,7 +62,7 @@ class exacparser(object):
 		self.vcfKeyIndex = kwargs.get( 'vcfKeyIndex' , {} )
 
 ### Retrieve input data from user ###
-	def getInputData( self  , **kwargs ):
+	def getInputData( self , **kwargs ):
 		vcfFile = kwargs.get( 'vcf' , "" )
 		vepDone = False
 		exacDone = False
@@ -74,9 +74,10 @@ class exacparser(object):
 	def readVCF( self , inputFile , **kwargs ):
 		( inFile , outFH ) = self.initializeFile( inputFile , **kwargs )
 		self.getVCFMetaData( inFile , **kwargs )
-		self.getVCFVariants( inFile , outFH=outFH , **kwargs )
+		kwargs['outFH'] = outFH
+		self.getVCFVariants( inFile , **kwargs )
 	def initializeFile( self , inputFile , **kwargs ):
-		writeToFile = kwargs.get( 'writeToFile' , "default.exacparsed" )
+		writeToFile = kwargs.get( 'writeToFile' , "biomine.parsed.exac.default.tsv" )
 		outFH = open( writeToFile , 'a' )
 		if ( outFH.closed ):
 			print "file handle closed: " + writeToFile
@@ -113,9 +114,6 @@ class exacparser(object):
 	def collectAlternates( self , record , **kwargs ):
 		chrom = record.CHROM
 		reference = record.REF
-		info = record.INFO
-		qual = record.QUAL
-		filtr = record.FILTER
 		alternates = record.ALT
 		alti = -1
 		for alternate in alternates:
@@ -123,7 +121,7 @@ class exacparser(object):
 			begin = record.start
 			end = record.end
 			( begin , end , ref , alt ) = self.getPositionsAndAlleles( record , alti , **kwargs )
-			self.getVariant( record , begin , end , ref , alt , alti , qual=qual , filtr=filtr , info=info , **kwargs )
+			self.getVariant( record , begin , end , ref , alt , alti , **kwargs )
 	def getVariant( self , record , begin , end , ref , alt , alti , **kwargs ):
 		var = exacvariant( \
 			chromosome = record.CHROM , \
@@ -134,7 +132,14 @@ class exacparser(object):
 			alternate = alt , \
 		)
 		self.getCSQ( var , record , begin , end , ref , alt , alti , **kwargs )
-		self.setWriteVariant( var , pos=record.POS , ref=record.REF , alt=record.ALT[alti] , **kwargs )
+		var.POS = record.POS
+		var.REF = record.REF
+		var.ALT = record.ALT[alti]
+		var.allele = alti
+		var.QUAL = record.QUAL
+		var.FILTER = record.FILTER
+		var.INFO = record.INFO
+		self.setWriteVariant( var , **kwargs )
 	def getPositionsAndAlleles( self , record , alti , **kwargs ):
 		begin = record.start + 1 #1-base beginning of ref
 		end = record.end #0-base ending of ref
@@ -435,7 +440,7 @@ class exacparser(object):
 				var.alleleFrequency = self.getVCFKeyIndex( values , "GMAF" )
 				var.vepVariant.consequences.append( vcv )
 			self.determineMostSevere( var , **kwargs )
-			self.setAlleleMeasures( var , info , alti = alti , **kwargs )
+			self.setAlleleMeasures( var , info , **kwargs )
 		return None
 
 	def determineMostSevere( self , var , **kwargs ):

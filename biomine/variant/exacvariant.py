@@ -19,6 +19,13 @@ class exacvariant( variant ):
 		self.vepvariant = None
 		self.clinvarvariant = None
 		self.mafvariant = None
+		self.POS = None
+		self.REF = None
+		self.ALT = None
+		self.allele = None
+		self.QUAL = None
+		self.FILTER = None
+		self.INFO = None
 		aParentVariant = kwargs.get( 'parentVariant' , None )
 		if aParentVariant:
 			super( exacvariant , self ).copyInfo( aParentVariant )
@@ -30,6 +37,13 @@ class exacvariant( variant ):
 		self.vepvariant = copy.vepvariant
 		self.clinvarvariant = copy.clinvarvariant
 		self.mafvariant = copy.mafvariant
+		self.POS = self.POS
+		self.REF = self.REF
+		self.ALT = self.ALT
+		self.allele = self.allele
+		self.QUAL = self.QUAL
+		self.FILTER = self.FILTER
+		self.INFO = self.INFO
 	#def print( self , **kwargs ):
 	#	delim = kwargs.get( 'delim' , "\t" )
 	#	minimal = kwargs.get( 'minimal' , False )
