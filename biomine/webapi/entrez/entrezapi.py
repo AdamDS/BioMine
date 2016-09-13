@@ -166,18 +166,21 @@ class entrezapi(webapi):
 			self.query_key = self.getEntry( root , 'QueryKey' )
 			totalRecords = 0
 			totalRecords = self.getEntry( root , 'Count' )
-			if int(totalRecords) > 0:
-		#		print totalRecords + "records found"
-				self.setRetmax( int(totalRecords) , summaryBatchSize=summaryBatchSize )
-				self.subset = entrezapi.esummary
-				for self.retstart in range( 0 , int(totalRecords) , self.retmax ):
-					self.action = self.buildWebEnvAction()
-					url = self.buildURL()
-			#		print url
-					summaryResponse = self.submit()
-					variants.update( self.getClinVarEntry() )
-					#print "These are the ClinVar variants: " 
-					#print variants
+			try:
+				if int(totalRecords) > 0:
+			#		print totalRecords + "records found"
+					self.setRetmax( int(totalRecords) , summaryBatchSize=summaryBatchSize )
+					self.subset = entrezapi.esummary
+					for self.retstart in range( 0 , int(totalRecords) , self.retmax ):
+						self.action = self.buildWebEnvAction()
+						url = self.buildURL()
+				#		print url
+						summaryResponse = self.submit()
+						variants.update( self.getClinVarEntry() )
+						#print "These are the ClinVar variants: " 
+						#print variants
+			except:
+				print "CharGer Warning: No ClinVar records in this batch\n"
 		return variants
 	
 	def parseClinVarTitle( self , DocumentSummary ):
