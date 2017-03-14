@@ -74,8 +74,9 @@ class clinvarvariant(mafvariant):
 			attributes.append(self.uid)
 		return attributes
 	def linkPubMed( self , **kwargs ):
+		skip = kwargs.get( 'skip' , False )
 		try:
-			return self.testLink()
+			return self.testLink( skip = skip )
 		except:
 			print "biomine::variant::clinvarvariant Warning: no uid"
 			return None
@@ -85,7 +86,8 @@ class clinvarvariant(mafvariant):
 		action = "LinkName=clinvar_pubmed&from_uid=" + str( self.uid )
 		pm = webapi( base , subset )
 		pm.action = action
-		if pm.testURL():
+		skip = kwargs.get( 'skip' , False )
+		if pm.testURL( skip = skip ):
 			return self.checkPubMedItems( pm )
 		print "biomine::variant::clinvarvariant Warning: no site with uid " ,
 		return None

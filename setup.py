@@ -54,6 +54,7 @@ setup( \
 		'requests' ,
 		'PyVCF' ,
 		'TransVar' ,
+		'pysam' , 
 	] , #auto installs with pip install
 	dependency_links = ['https://github.com/zwdzwd/transvar/archive/v2.1.23.20160321.tar.gz']
 )

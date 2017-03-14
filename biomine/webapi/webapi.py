@@ -159,7 +159,12 @@ class webapi(object):
 				print "biomine::webapi::errorCheck Warning: response from " + self.buildURL()
 				print "received status code = " + str(code)
 				self.printInfo()
-	def testURL( self ):
+	def testURL( self , **kwargs ):
+		skip = kwargs.get( 'skip' , False )
+		if skip:
+			print( "biomine::webapi::testURL Warning: site test skipped - " + self.url )
+			return True
+		print( "biomine::webapi::testURL behavior: testing url - " + self.url )
 		response = self.submit()
 		if response.status_code < 300:
 			return True

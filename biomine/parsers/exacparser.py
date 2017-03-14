@@ -10,6 +10,7 @@ from biomine.variant.vepconsequencevariant import vepconsequencevariant
 from biomine.variant.mafvariant import mafvariant
 from biomine.variant.variant import variant
 from biomine.variant.exacvariant import exacvariant
+import pysam
 import vcf
 import re
 import os.path
@@ -543,4 +544,23 @@ class exacparser(object):
 			out.write( str( value ) + "\n" )
 		else:
 			out.write( str( value ) + "\t" )
+
+	def searchVCF( self , **kwargs ):
+		vcf = kwargs.get( 'vcf' , "" )
+		self.variants = kwargs.get( 'queries' , [] )
+		entries = {}
+		with pysam.VariantFile( vcf , "r" ) as vf:
+			for var in self.variants:
+				entries[var.genomicVar()] = 1
+				here = ':'.join( [ var.chChromosome() , str( var.start ) , str( var.end ) ] )
+				for hit in vf.fetch( region = here ):
+					for i in range( 0 , len( hit.alts ) ):
+						evar = variant( chromosome = hit.contig , \
+										start = hit.start , \
+										dbsnp = hit.id , \
+										reference = hit.alleles[0] , \
+										alternate = hit.alts[i] , \
+									)
+						if var.sameGenomicVariant( evar ):
+							entries[var.genomicVar()] =  hit.info["AF"]
 
