@@ -18,9 +18,9 @@ class variant(object):
 		#if str(reference) == "0" or not start:
 			#self.start = "-"
 	def setStrand( self , strand ):
-		if self.strand == -1:
+		if strand == -1:
 			self.strand = "-"
-		if self.strand == 1:
+		if strand == 1:
 			self.strand = "+"
 #		print self.strand
 		
@@ -194,9 +194,10 @@ class variant(object):
 				self.stop = len( self.reference ) + self.start - 1
 	def cleanChromosome( self ):
 		''' Get the chromosome number in case chr or Chr is present'''
-		chrom = self.chromosome.lower()
-		clean = chrom.replace( "chr" , "" )
-		self.chromosome = clean.upper()
+		if type( self.chromosome ) == "str":
+			chrom = self.chromosome.lower()
+			clean = chrom.replace( "chr" , "" )
+			self.chromosome = clean.upper()
 	def mafLine2Variant( self , line , **kwargs ):
 ##		print "variant::mafLine2Variant - " ,
 		fields = line.split( "\t" )
