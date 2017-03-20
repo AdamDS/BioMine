@@ -28,17 +28,20 @@ class clinvarvariant(mafvariant):
 			try:
 				self.uid = copy.uid
 			except:
-				print "no uid"
+				pass
+				#print "no uid"
 		if not self.trait:
 			try:
 				self.trait = copy.trait
 			except:
-				print "no trait"
+				pass
+				#print "no trait"
 		if not self.clinical:
 			try:
 				self.clinical = copy.clinical
 			except:
-				print "no clinical"
+				pass
+				#print "no clinical"
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
@@ -74,11 +77,11 @@ class clinvarvariant(mafvariant):
 			attributes.append(self.uid)
 		return attributes
 	def linkPubMed( self , **kwargs ):
-		skip = kwargs.get( 'skip' , False )
+		skip = kwargs.get( 'skip' , True )
 		try:
 			return self.testLink( skip = skip )
 		except:
-			print "biomine::variant::clinvarvariant Warning: no uid"
+			#print "biomine::variant::clinvarvariant Warning: no uid"
 			return None
 	def testLink( self , **kwargs ):
 		base = "http://www.ncbi.nlm.nih.gov/"
@@ -86,7 +89,7 @@ class clinvarvariant(mafvariant):
 		action = "LinkName=clinvar_pubmed&from_uid=" + str( self.uid )
 		pm = webapi( base , subset )
 		pm.action = action
-		skip = kwargs.get( 'skip' , False )
+		skip = kwargs.get( 'skip' , True )
 		if pm.testURL( skip = skip ):
 			return self.checkPubMedItems( pm )
 		print "biomine::variant::clinvarvariant Warning: no site with uid " ,

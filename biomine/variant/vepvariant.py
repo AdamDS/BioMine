@@ -133,7 +133,7 @@ class vepvariant(mafvariant):
 					if consequence.geneSymbolSource == "HGNC":
 						super( vepvariant , self ).fillMissingInfo( copy )
 					mafvariant.fillMissingInfo( self , consequence )
-					print( str( consequence.terms[0] ) )
+					#print( str( consequence.terms[0] ) )
 					self.variantClass = consequence.terms[0]
 		if not self.colocations:
 			try:

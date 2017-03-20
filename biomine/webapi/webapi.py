@@ -160,7 +160,7 @@ class webapi(object):
 				print "received status code = " + str(code)
 				self.printInfo()
 	def testURL( self , **kwargs ):
-		skip = kwargs.get( 'skip' , False )
+		skip = kwargs.get( 'skip' , True )
 		if skip:
 			print( "biomine::webapi::testURL Warning: site test skipped - " + self.url )
 			return True

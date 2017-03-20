@@ -173,8 +173,8 @@ class mafvariant(variant):
 			lenRef = len(self.reference)
 			lenAlt = len(self.alternate)
 			lengthOfIndel = lenAlt - lenRef
-			if lenRef > 1:
-				print "is del"
+#			if lenRef > 1:
+#				print "is del"
 		return lengthOfIndel
 
 	def typeIsIndel( self ):
