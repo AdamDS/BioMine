@@ -245,9 +245,9 @@ class ensemblapi(webapi):
 					try:
 						waitTime = self.headers['X-RateLimit-Remaining']
 					except:
-						print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query due to " + str( self.status_code ) + ": " + self.reason )
+						print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query due to " + str( self.response.status_code ) + ": " + self.response.reason )
 						return [ annotatedVariants , attempts , False , timeAtSubmit ]
-		print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query after " + str( attempts ) + " attempts. Stopping due to " + str( self.status_code ) + ": " + self.reason )
+		print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query after " + str( attempts ) + " attempts. Stopping due to " + str( self.response.status_code ) + ": " + self.response.reason )
 		return [ annotatedVariants , attempts , False , timeAtSubmit ]
 
 	def checkInsertionsReference( self , variants , **kwargs ):

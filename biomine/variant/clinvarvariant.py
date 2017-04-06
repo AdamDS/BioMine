@@ -43,7 +43,7 @@ class clinvarvariant(mafvariant):
 				pass
 				#print "no clinical"
 
-	def printVariant(self,delim , **kwargs ):
+	def printVariant( self , delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
 		if not onlyThisVariant:
 			super(clinvarvariant,self).printVariant( delim , **kwargs )

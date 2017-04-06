@@ -2,6 +2,15 @@ import re
 from biomine.variant.variant import variant
 
 class mafvariant(variant):
+	nonCoding = re.compile( "([NULL|\*|\+|\-])" )
+	upstream = re.compile( "(\*)" )
+	intronic = re.compile( "([\+|\-])" )
+	inversion = re.compile( "(inv)" )
+	duplication = re.compile( "(dup)" )
+	deletion = re.compile( "(del)" )
+	insertion = re.compile( "(ins)" )
+	indel = re.compile( "(del.*ins)" )
+	multiple = re.compile( "(_)" )
 	def __init__(self , **kwargs):
 		super(mafvariant,self).__init__(**kwargs)
 		self.referencePeptide = kwargs.get('referencePeptide',"")
@@ -155,6 +164,9 @@ class mafvariant(variant):
 			attributes.append(self.disease)
 		return attributes
 			
+#	def fromHGVSc( self , hgvsc ):
+#		pass
+
 	def mafLine2Variant( self , line , **kwargs ):
 #		print "biomine::variant::mafvariant::mafLine2Variant - " , 
 		super(mafvariant,self).mafLine2Variant( line , **kwargs )
@@ -251,17 +263,20 @@ class mafvariant(variant):
 		mut = ""
 		isNon = self.hgvspIsNonCoding( hgvsp )
 		if not isNon:
-			changep = re.match( "p\.([a-zA-Z]+?)([0-9]+?)([a-zA-Z\*\=\_]+?)" , hgvsp )
+			changep = re.match( "p\.([a-zA-Z]+?)([0-9]+?)([a-zA-Z\*\=\_]+)" , hgvsp )
 			changee = re.match( "(e)([0-9]+?)([\+\-][0-9]+?)" , hgvsp )
 			if changep: #peptide
 				changes = changep.groups()
+				#print( changes )
 				ref = changes[0]
 				ref = self.convertAA( ref )
 				self.referencePeptide = ref
 				pos = changes[1]
 				self.positionPeptide = pos
 				mut = changes[-1]
+				#print( "\t" + mut )
 				mut = self.convertAA( mut )
+				#print( "\t\t" + mut )
 				self.alternatePeptide = mut
 			elif changee: #intronic
 				changes = changee.groups()
@@ -283,7 +298,7 @@ class mafvariant(variant):
 			pos = parts[-1]
 		return [ ref , pos , mut ]
 	def convertAA( self , pep ):
-#		print "mafvariant::convertAA - " + pep
+		#print "mafvariant::convertAA - " + pep
 		pattern = re.compile( "(fs)" )
 		fs = pattern.match( pep )
 		if fs:
@@ -310,35 +325,54 @@ class mafvariant(variant):
 			return "*"
 		if pep == "Tyr":
 			return "Y"
-		return pep[0]
+		return pep
 	def hgvspIsNonCoding( self , hgvsp ):
 #		print "biomine::variant::mafvariant::hgvspIsNonCoding - " ,
 		pattern = re.compile( "(NULL)" )
 		match = pattern.match( hgvsp )
-		if match: #then its a complex indel
+		if match:
 			return True
 		return False
 
 ### Codon
 	def hgvscIsNonCoding( self , hgvsc ):
 #		print "biomine::variant::mafvariant::hgvscIsNonCoding - " ,
-		pattern = re.compile( "([NULL|\*|\+|\-])" )
-		match = pattern.match( hgvsc )
-		if match: #then its a complex indel
+		match = mafvariant.nonCoding.match( hgvsc )
+		if match:
 			return True
 		return False
+
 	def hgvscIsIndel( self , hgvsc ):
 #		print "biomine::variant::mafvariant::hgvscIsIndel - " ,
-		pattern = re.compile( "(.*?[del|ins].*?)" )
-		match = pattern.match( hgvsc )
+		match = mafvariant.indel.match( hgvsc )
 		if match: #then its a complex indel
-			complexPattern = re.compile( "(delins)" )
-			complexMatch = complexPattern.match( hgvsc )
-			if complexMatch:
-				return 2
-			else:
-				return 1
+			return 2
+		match = mafvariant.insertion.match( hgvsc )
+		if match:
+			return 1
+		match = mafvariant.deletion.match( hgvsc )
+		if match:
+			return -1
 		return 0
+
+	def hgvscIsInversion( self , hgvsc ):
+		match = mafvariant.inversion.match( hgvsc )
+		if match:
+			return True
+		return False
+
+	def hgvscIsDuplication( self , hgvsc ):
+		match = mafvariant.duplication.match( hgvsc )
+		if match:
+			return True
+		return False
+
+	def hgvscIsMultiple( self , hgvsc ):
+		match = mafvariant.multiple.match( hgvsc )
+		if match:
+			return True
+		return False
+
 	def HGVSc( self ):
 #		print "biomine::variant::mafvariant::HGVSc"
 		hgvsc = ""
@@ -378,30 +412,41 @@ class mafvariant(variant):
 			return self.sample + "::" + self.proteogenomicVar()
 		else:
 			return "nosample::" + self.proteogenomicVar()
-	def splitHGVSc( self , hgvsc , xDot="c\." ):
+
+	def splitHGVSc( self , hgvsc , xDot="c\." , override = False ):
 #		print "biomine::variant::mafvariant::splitHGVSc - " ,
 		pattern = re.compile( xDot + "(.*)" )
 		change = pattern.match( hgvsc )
+		print( change )
 		pos = ""
 		if change:
 			hgvsc = change.groups()[0]
-			indel = self.hgvscIsIndel( hgvsc ) 
+			print( hgvsc )
+			isInd = self.hgvscIsIndel( hgvsc ) 
 			isNon = self.hgvscIsNonCoding( hgvsc ) 
+			isDup = self.hgvscIsDuplication( hgvsc )
+			isInv = self.hgvscIsInversion( hgvsc )
+			isMul = self.hgvscIsMultiple( hgvsc )
 			posOnly = self.hasCodonPositionOnly( hgvsc )
+			#print( ' | '.join( [ str( hgvsc ) , str( isNon ) , str( isMul ) , str( posOnly ) , str( isInd ) , str( isDup ) , str( isInv ) ] ) )
 			if not posOnly:
-				if ( self.typeIsIndel( hgvsc ) ) or ( indel > 0 ):
-					if indel == 2: #then its a complex indel
-						return self.splitComplexIndelHGVSc( hgvsc )
-					elif indel == 1: #simple indel
-						return self.splitSimpleIndelHGVSc( hgvsc )
-				elif isNon:
-					return self.splitNonCodingHGVSc( hgvsc )
+				if isInd != 0:
+					if isInd == -1: #simple deletion
+						return self.splitDeletionHGVSc( hgvsc , noncoding = isNon , multiple = isMul , override = override )
+					elif isInd == 1: #simple insertion
+						return self.splitInsertionHGVSc( hgvsc , noncoding = isNon , multiple = isMul , override = override )
+					elif isInd == 2: #then its a complex indel
+						return self.splitComplexHGVSc( hgvsc , noncoding = isNon , multiple = isMul , override = override )
+				elif isDup:
+					return self.splitDuplicationHGVSc( hgvsc , noncoding = isNon , multiple = isMul , override = override )
+				elif isInv:
+					return self.splitInversionHGVSc( hgvsc , noncoding = isNon , multiple = isMul , override = override )
 				else: #then its a snv
-					return self.splitSNVHGVSc( hgvsc )
+					return self.splitSNVHGVSc( hgvsc , noncoding = isNon , override = override )
 			else:
-				if indel > 0:
+				if isMul:
 					startStop = hgvsc.split('_')
-					pos = hgvsc[0]
+					pos = startStop[0]
 				else:
 					pos = hgvsc
 				self.positionCodon = pos
@@ -412,98 +457,190 @@ class mafvariant(variant):
 			print "    Problem variant: " ,
 			self.printVariant(',')
 		return [ "" , "" , "" ]
+
 	def hasCodonPositionOnly( self , hgvsc ):
 #		print "biomine::variant::mafvariant::hasCodonPositionOnly - " ,
 		noncoding = self.hgvscIsNonCoding( hgvsc )
 		if noncoding:
 			return True
 		else:
-			pattern = re.compile( "([a-zA-Z])" )
+			pattern = re.compile( ".*\d+.*([a-zA-Z])" )
 			pos = pattern.match( hgvsc )
+			#print( hgvsc + "  " + str( pos ) )
 			if pos and noncoding != "NULL":
 				return False
 			return True
-	def splitNonCodingHGVSc( self , hgvsc ):
-#		print "biomine::variant::mafvariant::splitNonCodingHGVSc - " ,
-		if self.hgvscIsNonCoding( hgvsc ):
-			pattern = re.compile( "([NULL|\*|\-|\+])(\d+)(.*)" )
-			match = pattern.match( hgvsc )
-			parts = match.groups()
-			if parts[0] == "NULL":
-				return [ "" , parts[0] , "" ]
-			elif parts[0]:
-				pos = str(match.groups()[0]) + str(match.groups()[1])
-			else:
-				pos = str(match.groups()[1])
-			return [ "" , pos , "" ]
-		return [ "" , "" , "" ]
-	def splitSNVHGVSc( self , hgvsc ):
-		pattern = re.compile( "(\d+?)([0-9]+?)([a-zA-Z\*]+)" )
-		change = pattern.match( hgvsc )
+
+	def splitSNVHGVSc( self , hgvsc , noncoding = False , override = False ):
+		#print( "splitSNVHGVSc: " + hgvsc + ", " + str( noncoding ) + ", " + str( override ) )
 		ref = ""
 		pos = ""
 		mut = ""
+		pattern = None
+		if noncoding:
+			pattern = re.compile( "(.*)([a-zA-Z\*])>([a-zA-Z\*])" )
+		else:
+			pattern = re.compile( "(\d+?)([a-zA-Z\*])>([a-zA-Z\*])" )
+		change = pattern.match( hgvsc )
 		if change:
-			changes = change.groups()
-			ref = changes[0]
-			pos = changes[1]
+			#print( "have change" )
+			#print( change.groups() )
+			ref = change.group( 2 )
+			pos = change.group( 1 )
+			mut = change.group( 3 )
+			#print( ', '.join( [ str( ref ) , str( pos ) , str( mut ) ] ) )
+			if override or self.reference == "" and self.alternate == "":
+				self.reference = ref
+				self.alternate = mut
 			self.positionCodon = pos
-			mut = changes[-1]
-			self.positionCodon = pos
+		#print( "about to return" )
+		#print( ', '.join( [ str( ref ) , str( pos ) , str( mut ) ] ) )
 		return [ ref , pos , mut ]
-	def splitComplexHGVSc( self , hgvsc ):
-#		print "biomine::variant::mafvariant::splitComplexHGVSc - " ,
-		pattern = re.compile( "(\d+?)\_(\d+?)del(\w+)ins([AGCT]*?)" )
+
+	def defaultNull( self , val , null = "." ):
+		if val:
+			return val
+		else:
+			return null
+
+	def splitComplexHGVSc( self , hgvsc , multiple = False , override = False , null = "." ):
+		#print "biomine::variant::mafvariant::splitComplexHGVSc - " ,
+		matches = re.match( "(.*)del(.*)ins(.*)" , hgvsc )
+		parts = matches.groups()
+		#print( parts )
+		ref = matches.group( 2 )
+		pos = ""
+		if multiple:
+			positions = matches.group( 1 ).split( "_" )
+			pos = positions[0]
+		else:
+			pos = matches.group( 1 )
+		mut = matches.group( 3 )
+		ref = self.defaultNull( ref , null = null )
+		mut = self.defaultNull( mut , null = null )
+		if override:
+			self.reference = ref
+			self.alternate = mut
+		self.positionCodon = pos
+		#print( ', '.join( [ str( ref ) , str( pos ) , str( mut ) ] ) )
+		return [ ref , pos , mut ]
+
+	def splitDeletionHGVSc( self , hgvsc , multiple = False , override = False , null = "." ):
+		#print "biomine::variant::mafvariant::splitDeletionHGVSc - " ,
+		matches = re.match( "(.*)del(.*)" , hgvsc )
+		parts = matches.groups()
+		#print( parts )
+		ref = matches.group( 2 )
+		pos = ""
+		if multiple:
+			positions = matches.group( 1 ).split( "_" )
+			pos = positions[0]
+		else:
+			pos = matches.group( 1 )
+		ref = self.defaultNull( ref , null = null )
+		if override:
+			self.reference = ref
+			self.alternate = null
+		self.positionCodon = pos
+		#print( ', '.join( [ str( ref ) , str( pos ) , str( mut ) ] ) )
+		return [ ref , pos , null ]
+
+	def splitInsertionHGVSc( self , hgvsc , multiple = False , override = False , null = "." ):
+		#print "biomine::variant::mafvariant::splitInsertionHGVSc - "
+		matches = re.match( "(.*)ins(.*)" , hgvsc )
+		parts = matches.groups()
+		#print( parts )
+		mut = matches.group( 2 )
+		pos = ""
+		if multiple:
+			positions = matches.group( 1 ).split( "_" )
+			pos = positions[0]
+		else:
+			pos = matches.group( 1 )
+		mut = self.defaultNull( mut , null = null )
+		if override:
+			self.reference = null
+			self.alternate = mut
+		self.positionCodon = pos
+		#print( ', '.join( [ str( ref ) , str( pos ) , str( mut ) ] ) )
+		return [ null , pos , mut ]
+
+	def splitInversionHGVSc( self , hgvsc , noncoding = False , multiple = False , override = False ):
+		#print "biomine::variant::mafvariant::splitInversionHGVSc - "
+		matches = re.match( "(.*)inv(.*)" , hgvsc )
+		parts = matches.groups()
+		#print( parts )
+		mut = matches.group( 2 )
+		pos = ""
+		if multiple:
+			positions = matches.group( 1 ).split( "_" )
+			pos = positions[0]
+		else:
+			pos = matches.group( 1 )
+		mut = self.defaultNull( mut , null = null )
+		if override:
+			self.reference = null
+			self.alternate = mut
+		self.positionCodon = pos
+		#print( ', '.join( [ str( ref ) , str( pos ) , str( mut ) ] ) )
+		if multiple:
+			if noncoding:
+				pattern = re.compile( "([\*|\-|\+]*\d+?[\-|\+]*[\d+?])([a-zA-Z\*]+)inv([a-zA-Z\*])" )
+			else:
+				pattern = re.compile( "(\d+?)([a-zA-Z\*]+)inv([a-zA-Z\*])" )
+		else:
+			if noncoding:
+				pattern = re.compile( "([\*|\-|\+]*\d+?[\-|\+]*[\d+?])([a-zA-Z\*]+)inv([a-zA-Z\*])" )
+			else:
+				pattern = re.compile( "(\d+?)([a-zA-Z\*]+)inv([a-zA-Z\*])" )
+		pattern = re.compile( "(\d+?)[\_\d.?]inv(\w+)" )
 		matches = pattern.match( hgvsc )
 		parts = matches.groups()
-		ref = ""
-		pos = ""
-		mut = ""
-		if len(parts) > 1:
-			mut = parts[-1]
+		mut = parts[1]
+		pos = parts[0]
+		self.reference = parts[1].reverse()
+		self.positionCodon = parts[0]
+		return [ pos , mut ]
+
+	def splitDuplicationHGVSc( self , hgvsc , noncoding = False , multiple = False , override = False ):
+		if multiple:
+			if noncoding:
+				pattern = re.compile( "([\*|\-|\+]*\d+?[\-|\+]*[\d+?])([a-zA-Z\*]+)dup([a-zA-Z\*])" )
+			else:
+				pattern = re.compile( "(\d+?)([a-zA-Z\*]+)dup([a-zA-Z\*])" )
 		else:
-			mut = self.alternate
-		if len(parts) > 2:
-			ref = parts[2]
-		else:
-			ref = self.reference
+			if noncoding:
+				pattern = re.compile( "([\*|\-|\+]*\d+?[\-|\+]*[\d+?])([a-zA-Z\*]+)dup([a-zA-Z\*])" )
+			else:
+				pattern = re.compile( "(\d+?)([a-zA-Z\*]+)dup([a-zA-Z\*])" )
+		pattern = re.compile( "([\*|-]\d+?[-\d.?|+\d.?).*dup(\w+)" )
+		matches = pattern.match( hgvsc )
+		parts = matches.groups()
+		mut = parts[2]
+		self.reference = parts[1]
 		pos = parts[0]
 		self.positionCodon = parts[0]
-		return [ ref , pos , mut ]
-	def splitSimpleIndelHGVSc( self , hgvsc ):
+		return [ pos , mut ]
+
+	def splitSimpleIndelHGVSc( self , hgvsc , noncoding = False , multiple = False , override = False ):
 #		print "biomine::variant::mafvariant::splitSimpleIndelHGVSc - " ,
 		pattern = re.compile( "(del)" )
 		matches = pattern.match( hgvsc )
 		if matches:
-			self.splitSimpleDeletion( hgvsc )
+			self.splitDeletion( hgvsc )
 		else:
-			self.splitSimpleInsertion( hgvsc )
-	def splitSimpleDeletionHGVSc( self , hgvsc ):
-#		print "biomine::variant::mafvariant::splitSimpleDeletionHGVSc - " ,
-		pattern = re.compile( "(\d+?)\_(\d+?)del(\w+)" )
-		matches = pattern.match( hgvsc )
-		parts = matches.groups()
-		ref = ""
-		if len(parts) > 2:
-			ref = parts[2]
-		else:
-			ref = self.reference
-		pos = parts[0]
-		self.positionCodon = parts[0]
-		return [ ref , pos ]
-	def splitSimpleInsertionHGVSc( self , hgvsc ):
-#		print "biomine::variant::mafvariant::splitSimpleInsertionHGVSc - " ,
-		pattern = re.compile( "(\d+?)\_(\d+?)ins(\w+)" )
-		matches = pattern.match( hgvsc )
-		parts = matches.groups()
-		mut = ""
-		if len(parts) > 2:
-			mut = parts[2]
-		else:
-			mut = self.reference
-		pos = parts[0]
-		self.positionCodon = parts[0]
-		return [ pos , mut ]
+			pattern = re.compile( "(dup)" )
+			matches = pattern.match( hgvsc )
+			if matches:
+				self.splitDuplicationHGVSc( hgvsc )
+			else:
+				pattern = re.compile( "(inv)" )
+				matches = pattern.match( hgvsc )
+				if matches:
+					self.splitInversionHGVSc( hgvsc )
+				else:
+					self.splitInsertion( hgvsc )
+
 	def plausibleCodonFrame( self , otherVar ):
 		start = int(self.start)
 		#stop = self.stop

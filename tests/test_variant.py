@@ -3,7 +3,7 @@ import sys
 import unittest
 from biomine.variant.variant import variant
 
-class testbreakteststeps( unittest.TestCase ):
+class testvariant( unittest.TestCase ):
 	def test_empty_init( self ):
 		v = variant()
 		self.assertTrue( v.gene == "" )

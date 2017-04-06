@@ -202,6 +202,7 @@ class variant(object):
 ##		print "variant::mafLine2Variant - " ,
 		fields = line.split( "\t" )
 		self.gene = fields[0]	#1	Hugo_Symbol
+		self.assembly = fields[3] #4	NCBI_Build
 		self.chromosome = fields[4]	#5	Chromosome
 		self.start = fields[5]	#6	Start_Position
 		self.stop = fields[6]	#7	End_Position
