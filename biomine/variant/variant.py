@@ -1,6 +1,7 @@
 #1-based closed coordinate system
 #https://wiki.nci.nih.gov/display/TCGA/Mutation+Annotation+Format+%28MAF%29+Specification
 class variant(object):
+	NULL = "."
 	def __init__(self , **kwargs):
 		self.gene = kwargs.get('gene',"")
 		self.chromosome = kwargs.get('chromosome',None)
@@ -23,6 +24,11 @@ class variant(object):
 		if strand == 1:
 			self.strand = "+"
 #		print self.strand
+	
+	def getReference( self ):
+		if self.reference == variant.NULL:
+			return variant.NULL
+		return self.reference
 		
 	def copyInfo( self , copy ):
 		self.gene = copy.gene
@@ -45,9 +51,9 @@ class variant(object):
 			self.start = copy.start
 		if not self.stop:
 			self.stop = copy.stop
-		if not self.reference:
+		if not self.reference or ( self.reference == "-" and copy.reference != "-" ):
 			self.reference = copy.reference
-		if not self.alternate:
+		if not self.alternate or ( self.alternate == "-" and copy.alternate != "-" ):
 			self.alternate = copy.alternate
 		if not self.strand:
 			self.setStrand( copy.strand )
@@ -59,7 +65,7 @@ class variant(object):
 			self.dbsnp = copy.dbsnp
 			
 	def printVariant(self,delim , **kwargs ):
-		print "variant: { " ,
+		print "variant { " ,
 		if self.gene:
 			print "gene= " ,
 			print self.gene + delim ,
@@ -220,6 +226,31 @@ class variant(object):
 			return self.sample + "::" + self.genomicVar()
 		else:
 			return "nosample::" + self.genomicVar()
+
+
+	def setStopFromReferenceAndAlternate( self ):
+		if len( self.reference ) > 1 or len( self.alternate ) > 1 \
+		or self.reference == "-" or self.alternate == "-" \
+		or self.reference == variant.NULL or self.alternate == variant.NULL:
+			if self.reference == "-" or self.reference == variant.NULL:
+				self.stop = self.start
+			else:
+				self.stop = int( self.start ) + len( self.alternate )
+				if self.reference[0] == self.alternate[0]:
+					self.stop += 1
+		else:
+			self.stop = self.start
+
+	def determineLengthOfIndel( self ):
+		lengthOfIndel = 0
+		endDeletion = 0
+		if self.isIndel():
+			lenRef = len(self.reference)
+			lenAlt = len(self.alternate)
+			lengthOfIndel = lenAlt - lenRef
+#           if lenRef > 1:
+#               print "is del"
+		return lengthOfIndel
 
 	def isIndel( self ):
 		if self.variantType == "INS" or self.variantType == "DEL":

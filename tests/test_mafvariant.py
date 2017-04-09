@@ -68,11 +68,23 @@ class testmafvariant( unittest.TestCase ):
 		self.assertTrue( vals[0] == "V" )
 		self.assertTrue( vals[1] == "600" )
 		self.assertTrue( vals[2] == "E" )
+		
 		hgvsp = "p.V600E"
 		vals = mafvariant().splitHGVSp( hgvsp )
 		self.assertTrue( vals[0] == "V" )
 		self.assertTrue( vals[1] == "600" )
 		self.assertTrue( vals[2] == "E" )
+		
+#EPHB2:1:23111545-23111545G>A::NM_017449.4:c.787G>A::NP_059145.2:p.V263Ile
+		hgvsp = "NP_059145.2:p.V263Ile"
+		vals = mafvariant().splitHGVSp( hgvsp )
+		#self.assertTrue( vals[0]
+
+#COL4A5:X:107939525-107939525A>G::NM_033380.2:c.A>G::NP_203699.1:p.  --  p.?
+		hgvsp = "NP_203699.1:p.?"
+
+#EPHB2:1:23189553-23189553G>T::NM_017449.4:c.835G>T::NP_059145.2:p.Ala279Ser
+		hgvsp = "NP_059145.2:p.Ala279Ser"
 
 #	def test_splitHGVSc( self ):
 #		pass

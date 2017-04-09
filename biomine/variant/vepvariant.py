@@ -150,6 +150,7 @@ class vepvariant(mafvariant):
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
+		print( "vepvariant {" )
 		if not onlyThisVariant:
 			super(vepvariant,self).printVariant( delim , **kwargs )
 		print "vepvariant: { " ,
@@ -158,7 +159,7 @@ class vepvariant(mafvariant):
 			print self.inputVariant + delim ,
 		if self.mostSevereConsequence:
 			print "mostSevereConsequence=" , 
-			print self.mostSevereConsequence + delim ,
+			print str( self.mostSevereConsequence ) + delim ,
 		if self.consequences:
 			print "consequences= [" ,
 			for cons in sorted(self.consequences):
@@ -170,6 +171,7 @@ class vepvariant(mafvariant):
 				print str(anno) + ", " ,
 			print "]" + delim ,
 		print " }"
+		print( "}" )
 	def attr(self):
 		attributes = super(vepvariant,self).attr()
 		if self.inputVariant:

@@ -114,6 +114,7 @@ class mafvariant(variant):
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
+		print( "mafvariant {" )
 		if not onlyThisVariant:
 			super(mafvariant,self).printVariant(delim , **kwargs )
 			print "mafvariant: { " ,
@@ -145,6 +146,7 @@ class mafvariant(variant):
 				print "disease= " ,
 				print self.disease + delim ,
 			print " }"
+		print( "}" )
 	def attr(self):
 		attributes = []
 		super(mafvariant,self).attr()
@@ -177,23 +179,6 @@ class mafvariant(variant):
 		self.variantType = fields[9]	#10	Variant_Type
 		self.splitHGVSc( fields[int(codonColumn)] )
 		self.splitHGVSp( fields[int(deltaPeptideColumn)] ) #################################### Custom field, not reliable in general
-
-	def determineLengthOfIndel( self ):
-		lengthOfIndel = 0
-		endDeletion = 0
-		if self.isIndel():
-			lenRef = len(self.reference)
-			lenAlt = len(self.alternate)
-			lengthOfIndel = lenAlt - lenRef
-#			if lenRef > 1:
-#				print "is del"
-		return lengthOfIndel
-
-	def typeIsIndel( self ):
-#		print "biomine::variant::mafvariant::typeIsIndel - " ,
-		if self.variantType == "INS" or self.variantType == "DEL":
-			return True
-		return False
 
 	def compareVariants( self , otherVariant ):
 		common = 0
@@ -261,38 +246,47 @@ class mafvariant(variant):
 		ref = ""
 		pos = ""
 		mut = ""
+		if not hgvsp:
+			return [ ref , pos , mut ]
+		shgvsp = hgvsp.split( ":" )
+		#print( hgvsp )
+		if len( shgvsp ) > 1:
+			self.transcriptPeptide = shgvsp[0]
+			hgvsp = shgvsp[1]
+		else:
+			hgvsp = shgvsp[0]
+		#print( str( self.transcriptPeptide ) + "  :  " + hgvsp )
 		isNon = self.hgvspIsNonCoding( hgvsp )
 		if not isNon:
-			changep = re.match( "p\.([a-zA-Z]+?)([0-9]+?)([a-zA-Z\*\=\_]+)" , hgvsp )
+#TODO handle splice variants: NM_000030.2:c.424-2A>G  NP_000021.1:p.Gly_142Gln145del
+			changep = re.match( "p\.([a-zA-Z]+?)([0-9\?]+?)([a-zA-Z\*\=\_]+)" , hgvsp )
 			changee = re.match( "(e)([0-9]+?)([\+\-][0-9]+?)" , hgvsp )
 			if changep: #peptide
-				changes = changep.groups()
-				#print( changes )
-				ref = changes[0]
+				#print( changep.groups() )
+				ref = changep.group( 1 )
 				ref = self.convertAA( ref )
 				self.referencePeptide = ref
-				pos = changes[1]
+				pos = changep.group( 2 )
 				self.positionPeptide = pos
-				mut = changes[-1]
-				#print( "\t" + mut )
+				mut = changep.group( 3 )
 				mut = self.convertAA( mut )
-				#print( "\t\t" + mut )
 				self.alternatePeptide = mut
 			elif changee: #intronic
+				#print( changee.groups() )
 				changes = changee.groups()
-				ref = changes[0]
+				ref = changee.group( 1 )
 				ref = self.convertAA( ref )
 				self.referencePeptide = ref
-				pos = changes[1]
+				pos = changee.group( 2 )
 				self.positionPeptide = pos
-				mut = changes[2] 
+				mut = changee.group( 3 )
 				mut = self.convertAA( mut )
 				self.alternatePeptide = mut
 			else:
 				print "biomine::variant::mafvariant Warning: could not find amino acid change or intronic change"
 				print "  Hint: Is the input amino acid change column correct?"
 				print "    Problem variant: " ,
-				self.printVariant(',')
+				print( self.proteogenomicVar() + "  --  " + hgvsp )
 		else:
 			parts = hgvsp.split('\.')
 			pos = parts[-1]
@@ -325,6 +319,8 @@ class mafvariant(variant):
 			return "*"
 		if pep == "Tyr":
 			return "Y"
+		if pep == "Val":
+			return "V"
 		return pep
 	def hgvspIsNonCoding( self , hgvsp ):
 #		print "biomine::variant::mafvariant::hgvspIsNonCoding - " ,
@@ -414,14 +410,26 @@ class mafvariant(variant):
 			return "nosample::" + self.proteogenomicVar()
 
 	def splitHGVSc( self , hgvsc , xDot="c\." , override = False ):
-#		print "biomine::variant::mafvariant::splitHGVSc - " ,
-		pattern = re.compile( xDot + "(.*)" )
-		change = pattern.match( hgvsc )
-		print( change )
+		#print "biomine::variant::mafvariant::splitHGVSc - " ,
+		ref = ""
 		pos = ""
+		mut = ""
+		if not hgvsc:
+			return [ ref , pos , mut ]
+		shgvsc = hgvsc.split( ":" )
+		#print( shgvsc )
+		if len( shgvsc ) > 1:
+			self.transcriptCodon = shgvsc[0]
+			hgvsc = shgvsc[1]
+		else:
+			hgvsc = shgvsc[0]
+		#print( str( self.transcriptCodon ) + "  :  " + hgvsc )
+		pattern = re.compile( ".*" + xDot + "(.*)" )
+		change = pattern.match( hgvsc )
+		#print( change )
 		if change:
-			hgvsc = change.groups()[0]
-			print( hgvsc )
+			hgvsc = change.group( 1 )
+			#print( hgvsc )
 			isInd = self.hgvscIsIndel( hgvsc ) 
 			isNon = self.hgvscIsNonCoding( hgvsc ) 
 			isDup = self.hgvscIsDuplication( hgvsc )

@@ -62,6 +62,9 @@ class clinvarvariant(mafvariant):
 			print "review_status=>" + self.clinical["review_status"] ,
 			print "}" ,
 		print " }"
+
+	def getClinical( self ):
+		return self.clinical
 	def getTraits( self , delim , **kwargs ):
 		traits = []
 		for trait in self.trait:
