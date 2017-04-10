@@ -261,27 +261,29 @@ class mafvariant(variant):
 #TODO handle splice variants: NM_000030.2:c.424-2A>G  NP_000021.1:p.Gly_142Gln145del
 			changep = re.match( "p\.([a-zA-Z]+?)([0-9\?]+?)([a-zA-Z\*\=\_]+)" , hgvsp )
 			changee = re.match( "(e)([0-9]+?)([\+\-][0-9]+?)" , hgvsp )
+			unknown = re.match( "p\.[\?\=\|(\=\)|0|0\?]" , hgvsp )
 			if changep: #peptide
-				#print( changep.groups() )
 				ref = changep.group( 1 )
-				ref = self.convertAA( ref )
-				self.referencePeptide = ref
 				pos = changep.group( 2 )
-				self.positionPeptide = pos
 				mut = changep.group( 3 )
+				ref = self.convertAA( ref )
 				mut = self.convertAA( mut )
+				self.referencePeptide = ref
+				self.positionPeptide = pos
 				self.alternatePeptide = mut
 			elif changee: #intronic
 				#print( changee.groups() )
 				changes = changee.groups()
 				ref = changee.group( 1 )
-				ref = self.convertAA( ref )
-				self.referencePeptide = ref
 				pos = changee.group( 2 )
-				self.positionPeptide = pos
 				mut = changee.group( 3 )
+				ref = self.convertAA( ref )
 				mut = self.convertAA( mut )
+				self.referencePeptide = ref
+				self.positionPeptide = pos
 				self.alternatePeptide = mut
+			elif unknown:
+				pass
 			else:
 				print "biomine::variant::mafvariant Warning: could not find amino acid change or intronic change"
 				print "  Hint: Is the input amino acid change column correct?"
@@ -299,6 +301,8 @@ class mafvariant(variant):
 			return "fs"
 		if pep == "=":
 			return ""
+		if pep == "Ala":
+			return "A"
 		if pep == "Arg":
 			return "R"
 		if pep == "Asn":
@@ -309,10 +313,16 @@ class mafvariant(variant):
 			return "Q"
 		if pep == "Glu":
 			return "E"
+		if pep == "Gly":
+			return "G"
+		if pep == "Ile":
+			return "I"
 		if pep == "Lys":
 			return "K"
 		if pep == "Phe":
 			return "F"
+		if pep == "Ser":
+			return "S"
 		if pep == "Trp":
 			return "W"
 		if pep == "Ter":
@@ -417,13 +427,11 @@ class mafvariant(variant):
 		if not hgvsc:
 			return [ ref , pos , mut ]
 		shgvsc = hgvsc.split( ":" )
-		#print( shgvsc )
 		if len( shgvsc ) > 1:
 			self.transcriptCodon = shgvsc[0]
 			hgvsc = shgvsc[1]
 		else:
 			hgvsc = shgvsc[0]
-		#print( str( self.transcriptCodon ) + "  :  " + hgvsc )
 		pattern = re.compile( ".*" + xDot + "(.*)" )
 		change = pattern.match( hgvsc )
 		#print( change )
@@ -491,18 +499,13 @@ class mafvariant(variant):
 			pattern = re.compile( "(\d+?)([a-zA-Z\*])>([a-zA-Z\*])" )
 		change = pattern.match( hgvsc )
 		if change:
-			#print( "have change" )
-			#print( change.groups() )
 			ref = change.group( 2 )
 			pos = change.group( 1 )
 			mut = change.group( 3 )
-			#print( ', '.join( [ str( ref ) , str( pos ) , str( mut ) ] ) )
 			if override or self.reference == "" and self.alternate == "":
 				self.reference = ref
 				self.alternate = mut
 			self.positionCodon = pos
-		#print( "about to return" )
-		#print( ', '.join( [ str( ref ) , str( pos ) , str( mut ) ] ) )
 		return [ ref , pos , mut ]
 
 	def defaultNull( self , val , null = "." ):
