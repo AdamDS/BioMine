@@ -306,6 +306,48 @@ class variant(object):
 			return True
 #		print "False"
 		return False
+	def removeOverlapFromReferenceAndAlternate( self ):
+		updatedRef = ""
+		updatedAlt = ""
+		loverlap = 0
+		ref = self.reference
+		alt = self.alternate
+		for i in range( 0 , min( [ len( ref ) , len( alt ) ] ) ):
+			if ref[i] == alt[i]:
+				loverlap = i
+				next
+			else:
+				break
+		if loverlap < len( ref ) - 1:
+			updatedRef = ref[loverlap+1:]
+		if loverlap < len( alt ) - 1:
+			updatedAlt = alt[loverlap+1:]
+		self.setStartStopForCleanOverlapFix( loverlap , \
+											 updatedRef , updatedAlt )
+		self.reference = self.nullCheck( updatedRef )
+		self.alternate = self.nullCheck( updatedAlt )
+	def setStartStopForOverlapFix( self , loverlap , ref , alt ):
+		start = self.start + loverlap + 1
+		stop = self.start
+		if len( ref ) < len( alt ) and len( ref ) == 0: #insertion
+			start -= 1
+			stop = start + 1
+		elif len( ref ) > len( alt ) and len( alt ) == 0: #deletion
+			stop = start + len( ref ) - 1
+		elif len( ref ) > 0 and len( alt ) > 0: #complex
+			stop = start + len( alt )
+		else: #dunno
+			print( "biomine::variant::setStartStopForCleanVCFPosition warning:" \
+			+ " Unusual ref alt start stop: " + ref + " " \
+			+ alt + " " + str( self.start ) + " " + str( self.stop ) \
+			+ ", reference and alternate not cleaned" )
+		self.start = start
+		self.stop = stop
+	@staticmethod
+	def nullCheck( val ):
+		if not val:
+			val = "-"
+		return val
 '''
 mu = variant(gene="BRAF",chromosome=7,start=12345,stop=123456,reference="AT",alternate="GC")
 mu.printVariant('\t')
