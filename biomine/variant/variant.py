@@ -322,7 +322,7 @@ class variant(object):
 			updatedRef = ref[loverlap+1:]
 		if loverlap < len( alt ) - 1:
 			updatedAlt = alt[loverlap+1:]
-		self.setStartStopForCleanOverlapFix( loverlap , \
+		self.setStartStopForOverlapFix( loverlap , \
 											 updatedRef , updatedAlt )
 		self.reference = self.nullCheck( updatedRef )
 		self.alternate = self.nullCheck( updatedAlt )
@@ -337,7 +337,7 @@ class variant(object):
 		elif len( ref ) > 0 and len( alt ) > 0: #complex
 			stop = start + len( alt )
 		else: #dunno
-			print( "biomine::variant::setStartStopForCleanVCFPosition warning:" \
+			print( "biomine::variant::setStartStopForOverlapFix warning:" \
 			+ " Unusual ref alt start stop: " + ref + " " \
 			+ alt + " " + str( self.start ) + " " + str( self.stop ) \
 			+ ", reference and alternate not cleaned" )
