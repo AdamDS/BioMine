@@ -23,6 +23,11 @@ class webapi(object):
 		self.action = ""
 		self.headers = {}
 		self.data = {}
+		self.nRequests = 0
+		self.timeLastRequest = None
+		self.requestsPerSecond = None
+		#TODO consider limit if multiple instances or in parallel programs
+		#https://stackoverflow.com/questions/11458477/limit-number-of-class-instances-with-python
 
 	def printInfo( self ):
 		print "Response = " + str( self.response ) + ", ok? " + str( self.response.ok )
@@ -35,6 +40,8 @@ class webapi(object):
 		print "Data = " ,
 		print self.data
 
+	def setRequestLimit( self , nps ): #requests n per second
+		self.requestLimit = nps
 	def setSubset(self,subset):
 		self.subset = subset
 		self.action = ""
@@ -116,6 +123,7 @@ class webapi(object):
 #		print headers
 #		print data
 		try:
+			self.limitRequestRate()
 			if self.headers:
 				if self.data:
 					if doPost:
@@ -146,6 +154,18 @@ class webapi(object):
 			self.errorCheck()
 			pass
 		return self.response
+	def limitRequestRate( self , tUnit = 'second' ):
+		prior = self.lastRequestTime
+		dtime = self.setRequestTime()
+		if ( dtime < 1 ):
+			if ( self.nRequests > self.nps ):
+				sleep( dtime )
+		else:
+			self.nRequests = 1
+
+		
+	def setRequestTime( self ):
+		self.lastRequestTime = time.time()
 	
 	def errorCheck( self ):
 		if not self.response.status_code:
@@ -172,6 +192,7 @@ class webapi(object):
 
 	def submitDigest(self,username,password):
 		url = self.buildURL()
+		self.limitRequestRate()
 		self.response = requests.get( url , auth=HTTPDigestAuth( username , password ) )
 		return self.response
 
