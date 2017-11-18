@@ -74,9 +74,27 @@ class ensemblapi(webapi):
 			else:
 				print "biomine ERROR: bad subset. webapi.subset initializing to variant association results"
 				super(ensemblapi,self).__init__(ensemblapi.endpoint,ensemblapi.hgvsSubset)
+		#https://github.com/Ensembl/ensembl-rest/wiki/Rate-Limits
+		#TODO set request limits
+		self.requestsPerSecond = 15
+
+	def limitRequestsPerHour( self ):
+		maxLimit = self.response.headers['X-RateLimit-Limit']
+		timeToReset = self.response.headers['X-RateLimit-Reset']
+		limitPeriod = self.response.headers['X-RateLimit-Period']
+		remainingRequests = self.response.headers['X-RateLimit-Remaining']
+		sleepTime = self.response.headers.get( 'Retry-After' , None )
+		if ( remainingRequests ):
+			print( "biomine::webapi::ensembl::ensemblapi::limitRequestsPerHour " + \
+				"- request limit reached" )
+		if ( sleepTime is not None ):
+			print( "biomine::webapi::ensembl::ensemblapi::limitRequestsPerHour " + \
+				"- must wait for " + str( sleepTime ) + \
+				"seconds before next request" )
+			time.sleep( sleepTime )
 
 	def doAllOptions( self , **kwargs ):
-		"biomine::webapi::ensembl::ensemblapi::doAllOptions"
+		#"biomine::webapi::ensembl::ensemblapi::doAllOptions"
 		self.blosum = True
 		self.csn = True
 		self.compara = True
@@ -161,12 +179,13 @@ class ensemblapi(webapi):
 					self.addData( option , options[option] )
 				else:
 					self.action += str(option) + "=1&"
-
+	
 	def annotateHGVSScalar2Response( self , hgvsNotated , **kwargs ):
 		out = kwargs.get( "content" , 'text/xml' )
 		contentInURL = kwargs.get( "inURL" , True )
 		self.doOptions()
 		self.action = hgvsNotated + "?"
+		self.limitRequestsPerHour()
 		if contentInURL:
 			self.action += "content-type=" + out
 			return self.submit()
@@ -264,6 +283,7 @@ class ensemblapi(webapi):
 			inputRegions = []
 			self.addHeader( "Accept" , "application/json" )
 			self.addHeader( "Content-Type" , "application/json" )
+			self.limitRequestsPerHour()
 			self.submit( post=True , **kwargs )
 			if self.response.ok and self.response.text:
 				needReferences = self.updateMissingReferences( variants , needReferences , **kwargs )
@@ -343,6 +363,7 @@ class ensemblapi(webapi):
 		contentInURL = kwargs.get( "inURL" , True )
 		self.action = hgvsNotated + "?"
 		#self.doOptions()
+		self.limitRequestsPerHour()
 		if contentInURL:
 			self.action += "content-type=" , out
 			self.submit()
