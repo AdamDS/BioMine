@@ -1,19 +1,24 @@
+# BioMine
+This is a toolkit to handle variant and clinical data (see variant classes). Web accessions are included through the webapi class for 
+
+- ClinicalTrials.gov
+- NCBI Entrez services
+- Ensembl ReST API
+- ExAC (Harvard) ReST API
+
+The webapi parent class can be used to more easily create classes for other URL-based web services as well.
+
+The variant classes can be used independently of the webapi's, and they include many useful functions to conform to HGVS variant representations. The BioMine toolkit is used in other software, such as [CharGer](https://github.com/ding-lab/CharGer).
 # Installation
-This package uses Python 2.7.
-To install navigate to the WebAPIs/ directory, then run:</br>
-	pip install .</br>
-This will automatically install the dependencies as well.</br>
-Otherwise, run:</br>
-	python setup.py install</br>
-## Dependencies
-### [Requests](http://docs.python-requests.org/en/latest/) 
-	pip install requests 
-### [AdvancedHTMLParser](https://pypi.python.org/pypi/AdvancedHTMLParser) 
-	pip install AdvancedHTMLParser 
+This package works with Python 2.7. To install:
+`pip install .`
+All dependencies should automatically install.
+# Note to developers
+Please be aware of site's crawler limitations (robots.txt) & rate limitations when creating new classes for web services. Failure to do so can result in IP banning or denial of service.
 # Modules
 ## Web API - general
 Parent class of the included ReST APIs, web services, and HTML
-### Example:
+### Example to print this readme from github:
 	site = webAPI.webAPI( "https://github.com/" , "AdamDS/" )
 	site.action = "WebAPIs"
 	site.submit()
