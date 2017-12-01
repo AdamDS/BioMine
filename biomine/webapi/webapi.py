@@ -26,6 +26,7 @@ class webapi(object):
 		self.nRequests = 0
 		self.timeLastRequest = None
 		self.requestsPerSecond = None
+		self.timeWindow = 1 #unit in seconds
 		#TODO consider limit if multiple instances or in parallel programs
 		#https://stackoverflow.com/questions/11458477/limit-number-of-class-instances-with-python
 
@@ -40,8 +41,8 @@ class webapi(object):
 		print "Data = " ,
 		print self.data
 
-	def setRequestLimit( self , nps ): #requests n per second
-		self.requestLimit = nps
+	def setRequestRate( self , nps ): #requests n per second
+		self.requestsPerSecond = nps
 	def setSubset(self,subset):
 		self.subset = subset
 		self.action = ""
@@ -155,13 +156,20 @@ class webapi(object):
 			pass
 		return self.response
 	def limitRequestRate( self , tUnit = 'second' ):
+		if ( self.nps is None ):
+			return
 		prior = self.lastRequestTime
-		dtime = self.setRequestTime()
-		if ( dtime < 1 ):
+		self.setRequestTime()
+		current = self.lastRequestTime
+		dtime = current - prior
+		if ( dtime <= self.timeWindow ):
 			if ( self.nRequests > self.nps ):
 				sleep( dtime )
+				self.nRequests = 0
+			self.nRequests += 1
 		else:
 			self.nRequests = 1
+
 
 		
 	def setRequestTime( self ):

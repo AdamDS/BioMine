@@ -1,5 +1,6 @@
 import os
 import sys
+import pdb
 import unittest
 from biomine.variant.mafvariant import mafvariant
 
@@ -124,6 +125,19 @@ class testmafvariant( unittest.TestCase ):
 		vals = var.splitHGVSp( hgvsp )
 		self.assertTrue( vals[0] == "A" )
 		self.assertTrue( vals[1] == "279" )
+		self.assertTrue( vals[2] == "S" )
+		self.assertTrue( var.referencePeptide == "A" )
+		self.assertTrue( var.positionPeptide == "279" )
+		self.assertTrue( var.alternatePeptide == "S" )
+		self.assertTrue( var.transcriptPeptide == "NP_059145.2" )
+
+#POLR2F:22:38369491-38369493CAGGGCCCCCTTT>C::NM_006941.3:c.delCAGGGCCCCCTTTinsC::NP_008872.1:p.*467Cysext*82
+		hgvsp = "NP_008872.1:p.*467Cysext*82"
+		var = mafvariant()
+		vals = var.splitHGVSp( hgvsp )
+		pdb.set_trace()
+		self.assertTrue( vals[0] == "C" )
+		self.assertTrue( vals[1] == "467" )
 		self.assertTrue( vals[2] == "S" )
 		self.assertTrue( var.referencePeptide == "A" )
 		self.assertTrue( var.positionPeptide == "279" )

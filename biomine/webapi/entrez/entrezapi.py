@@ -41,6 +41,9 @@ class entrezapi(webapi):
 	omim = "OMIM"
 	defaultGroup = "grabBag"
 	largestBatchSize = 500
+	requestsPerSecond = 3
+	searchBatchSize = 50
+	summaryBatchSize = 500
 	def __init__(self,**kwargs):
 		subset = kwargs.get("subset",'')
 		if not subset:
@@ -320,3 +323,15 @@ class entrezapi(webapi):
 		entries = {}
 		for DocSum in root.iter( 'DocSum' ):
 			print ""
+
+	def setRequestLimits( self ):
+		self.setRequestLimit( entrezapi.requestsPerSecond )
+		self.setSearchBatchSize( entrezapi.searchBatchSize )
+		self.setSummaryBatchSize( entrezaip.summaryBatchSize )
+
+	def setRequestRate( self , rate ):
+		self.nps = rate
+	def setSearchBatchSize( self , size ):
+		self.searchBatchSize = size
+	def setSummaryBatchSize( self , size ):
+		self.summaryBatchSize = size
