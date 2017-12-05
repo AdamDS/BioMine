@@ -48,6 +48,7 @@ class testmafvariant( unittest.TestCase ):
 		self.assertTrue( v.sample == "test-t" )
 		self.assertTrue( v.assembly == "GRCh37" )
 		self.assertTrue( v.dbsnp == "rs113488022" )
+		#pdb.set_trace()
 		self.assertTrue( v.referencePeptide == "V" )
 		self.assertTrue( v.positionPeptide == "600" )
 		self.assertTrue( v.alternatePeptide == "E" )
@@ -135,14 +136,14 @@ class testmafvariant( unittest.TestCase ):
 		hgvsp = "NP_008872.1:p.*467Cysext*82"
 		var = mafvariant()
 		vals = var.splitHGVSp( hgvsp )
-		pdb.set_trace()
-		self.assertTrue( vals[0] == "C" )
+		self.assertTrue( vals[0] == "*" )
 		self.assertTrue( vals[1] == "467" )
-		self.assertTrue( vals[2] == "S" )
-		self.assertTrue( var.referencePeptide == "A" )
-		self.assertTrue( var.positionPeptide == "279" )
-		self.assertTrue( var.alternatePeptide == "S" )
-		self.assertTrue( var.transcriptPeptide == "NP_059145.2" )
+		#pdb.set_trace()
+		self.assertTrue( vals[2] == "Cext*82" )
+		self.assertTrue( var.referencePeptide == "*" )
+		self.assertTrue( var.positionPeptide == "467" )
+		self.assertTrue( var.alternatePeptide == "Cext*82" )
+		self.assertTrue( var.transcriptPeptide == "NP_008872.1" )
 
 	def test_splitHGVSc( self ):
 		hgvsc = "NM_004958.3:c.7255G>A"				#snv coding

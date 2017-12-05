@@ -11,6 +11,13 @@ class mafvariant(variant):
 	insertion = re.compile( "(ins)" )
 	indel = re.compile( "(del.*ins)" )
 	multiple = re.compile( "(_)" )
+	varSymbols = { "fs" : "fs" , "x" : "*" , "ter" : "*" , "=" : "" }
+	revVarSymbols = dict( ( v , k ) for k , v in varSymbols.iteritems() )
+	toShort = { "ala" : "A" , "arg" : "R" , "asn" : "N" , "asp" : "D" , \
+				"cys" : "C" , "gln" : "Q" , "glu" : "E" , "gly" : "G" , \
+				"ile" : "I" , "lys" : "K" , "phe" : "F" , "ser" : "S" , \
+				"trp" : "W" , "tyr" : "Y" , "val" : "V" }
+	toLong = dict( ( v , k ) for k , v in toShort.iteritems() )
 	def __init__(self , **kwargs):
 		super(mafvariant,self).__init__(**kwargs)
 		self.referencePeptide = kwargs.get('referencePeptide',"")
@@ -259,7 +266,7 @@ class mafvariant(variant):
 		isNon = self.hgvspIsNonCoding( hgvsp )
 		if not isNon:
 #TODO handle splice variants: NM_000030.2:c.424-2A>G  NP_000021.1:p.Gly_142Gln145del
-			changep = re.match( "p\.([a-zA-Z]+?)([0-9\?]+?)([a-zA-Z\*\=\_]+)" , hgvsp )
+			changep = re.match( "p\.([a-zA-Z\*]+?)([0-9\?]+?)([a-zA-Z]{1,3}|[\*\?])(ext[0-9\*\?]*)*" , hgvsp )
 			changee = re.match( "(e)([0-9]+?)([\+\-][0-9]+?)" , hgvsp )
 			unknown = re.match( "p\.[\?\=\|(\=\)|0|0\?]" , hgvsp )
 			if changep: #peptide
@@ -268,6 +275,8 @@ class mafvariant(variant):
 				mut = changep.group( 3 )
 				ref = self.convertAA( ref )
 				mut = self.convertAA( mut )
+				if ( changep.group( 4 ) ):
+					mut += changep.group( 4 )
 				self.referencePeptide = ref
 				self.positionPeptide = pos
 				self.alternatePeptide = mut
@@ -295,42 +304,15 @@ class mafvariant(variant):
 		return [ ref , pos , mut ]
 	def convertAA( self , pep ):
 		#print "mafvariant::convertAA - " + pep
+		lowPep = pep.lower()
 		pattern = re.compile( "(fs)" )
-		fs = pattern.match( pep )
-		if fs:
-			return "fs"
-		if pep == "=":
-			return ""
-		if pep == "Ala":
-			return "A"
-		if pep == "Arg":
-			return "R"
-		if pep == "Asn":
-			return "N"
-		if pep == "Asp":
-			return "D"
-		if pep == "Gln":
-			return "Q"
-		if pep == "Glu":
-			return "E"
-		if pep == "Gly":
-			return "G"
-		if pep == "Ile":
-			return "I"
-		if pep == "Lys":
-			return "K"
-		if pep == "Phe":
-			return "F"
-		if pep == "Ser":
-			return "S"
-		if pep == "Trp":
-			return "W"
-		if pep == "Ter":
-			return "*"
-		if pep == "Tyr":
-			return "Y"
-		if pep == "Val":
-			return "V"
+		fs = pattern.match( lowPep )
+		if ( lowPep in mafvariant.toShort ):
+			return mafvariant.toShort[lowPep]
+		if ( lowPep in mafvariant.varSymbols ):
+			return mafvariant.varSymbols[lowPep]
+		if ( lowPep not in mafvariant.toLong and lowPep not in mafvariant.revVarSymbols ):
+			print( "biomine warning: " + str( pep ) + " not found in conversion tables" )
 		return pep
 	def hgvspIsNonCoding( self , hgvsp ):
 #		print "biomine::variant::mafvariant::hgvspIsNonCoding - " ,
