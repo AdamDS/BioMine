@@ -311,7 +311,7 @@ class mafvariant(variant):
 			return mafvariant.toShort[lowPep]
 		if ( lowPep in mafvariant.varSymbols ):
 			return mafvariant.varSymbols[lowPep]
-		if ( lowPep not in mafvariant.toLong and lowPep not in mafvariant.revVarSymbols ):
+		if ( pep not in mafvariant.toLong and pep not in mafvariant.revVarSymbols ):
 			print( "biomine warning: " + str( pep ) + " not found in conversion tables" )
 		return pep
 	def hgvspIsNonCoding( self , hgvsp ):

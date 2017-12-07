@@ -31,6 +31,9 @@ class webapi(object):
 		#https://stackoverflow.com/questions/11458477/limit-number-of-class-instances-with-python
 
 	def printInfo( self ):
+		self.__repr__()
+
+	def __repr__( self ):
 		print "Response = " + str( self.response ) + ", ok? " + str( self.response.ok )
 		print "Endpoint = " + self.endpoint
 		print "Subset = " + self.subset
