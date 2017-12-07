@@ -24,7 +24,8 @@ class webapi(object):
 		self.headers = {}
 		self.data = {}
 		self.nRequests = 0
-		self.timeLastRequest = None
+		self.firstRequestTime = 0
+		self.lastRequestTime = time.time()
 		self.requestsPerSecond = None
 		self.timeWindow = 1 #unit in seconds
 		#TODO consider limit if multiple instances or in parallel programs
@@ -158,25 +159,29 @@ class webapi(object):
 			self.errorCheck()
 			pass
 		return self.response
+
 	def limitRequestRate( self , tUnit = 'second' ):
 		if ( self.nps is None ):
 			return
-		prior = self.lastRequestTime
-		self.setRequestTime()
+		prior = self.firstRequestTime
 		current = self.lastRequestTime
 		dtime = current - prior
 		if ( dtime <= self.timeWindow ):
 			if ( self.nRequests > self.nps ):
 				sleep( dtime )
 				self.nRequests = 0
+				self.setFirstRequestTime()
 			self.nRequests += 1
 		else:
+			self.setFirstRequestTime()
 			self.nRequests = 1
-
-
+		self.setLastRequestTime()
 		
-	def setRequestTime( self ):
+	def setLastRequestTime( self ):
 		self.lastRequestTime = time.time()
+	
+	def setFirstRequestTime( self ):
+		self.firstRequestTime = time.time()
 	
 	def errorCheck( self ):
 		if not self.response.status_code:
