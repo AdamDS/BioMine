@@ -24,9 +24,9 @@ class webapi(object):
 		self.headers = {}
 		self.data = {}
 		self.nRequests = 0
-		self.firstRequestTime = 0
-		self.lastRequestTime = time.time()
-		self.requestsPerSecond = None
+		self.requestTimes = []
+		#self.lastRequestTime = time.time()
+		self.requestsPerWindow = None
 		self.timeWindow = 1 #unit in seconds
 		#TODO consider limit if multiple instances or in parallel programs
 		#https://stackoverflow.com/questions/11458477/limit-number-of-class-instances-with-python
@@ -35,15 +35,20 @@ class webapi(object):
 		self.__repr__()
 
 	def __repr__( self ):
-		print "Response = " + str( self.response ) + ", ok? " + str( self.response.ok )
-		print "Endpoint = " + self.endpoint
-		print "Subset = " + self.subset
-		print "Action = " + self.action
-		print "URL = " + self.buildURL()
-		print "Headers = " ,
-		print self.headers
-		print "Data = " ,
-		print self.data
+		desc = ""
+		if( self.response is not None ):
+			desc += "Response = " + str( self.response ) + ", ok? " + str( self.response.ok )
+		else:
+			desc += "Response = " + str( self.response )
+		desc += "Endpoint = " + self.endpoint
+		desc += "Subset = " + self.subset
+		desc += "Action = " + self.action
+		desc += "URL = " + self.buildURL()
+		desc += "Headers = "
+		desc += str( self.headers )
+		desc += "Data = "
+		desc += str( self.data )
+		return desc
 
 	def setRequestRate( self , nps ): #requests n per second
 		self.requestsPerSecond = nps
@@ -102,7 +107,7 @@ class webapi(object):
 		data = ""
 		if self.data:
 			data = json.dumps( self.data )
-			self.headers["Accept"] = "application/json"
+			self.headers["accept"] = "application/json"
 #		print self.data
 		return data
 
@@ -163,38 +168,48 @@ class webapi(object):
 	def limitRequestRate( self , tUnit = 'second' ):
 		if ( self.nps is None ):
 			return
-		prior = self.firstRequestTime
-		current = self.lastRequestTime
-		dtime = current - prior
-		if ( dtime <= self.timeWindow ):
-			if ( self.nRequests > self.nps ):
-				sleep( dtime )
-				self.nRequests = 0
-				self.setFirstRequestTime()
-			self.nRequests += 1
-		else:
-			self.setFirstRequestTime()
-			self.nRequests = 1
-		self.setLastRequestTime()
-		
-	def setLastRequestTime( self ):
-		self.lastRequestTime = time.time()
-	
-	def setFirstRequestTime( self ):
-		self.firstRequestTime = time.time()
+		#
+		sleepTime = 0
+		nRecentRequests = self.getNRecentRequests()
+		while nRecentRequests > 0:
+			[ dTime , currentTime ] = self.timesUpdate()
+			if ( dTime <= self.timeWindow ):
+				if ( nRecentRequests >= self.requestsPerWindow ):
+					oldestTime = self.requestTimes.pop( 0 )
+					nRecentRequests = self.getNRecentRequests()
+					sleepTime = currentTime - oldestTime
+				else:
+					self.requestTimes.append( currentTime )
+					return
+			else:
+				if ( sleepTime > 0 ):
+					break
+				self.requestTimes.pop( 0 )
+				nRecentRequests = self.getNRecentRequests()
+		sleep( sleepTime )
+		return
+	def getNRecentRequests( self ):
+		return len( self.recentRequests )
+	def timeElapsed( self ):
+#TODO could check if the newest (-1 position) to current is smaller than time window
+		current = time.time()
+		prior = self.requestTimes[0]
+		dTime = current - prior
+		return [ dTime , current ]
 	
 	def errorCheck( self ):
-		if not self.response.status_code:
-			print "biomine::webapi::errorCheck Warning: no status code when trying " + self.buildURL()
-			return
-		code = self.response.status_code
-		if code != 200:
-			if code == 204:
-				print "biomine::webapi::errorCheck Warning: no content from " + self.buildURL()
-			else:
-				print "biomine::webapi::errorCheck Warning: response from " + self.buildURL()
-				print "received status code = " + str(code)
-				self.printInfo()
+		if self.response is not None:
+			if not self.response.status_code:
+				print "biomine::webapi::errorCheck Warning: no status code when trying " + self.buildURL()
+				return
+			code = self.response.status_code
+			if code != 200:
+				if code == 204:
+					print "biomine::webapi::errorCheck Warning: no content from " + self.buildURL()
+				else:
+					print "biomine::webapi::errorCheck Warning: response from " + self.buildURL()
+					print "received status code = " + str(code)
+					self.printInfo()
 	def testURL( self , **kwargs ):
 		skip = kwargs.get( 'skip' , True )
 		if skip:

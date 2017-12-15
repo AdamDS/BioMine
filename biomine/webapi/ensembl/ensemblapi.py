@@ -77,21 +77,46 @@ class ensemblapi(webapi):
 		#https://github.com/Ensembl/ensembl-rest/wiki/Rate-Limits
 		#TODO set request limits
 		self.requestsPerSecond = 15
+	
+	def __repr__( self , details = False ):
+		desc = ""
+		desc += super( ensemblapi , self ).__repr__()
+		if( details ):
+			desc += "blosum = " + str( self.blosum )
+			desc += "csn = " + str( self.csn )
+			desc += "compara = " + str( self.compara )
+			desc += "exac = " + str( self.exac )
+			desc += "genesplice = " + str( self.genesplicer )
+			desc += "maxentscan = " + str( self.maxentscan )
+			desc += "updown = " + str( self.updown )
+			desc += "callback = " + str( self.callback )
+			desc += "canonical = " + str( self.canonical )
+			desc += "ccds = " + str( self.ccds )
+			desc += "dbnsfp = " + str( self.dbnsfp )
+			desc += "dbscsnv = " + str( self.dbscsnv )
+			desc += "domains = " + str( self.domains )
+			desc += "hgvs = " + str( self.hgvs )
+			desc += "mirna = " + str( self.mirna )
+			desc += "numbers = " + str( self.numbers )
+			desc += "protein = " + str( self.protein )
+			desc += "refseq = " + str( self.refseq )
+		return desc
 
 	def limitRequestsPerHour( self ):
-		maxLimit = self.response.headers['X-RateLimit-Limit']
-		timeToReset = self.response.headers['X-RateLimit-Reset']
-		limitPeriod = self.response.headers['X-RateLimit-Period']
-		remainingRequests = self.response.headers['X-RateLimit-Remaining']
-		sleepTime = self.response.headers.get( 'Retry-After' , None )
-		if ( remainingRequests ):
-			print( "biomine::webapi::ensembl::ensemblapi::limitRequestsPerHour " + \
-				"- request limit reached" )
-		if ( sleepTime is not None ):
-			print( "biomine::webapi::ensembl::ensemblapi::limitRequestsPerHour " + \
-				"- must wait for " + str( sleepTime ) + \
-				"seconds before next request" )
-			time.sleep( sleepTime )
+		#maxLimit = self.response.headers.get( 'X-RateLimit-Limit' , None )
+		#timeToReset = self.response.headers.get( 'X-RateLimit-Reset' , None )
+		#limitPeriod = self.response.headers.get( 'X-RateLimit-Period' , None )
+		if ( self.response is not None ):
+			remainingRequests = self.response.headers.get( 'X-RateLimit-Remaining' , None )
+			sleepTime = self.response.headers.get( 'Retry-After' , None )
+			if ( remainingRequests ):
+				print( "biomine::webapi::ensembl::ensemblapi::limitRequestsPerHour " + \
+					"- request limit reached" )
+			if ( sleepTime is not None ):
+				print( "biomine::webapi::ensembl::ensemblapi::limitRequestsPerHour " + \
+					"- must wait for " + str( sleepTime ) + \
+					"seconds before next request" )
+				time.sleep( sleepTime )
 
 	def doAllOptions( self , **kwargs ):
 		#"biomine::webapi::ensembl::ensemblapi::doAllOptions"
@@ -203,7 +228,7 @@ class ensemblapi(webapi):
 	def annotateVariantsPost( self , variants , **kwargs ):
 		
 #		print "biomine::webapi::ensembl::ensemblapi::annotateVariantsPost"
-		doAllOptions = kwargs.get( 'allOptions' , True )
+		#doAllOptions = kwargs.get( 'allOptions' , True )
 		maxPost = kwargs.get( 'maxPost' , 150 ) #bc error 400 (bad request), 403 (banned), or 504 (gateway/proxy server timeout)
 		#maxPost = 400 #https://github.com/ensembl/ensembl-rest/wiki/POST-Requests
 		#maxPost = 1000 #http://rest.ensembl.org/documentation/info/vep_region_post
@@ -221,17 +246,17 @@ class ensemblapi(webapi):
 			needReferences = self.checkInsertionsReference( subsetVariants , nullValue=nullValue , delim=delim )
 			self.fullReset()
 			self.setSubset( ensemblapi.regionSubset )
-			self.doAllOptions( data=doAllOptions )
+			#self.doAllOptions( data=doAllOptions )
 			for var in subsetVariants:
 				inputVariant = var.ensembl()
-				print inputVariant
+				#print inputVariant
 				formattedVariants.append( inputVariant )
 				vepvar = vepvariant( inputVariant=inputVariant , parentVariant=var )
 				annotatedVariants[inputVariant] = vepvar
  			#following examples from documentation
 			self.addData( "variants" , formattedVariants )
-			self.addHeader( "Accept" , "application/json" )
-			self.addHeader( "Content-Type" , "application/json" )
+			self.addHeader( "accept" , "application/json" )
+			self.addHeader( "content-type" , "application/json" )
 			[ annotatedVariants , attempts , success , timeAtSubmit ] = self.trySubmit( timeAtSubmit , **kwargs )
 			if not success:
 				print "BioMine::webapi::ensembl::ensemblapi Error: cannot access desired XML fields/tags for variants " ,
@@ -251,22 +276,29 @@ class ensemblapi(webapi):
 				attempts += 1
 				timeAtSubmit = time.time()
 				self.submit( post=True , **kwargs )
-				if self.response.ok and self.response.text:
-					root = self.response.json()
-					keepGoing = False
-					for rootElement in root:
-						var = vepvariant()
-						var.parseEntryFromVEP( rootElement )
-						var.setInputVariant()
-						annotatedVariants[var.inputVariant] = var
-					return [ annotatedVariants , attempts , True , timeAtSubmit ]
+				if self.response is not None:
+					if self.response.ok and self.response.text:
+						root = self.response.json()
+						keepGoing = False
+						for rootElement in root:
+							var = vepvariant()
+							var.parseEntryFromVEP( rootElement )
+							var.setInputVariant()
+							annotatedVariants[var.inputVariant] = var
+						return [ annotatedVariants , attempts , True , timeAtSubmit ]
+					else:
+						try:
+							waitTime = self.headers['X-RateLimit-Remaining']
+						except:
+							print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query due to " + str( self.response.status_code ) + ": " + self.response.reason )
+							return [ annotatedVariants , attempts , False , timeAtSubmit ]
 				else:
-					try:
-						waitTime = self.headers['X-RateLimit-Remaining']
-					except:
-						print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query due to " + str( self.response.status_code ) + ": " + self.response.reason )
-						return [ annotatedVariants , attempts , False , timeAtSubmit ]
-		print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query after " + str( attempts ) + " attempts. Stopping due to " + str( self.response.status_code ) + ": " + self.response.reason )
+					print( "trySubmit Error: submitted request, but response is None" )
+		if( self.response is not None ):
+			print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query after " + str( attempts ) + " attempts. Stopping due to " + str( self.response.status_code ) + ": " + self.response.reason )
+		else:
+			print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: bad response" )
+			print( self )
 		return [ annotatedVariants , attempts , False , timeAtSubmit ]
 
 	def checkInsertionsReference( self , variants , **kwargs ):
@@ -281,15 +313,18 @@ class ensemblapi(webapi):
 		if needReferences:
 			self.addData( "regions" , inputRegions )
 			inputRegions = []
-			self.addHeader( "Accept" , "application/json" )
-			self.addHeader( "Content-Type" , "application/json" )
+			self.addHeader( "accept" , "application/json" )
+			self.addHeader( "content-type" , "application/json" )
 			self.limitRequestsPerHour()
 			self.submit( post=True , **kwargs )
-			if self.response.ok and self.response.text:
-				needReferences = self.updateMissingReferences( variants , needReferences , **kwargs )
+			if self.response is not None:
+				if self.response.ok and self.response.text:
+					needReferences = self.updateMissingReferences( variants , needReferences , **kwargs )
+				else:
+					print "References needed: " ,
+					print needReferences
 			else:
-				print "References needed: " ,
-				print needReferences
+				print( "checkInsertionsReference Error: submitted request, but response is None" )
 		return needReferences
 	def updateMissingReferences( self , variants , needReferences , **kwargs):
 		nullValue = kwargs.get( 'nullValue' , '.' )

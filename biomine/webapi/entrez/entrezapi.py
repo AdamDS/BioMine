@@ -41,7 +41,8 @@ class entrezapi(webapi):
 	omim = "OMIM"
 	defaultGroup = "grabBag"
 	largestBatchSize = 500
-	requestsPerSecond = 3
+	requestsPerWindow = 3
+	timeWindow = 1 #in seconds
 	searchBatchSize = 50
 	summaryBatchSize = 500
 	def __init__(self,**kwargs):
@@ -325,9 +326,10 @@ class entrezapi(webapi):
 			print ""
 
 	def setRequestLimits( self ):
-		self.setRequestLimit( entrezapi.requestsPerSecond )
+		self.setRequestLimit( entrezapi.requestsPerWindow )
 		self.setSearchBatchSize( entrezapi.searchBatchSize )
 		self.setSummaryBatchSize( entrezaip.summaryBatchSize )
+		self.setTimeWindow( entrezaip.timeWindow )
 
 	def setRequestRate( self , rate ):
 		self.nps = rate
@@ -335,3 +337,5 @@ class entrezapi(webapi):
 		self.searchBatchSize = size
 	def setSummaryBatchSize( self , size ):
 		self.summaryBatchSize = size
+	def setTimeWindow( self , size ):
+		self.timeWindow = size
