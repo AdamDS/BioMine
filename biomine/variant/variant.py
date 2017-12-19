@@ -29,6 +29,35 @@ class variant(object):
 		if self.reference == variant.NULL:
 			return variant.NULL
 		return self.reference
+	def checkIfRefAltStrand( self , k ):
+		if ( k == "reference" ):
+			return True
+		if ( k == "alternate" ):
+			return True
+		if ( k == "strand" ):
+			return True
+		return False
+
+	def nonzeroRefAltStrand( self , k ):
+		if ( k == "reference" ):
+			if ( self.__dict__.get( k ) != "-" ):
+				return True
+		elif ( k == "alternate" ):
+			if ( self.__dict__.get( k ) != "-" ):
+				return True
+		elif ( k == "strand" ):
+			if ( self.__dict__.get( k ) != "+" ):
+				return True
+		return False
+	def __nonzero__( self ):
+		for k , v in self.__dict__.iteritems():
+			if ( self.checkIfRefAltStrand( k ) ):
+				if ( self.nonzeroRefAltStrand( k ) ):
+					return True
+			else:
+				if ( bool( v ) ):
+					return True
+		return False
 		
 	def copyInfo( self , copy ):
 		self.gene = copy.gene

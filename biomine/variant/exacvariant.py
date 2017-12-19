@@ -55,6 +55,15 @@ class exacvariant( variant ):
 	#	print self.numbers ,
 	#	print delim ,
 	#	print self.frequency
+	def __nonzero__( self ):
+		for k , v in self.__dict__.iteritems():
+			if ( self.checkIfRefAltStrand( k ) ):
+				if ( self.nonzeroRefAltStrand( k ) ):
+					return True
+			else:
+				if ( bool( v ) ):
+					return True
+		return False
 
 	def setCounts( self , info , **kwargs ):
 		self.counts.setPopulation( info , **kwargs )

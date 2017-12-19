@@ -6,16 +6,10 @@ from biomine.variant.variant import variant
 class testvariant( unittest.TestCase ):
 	def test_empty_init( self ):
 		v = variant()
-		self.assertTrue( v.gene == "" )
-		self.assertTrue( v.chromosome == None )
-		self.assertTrue( v.start == None )
-		self.assertTrue( v.stop == None )
-		self.assertTrue( v.reference == "-" )
-		self.assertTrue( v.alternate == "-" )
-		self.assertTrue( v.strand == "+" )
-		self.assertTrue( v.sample == None )
-		self.assertTrue( v.assembly == None )
-		self.assertTrue( v.dbsnp == None )
+		if ( v ):
+			return True
+		else:
+			return False
 
 #	def test_setStrand( self ):
 #		v = variant()

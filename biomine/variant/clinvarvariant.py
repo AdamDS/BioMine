@@ -42,6 +42,15 @@ class clinvarvariant(mafvariant):
 			except:
 				pass
 				#print "no clinical"
+	def __nonzero__( self ):
+		for k , v in self.__dict__.iteritems():
+			if ( self.checkIfRefAltStrand( k ) ):
+				if ( self.nonzeroRefAltStrand( k ) ):
+					return True
+			else:
+				if ( bool( v ) ):
+					return True
+		return False
 
 	def printVariant( self , delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )

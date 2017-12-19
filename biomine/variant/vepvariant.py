@@ -140,6 +140,15 @@ class vepvariant(mafvariant):
 				self.colocations = copy.colocations
 			except:
 				pass
+	def __nonzero__( self ):
+		for k , v in self.__dict__.iteritems():
+			if ( self.checkIfRefAltStrand( k ) ):
+				if ( self.nonzeroRefAltStrand( k ) ):
+					return True
+			else:
+				if ( bool( v ) ):
+					return True
+		return False
 
 	def setInputVariant( self , **kwargs ):
 		asVCF = kwargs.get( 'vcf' , True )

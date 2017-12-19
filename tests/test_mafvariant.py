@@ -7,25 +7,10 @@ from biomine.variant.mafvariant import mafvariant
 class testmafvariant( unittest.TestCase ):
 	def test_empty_init( self ):
 		v = mafvariant()
-		self.assertTrue( v.gene == "" )
-		self.assertTrue( v.chromosome == None )
-		self.assertTrue( v.start == None )
-		self.assertTrue( v.stop == None )
-		self.assertTrue( v.reference == "-" )
-		self.assertTrue( v.alternate == "-" )
-		self.assertTrue( v.strand == "+" )
-		self.assertTrue( v.sample == None )
-		self.assertTrue( v.assembly == None )
-		self.assertTrue( v.dbsnp == None )
-		self.assertTrue( v.referencePeptide == "" )
-		self.assertTrue( v.positionPeptide == None )
-		self.assertTrue( v.alternatePeptide == "" )
-		self.assertTrue( v.transcriptPeptide == None )
-		self.assertTrue( v.positionCodon == None )
-		self.assertTrue( v.transcriptCodon == None )
-		self.assertTrue( v.variantClass == None )
-		self.assertTrue( v.variantType == None )
-		self.assertTrue( v.disease == None )
+		if ( v ):
+			return True
+		else:
+			return False
 
 	def test_mafLine2Variant( self ):
 		mafLine = "\t".join( [ \

@@ -118,6 +118,15 @@ class mafvariant(variant):
 				self.disease = copy.disease
 			except:
 				print( "BioMine::variant::mafvariant::fillMissingInfo Warning: no disease with which to fill" )
+	def __nonzero__( self ):
+		for k , v in self.__dict__.iteritems():
+			if ( self.checkIfRefAltStrand( k ) ):
+				if ( self.nonzeroRefAltStrand( k ) ):
+					return True
+			else:
+				if ( bool( v ) ):
+					return True
+		return False
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )

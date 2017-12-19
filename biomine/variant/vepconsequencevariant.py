@@ -167,6 +167,15 @@ class vepconsequencevariant(mafvariant):
 		if self.scoreSIFT:
 			print "scoreSIFT= " + str(self.scoreSIFT) + delim ,
 		print " }"
+	def __nonzero__( self ):
+		for k , v in self.__dict__.iteritems():
+			if ( self.checkIfRefAltStrand( k ) ):
+				if ( self.nonzeroRefAltStrand( k ) ):
+					return True
+			else:
+				if ( bool( v ) ):
+					return True
+		return False
 	def attr(self):
 		attributes = super(vepconsequencevariant,self).attr()
 		if self.biotype:

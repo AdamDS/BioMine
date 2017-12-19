@@ -75,3 +75,12 @@ class vepcolocatedvariant(mafvariant):
 				self.alternatePeptide = amino_acids[1]
 			else:
 				self.alternatePeptide = amino_acids[0]
+	def __nonzero__( self ):
+		for k , v in self.__dict__.iteritems():
+			if ( self.checkIfRefAltStrand( k ) ):
+				if ( self.nonzeroRefAltStrand( k ) ):
+					return True
+			else:
+				if ( bool( v ) ):
+					return True
+		return False
