@@ -43,6 +43,9 @@ class ensemblapi(webapi):
 	numbers = "numbers"
 	protein = "protein"
 	refseq = "xref_refseq"
+	requestsPerWindow = 15
+	timeWindow = 1 #in seconds
+	searchBatchSize = 300
 	def __init__(self,**kwargs):
 		subset = kwargs.get("subset",'')
 #optional defaults as given by http://rest.ensembl.org/documentation/info/vep_hgvs_get
@@ -75,8 +78,7 @@ class ensemblapi(webapi):
 				print "biomine ERROR: bad subset. webapi.subset initializing to variant association results"
 				super(ensemblapi,self).__init__(ensemblapi.endpoint,ensemblapi.hgvsSubset)
 		#https://github.com/Ensembl/ensembl-rest/wiki/Rate-Limits
-		#TODO set request limits
-		self.requestsPerSecond = 15
+		self.setRequestLimits()
 	
 	def __repr__( self , details = False ):
 		desc = ""
@@ -109,7 +111,7 @@ class ensemblapi(webapi):
 		if ( self.response is not None ):
 			remainingRequests = self.response.headers.get( 'X-RateLimit-Remaining' , None )
 			sleepTime = self.response.headers.get( 'Retry-After' , None )
-			if ( remainingRequests ):
+			if ( remainingRequests == 0 ):
 				print( "biomine::webapi::ensembl::ensemblapi::limitRequestsPerHour " + \
 					"- request limit reached" )
 			if ( sleepTime is not None ):
@@ -227,14 +229,15 @@ class ensemblapi(webapi):
 		return resultDict
 	def annotateVariantsPost( self , variants , **kwargs ):
 		
-#		print "biomine::webapi::ensembl::ensemblapi::annotateVariantsPost"
+		print "biomine::webapi::ensembl::ensemblapi::annotateVariantsPost"
 		#doAllOptions = kwargs.get( 'allOptions' , True )
-		maxPost = kwargs.get( 'maxPost' , 150 ) #bc error 400 (bad request), 403 (banned), or 504 (gateway/proxy server timeout)
+		maxPost = kwargs.get( 'maxPost' , self.searchBatchSize ) #bc error 400 (bad request), 403 (banned), or 504 (gateway/proxy server timeout)
+		if maxPost > self.searchBatchSize:
+			maxPost = self.searchBatchSize
 		#maxPost = 400 #https://github.com/ensembl/ensembl-rest/wiki/POST-Requests
 		#maxPost = 1000 #http://rest.ensembl.org/documentation/info/vep_region_post
 		lengthVariants = len(variants)
 		annotatedVariants = {} #dict of vepvariants
-		timeAtSubmit = 0
 		for i in range(0,lengthVariants,maxPost):
 			j = i + maxPost
 			if lengthVariants < maxPost:
@@ -248,7 +251,7 @@ class ensemblapi(webapi):
 			self.setSubset( ensemblapi.regionSubset )
 			#self.doAllOptions( data=doAllOptions )
 			for var in subsetVariants:
-				inputVariant = var.ensembl()
+				inputVariant = var.vcf()
 				#print inputVariant
 				formattedVariants.append( inputVariant )
 				vepvar = vepvariant( inputVariant=inputVariant , parentVariant=var )
@@ -257,51 +260,39 @@ class ensemblapi(webapi):
 			self.addData( "variants" , formattedVariants )
 			self.addHeader( "accept" , "application/json" )
 			self.addHeader( "content-type" , "application/json" )
-			[ annotatedVariants , attempts , success , timeAtSubmit ] = self.trySubmit( timeAtSubmit , **kwargs )
+			[ annotatedVariantsNew , success ] = self.trySubmit( **kwargs ) 
+			annotatedVariants.update(annotatedVariantsNew)
 			if not success:
 				print "BioMine::webapi::ensembl::ensemblapi Error: cannot access desired XML fields/tags for variants " ,
 				print "[" + str(i) + ":" + str(j) + "]"
 		return annotatedVariants
 
-	def trySubmit( self , lastSubmitTime , **kwargs ):
+	def trySubmit( self , **kwargs ):
+		print "BioMine::webapi::ensembl::ensemblapi::trySubmit"
 		annotatedVariants = {}
-		attempts = 0
-		keepGoing = True
-		timeAtSubmit = lastSubmitTime
-		timeSinceSubmit = time.time()
-		waitTime = 0
-		frequencyLimit = 1/15 #max seconds between requests: 15 requests/second
-		for attempts in range(0,30):
-			if timeSinceSubmit - timeAtSubmit > waitTime:
-				attempts += 1
-				timeAtSubmit = time.time()
-				self.submit( post=True , **kwargs )
-				if self.response is not None:
-					if self.response.ok and self.response.text:
-						root = self.response.json()
-						keepGoing = False
-						for rootElement in root:
-							var = vepvariant()
-							var.parseEntryFromVEP( rootElement )
-							var.setInputVariant()
-							annotatedVariants[var.inputVariant] = var
-						return [ annotatedVariants , attempts , True , timeAtSubmit ]
-					else:
-						try:
-							waitTime = self.headers['X-RateLimit-Remaining']
-						except:
-							print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query due to " + str( self.response.status_code ) + ": " + self.response.reason )
-							return [ annotatedVariants , attempts , False , timeAtSubmit ]
-				else:
-					print( "trySubmit Error: submitted request, but response is None" )
+		self.limitRequestsPerHour()
+		self.submit( post=True , **kwargs )
+		if self.response is not None:
+			if self.response.ok and self.response.text:
+				root = self.response.json()
+				for rootElement in root:
+					var = vepvariant()
+					var.parseEntryFromVEP( rootElement )
+					var.setInputVariant()
+					annotatedVariants[var.inputVariant] = var
+				return [ annotatedVariants , True ]
+			else:
+				print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query due to " + str( self.response.status_code ) + ": " + self.response.reason )
+				return [ annotatedVariants , False ]
 		if( self.response is not None ):
-			print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query after " + str( attempts ) + " attempts. Stopping due to " + str( self.response.status_code ) + ": " + self.response.reason )
+			print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query. Stopping due to " + str( self.response.status_code ) + ": " + self.response.reason )
 		else:
 			print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: bad response" )
 			print( self )
-		return [ annotatedVariants , attempts , False , timeAtSubmit ]
+		return [ annotatedVariants , False ]
 
 	def checkInsertionsReference( self , variants , **kwargs ):
+		# print "biomine::webapi::ensembl::ensemblapi::annotateVariantsPost::checkInsertionsReference"
 		self.setSubset( ensemblapi.sequenceSubset )
 		needReferences = {}
 		inputRegions = []
@@ -548,6 +539,11 @@ class ensemblapi(webapi):
 		for i in range(0,columns-1):
 			nulls += "NULL\t"
 		return nulls.rstrip()
+
+	def setRequestLimits( self ):
+		self.setRequestLimit( ensemblapi.requestsPerWindow )
+		self.setSearchBatchSize( ensemblapi.searchBatchSize )
+		self.setTimeWindow( ensemblapi.timeWindow )
 
 	@classmethod
 	def setSpecies( cls , species ):

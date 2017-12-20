@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 import json
 import AdvancedHTMLParser
 import time
+import pdb
 
 class webapi(object):
 	'''Web api class, has 
@@ -129,9 +130,9 @@ class webapi(object):
 		url = self.buildURL()
 		headers = self.headers #buildHeader()
 		data = self.buildData()
-#		print url
-#		print headers
-#		print data
+		# print url
+		# print headers
+		# print data
 		try:
 			self.limitRequestRate()
 			if self.headers:
@@ -159,6 +160,7 @@ class webapi(object):
 					else:
 						self.response = requests.get( url , timeout = timeout )
 			self.errorCheck()
+			# pdb.set_trace()
 		except:
 			print "biomine::webapi::submit failed: " ,
 			self.errorCheck()
@@ -166,36 +168,31 @@ class webapi(object):
 		return self.response
 
 	def limitRequestRate( self , tUnit = 'second' ):
-		if ( self.nps is None ):
-			return
-		#
 		sleepTime = 0
-		nRecentRequests = self.getNRecentRequests()
-		while nRecentRequests > 0:
-			[ dTime , currentTime ] = self.timesUpdate()
-			if ( dTime <= self.timeWindow ):
-				if ( nRecentRequests >= self.requestsPerWindow ):
-					oldestTime = self.requestTimes.pop( 0 )
-					nRecentRequests = self.getNRecentRequests()
-					sleepTime = currentTime - oldestTime
-				else:
-					self.requestTimes.append( currentTime )
-					return
-			else:
-				if ( sleepTime > 0 ):
-					break
-				self.requestTimes.pop( 0 )
-				nRecentRequests = self.getNRecentRequests()
-		sleep( sleepTime )
+		if len( self.requestTimes ) == self.requestsPerWindow: # not within the very first requests
+			dTime = self.timeElapsed()
+			if dTime < self.timeWindow:
+				sleepTime = self.timeWindow - dTime
+		elif len( self.requestTimes ) > self.requestsPerWindow:
+			print "ACSW::biomine::webapi::warning requestTimes have more elements than necessary"
+		# pdb.set_trace()
+		time.sleep( sleepTime )
+		self.addRequestTime()
 		return
-	def getNRecentRequests( self ):
-		return len( self.recentRequests )
+	def addRequestTime( self ):
+		if len( self.requestTimes ) < self.requestsPerWindow:
+			self.requestTimes.append( time.time() ) 
+		else:
+			self.requestTimes[-(self.requestsPerWindow+1):].append( time.time() ) # take the last n-1 number of times, and add the current time to the end
+		return
+	# def getNRecentRequests( self ):
+	# 	return len( self.recentRequests )
 	def timeElapsed( self ):
 #TODO could check if the newest (-1 position) to current is smaller than time window
 		current = time.time()
 		prior = self.requestTimes[0]
 		dTime = current - prior
-		return [ dTime , current ]
+		return dTime
 	
 	def errorCheck( self ):
 		if self.response is not None:
@@ -260,6 +257,14 @@ class webapi(object):
 		except:
 			print "biomine::webapi::getElement Warning: no xml element for " + text + " from " + generator.text
 			return ET.fromstring( webapi.nullXML )
+	def setRequestLimit( self , rate ):
+		self.requestsPerWindow = rate
+	def setSearchBatchSize( self , size ):
+		self.searchBatchSize = size
+	def setSummaryBatchSize( self , size ):
+		self.summaryBatchSize = size
+	def setTimeWindow( self , size ):
+		self.timeWindow = size
 
 	@staticmethod
 	def runTime( initialTime ):

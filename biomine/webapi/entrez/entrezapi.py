@@ -71,6 +71,7 @@ class entrezapi(webapi):
 		self.retmode = ""
 		self.usehistory = ""
 		self.assembly = "GRCh37"
+		self.setRequestLimits()
 
 	def addQuery( self , term , **kwargs ):
 		field = kwargs.get( "field" , "" )
@@ -330,12 +331,3 @@ class entrezapi(webapi):
 		self.setSearchBatchSize( entrezapi.searchBatchSize )
 		self.setSummaryBatchSize( entrezaip.summaryBatchSize )
 		self.setTimeWindow( entrezaip.timeWindow )
-
-	def setRequestRate( self , rate ):
-		self.nps = rate
-	def setSearchBatchSize( self , size ):
-		self.searchBatchSize = size
-	def setSummaryBatchSize( self , size ):
-		self.summaryBatchSize = size
-	def setTimeWindow( self , size ):
-		self.timeWindow = size
