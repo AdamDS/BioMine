@@ -150,12 +150,8 @@ class vepvariant(mafvariant):
 					return True
 		return False
 
-	def setInputVariant( self , **kwargs ):
-		asVCF = kwargs.get( 'vcf' , True )
-		if asVCF:
-			self.inputVariant = self.vcf( delim=' ' )
-		else:
-			self.inputVariant = self.genomicVar()
+	def setInputVariant( self, value , **kwargs ):
+		self.inputVariant = value
 
 	def printVariant(self,delim , **kwargs ):
 		onlyThisVariant = kwargs.get( 'minimal' , False )
@@ -202,6 +198,7 @@ class vepvariant(mafvariant):
 	def parseEntryFromVEP( self , rootElement ):
 		''' Expect rootElement as JSON (dict) '''
 #		print "biomine::variant::vepvariant::parseEntryFromVEP"
+		self.inputVariant = rootElement.get( 'input' )
 		self.chromosome = rootElement.get( 'seq_region_name' )
 		self.start = rootElement.get( 'start' )
 		self.stop = rootElement.get( 'end' )
@@ -211,7 +208,7 @@ class vepvariant(mafvariant):
 			self.alternate = allele_string[1]
 		else:
 			self.alternate = allele_string[0]
-		self.strand = rootElement.get( 'strand' )
+		self.setStrand( rootElement.get( 'strand' ) ) 
 		self.assembly = rootElement.get( 'assembly_name' )
 		self.mostSevereConsequence = rootElement.get( 'most_severe_consequence' )
 		transcriptConsequences = rootElement.get( 'transcript_consequences' )

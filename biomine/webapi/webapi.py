@@ -165,6 +165,7 @@ class webapi(object):
 			print "biomine::webapi::submit failed: " ,
 			self.errorCheck()
 			pass
+		# print "ACSW::webapi::trySubmit response = ", self.response.text
 		return self.response
 
 	def limitRequestRate( self , tUnit = 'second' ):
@@ -185,10 +186,7 @@ class webapi(object):
 		else:
 			self.requestTimes[-(self.requestsPerWindow+1):].append( time.time() ) # take the last n-1 number of times, and add the current time to the end
 		return
-	# def getNRecentRequests( self ):
-	# 	return len( self.recentRequests )
 	def timeElapsed( self ):
-#TODO could check if the newest (-1 position) to current is smaller than time window
 		current = time.time()
 		prior = self.requestTimes[0]
 		dTime = current - prior

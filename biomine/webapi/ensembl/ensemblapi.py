@@ -17,6 +17,7 @@ import json
 import time
 from biomine.variant.mafvariant import mafvariant
 from biomine.variant.vepvariant import vepvariant
+import pdb
 
 class ensemblapi(webapi):
 	endpoint = "http://grch37.rest.ensembl.org"
@@ -228,11 +229,11 @@ class ensemblapi(webapi):
 			resultDict[hgvsNotated] = self.response.text
 		return resultDict
 	def annotateVariantsPost( self , variants , **kwargs ):
-		
 		print "biomine::webapi::ensembl::ensemblapi::annotateVariantsPost"
 		#doAllOptions = kwargs.get( 'allOptions' , True )
 		maxPost = kwargs.get( 'maxPost' , self.searchBatchSize ) #bc error 400 (bad request), 403 (banned), or 504 (gateway/proxy server timeout)
 		if maxPost > self.searchBatchSize:
+			print "biomine::webapi::ensembl::ensemblapi::annotateVariantsPost Warning: user defined maxPost is larger than allowed. Setting back to the default search batch size"
 			maxPost = self.searchBatchSize
 		#maxPost = 400 #https://github.com/ensembl/ensembl-rest/wiki/POST-Requests
 		#maxPost = 1000 #http://rest.ensembl.org/documentation/info/vep_region_post
@@ -247,21 +248,24 @@ class ensemblapi(webapi):
 			nullValue = "."
 			delim = " "
 			needReferences = self.checkInsertionsReference( subsetVariants , nullValue=nullValue , delim=delim )
+			# pdb.set_trace()
 			self.fullReset()
 			self.setSubset( ensemblapi.regionSubset )
 			#self.doAllOptions( data=doAllOptions )
 			for var in subsetVariants:
-				inputVariant = var.vcf()
+				inputVariant = var.ensembl()
 				#print inputVariant
 				formattedVariants.append( inputVariant )
 				vepvar = vepvariant( inputVariant=inputVariant , parentVariant=var )
 				annotatedVariants[inputVariant] = vepvar
+			# pdb.set_trace()
  			#following examples from documentation
 			self.addData( "variants" , formattedVariants )
 			self.addHeader( "accept" , "application/json" )
 			self.addHeader( "content-type" , "application/json" )
 			[ annotatedVariantsNew , success ] = self.trySubmit( **kwargs ) 
-			annotatedVariants.update(annotatedVariantsNew)
+			annotatedVariants.update( annotatedVariantsNew )
+			# pdb.set_trace()
 			if not success:
 				print "BioMine::webapi::ensembl::ensemblapi Error: cannot access desired XML fields/tags for variants " ,
 				print "[" + str(i) + ":" + str(j) + "]"
@@ -278,8 +282,9 @@ class ensemblapi(webapi):
 				for rootElement in root:
 					var = vepvariant()
 					var.parseEntryFromVEP( rootElement )
-					var.setInputVariant()
+					# var.setInputVariant( var.ensembl() )
 					annotatedVariants[var.inputVariant] = var
+					# pdb.set_trace()
 				return [ annotatedVariants , True ]
 			else:
 				print( "BioMine::webapi::ensembl::ensemblapi::trySubmit Error: failed to query due to " + str( self.response.status_code ) + ": " + self.response.reason )
