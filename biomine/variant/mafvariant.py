@@ -15,8 +15,9 @@ class mafvariant(variant):
 	revVarSymbols = dict( ( v , k ) for k , v in varSymbols.iteritems() )
 	toShort = { "ala" : "A" , "arg" : "R" , "asn" : "N" , "asp" : "D" , \
 				"cys" : "C" , "gln" : "Q" , "glu" : "E" , "gly" : "G" , \
-				"ile" : "I" , "lys" : "K" , "phe" : "F" , "ser" : "S" , \
-				"trp" : "W" , "tyr" : "Y" , "val" : "V" }
+				"his" : "H" , "ile" : "I" , "leu" : "L" , "lys" : "K" , \
+				"met" : "M" , "pro" : "P" , "phe" : "F" , "ser" : "S" , \
+				"thr" : "T" , "trp" : "W" , "tyr" : "Y" , "val" : "V" }
 	toLong = dict( ( v , k ) for k , v in toShort.iteritems() )
 	def __init__(self , **kwargs):
 		super(mafvariant,self).__init__(**kwargs)
