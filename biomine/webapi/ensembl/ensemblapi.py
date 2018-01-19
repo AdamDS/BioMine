@@ -47,6 +47,7 @@ class ensemblapi(webapi):
 	requestsPerWindow = 15
 	timeWindow = 1 #in seconds
 	searchBatchSize = 300
+	updownDefault = 5000
 	def __init__(self,**kwargs):
 		subset = kwargs.get("subset",'')
 #optional defaults as given by http://rest.ensembl.org/documentation/info/vep_hgvs_get
@@ -56,7 +57,7 @@ class ensemblapi(webapi):
 		self.exac = kwargs.get( ensemblapi.exac , False )
 		self.genesplicer = kwargs.get( ensemblapi.genesplicer , False )
 		self.maxentscan = kwargs.get( ensemblapi.maxentscan , False )
-		self.updown = kwargs.get( ensemblapi.updown , 5000 )
+		self.updown = kwargs.get( ensemblapi.updown , ensemblapi.updownDefault )
 		self.callback = kwargs.get( ensemblapi.callback , "" )
 		self.canonical = kwargs.get( ensemblapi.canonical , False )
 		self.ccds = kwargs.get( ensemblapi.ccds , False )
@@ -80,7 +81,53 @@ class ensemblapi(webapi):
 				super(ensemblapi,self).__init__(ensemblapi.endpoint,ensemblapi.hgvsSubset)
 		#https://github.com/Ensembl/ensembl-rest/wiki/Rate-Limits
 		self.setRequestLimits()
-	
+
+	def checkUpDown( self , k ):
+		if ( k == "updown" ):
+			return True
+		return False
+	def isDefaultUpDown( self ):
+		if ( self.updown == ensemblapi.updownDefault ):
+			return True
+		return False
+	def checkIfRequestsPerWindow( self , k ):
+		if ( k == "requestsPerWindow" ):
+			return True
+		return False
+	def isDefaultRequestsPerWindow( self ):
+		if ( self.requestsPerWindow == ensemblapi.requestsPerWindow ):
+			return True
+		return False
+	def checkIfSearchBatchSize( self , k ):
+		if ( k == "searchBatchSize" ):
+			return True
+		return False
+	def isDefaultSearchBatchSize( self ):
+		if ( self.searchBatchSize == ensemblapi.searchBatchSize ):
+			return True
+		return False
+	def __nonzero__( self ):
+		for k , v in self.__dict__.iteritems():
+			print( k + " => " + str( v ) )
+			if ( self.checkEndpointSubset( k ) ):
+				continue
+			elif ( self.checkIfTimeWindow( k ) ):
+				if ( not self.isUnitTimeWindow() ):
+					return True
+			elif ( self.checkIfRequestsPerWindow( k ) ):
+				if ( not self.isDefaultRequestsPerWindow() ):
+					return True
+			elif ( self.checkUpDown( k ) ):
+				if ( not self.isDefaultUpDown() ):
+					return True
+			elif ( self.checkIfSearchBatchSize( k ) ):
+				if ( not self.isDefaultSearchBatchSize() ):
+					return True
+			else:
+				if ( bool( v ) ):
+					return True
+		return False
+
 	def __repr__( self , details = False ):
 		desc = ""
 		desc += super( ensemblapi , self ).__repr__()
@@ -256,7 +303,7 @@ class ensemblapi(webapi):
 				inputVariant = var.ensembl()
 				#print inputVariant
 				formattedVariants.append( inputVariant )
-				vepvar = vepvariant( inputVariant=inputVariant , parentVariant=var )
+				vepvar = vepvariant( inputVariant = inputVariant , parentVariant = var )
 				annotatedVariants[inputVariant] = vepvar
 			# pdb.set_trace()
  			#following examples from documentation
@@ -282,7 +329,6 @@ class ensemblapi(webapi):
 				for rootElement in root:
 					var = vepvariant()
 					var.parseEntryFromVEP( rootElement )
-					# var.setInputVariant( var.ensembl() )
 					annotatedVariants[var.inputVariant] = var
 					# pdb.set_trace()
 				return [ annotatedVariants , True ]
