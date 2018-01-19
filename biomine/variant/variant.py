@@ -11,7 +11,8 @@ class variant(object):
 		self.stop = kwargs.get('stop',None)
 		self.reference = kwargs.get('reference',"-")
 		self.alternate = kwargs.get('alternate',"-")
-		self.strand = kwargs.get('strand',"+")
+		strand = kwargs.get('strand',"+")
+		self.setStrand( strand )
 		self.sample = kwargs.get('sample',None)
 		self.assembly = kwargs.get('assembly',None)
 		self.dbsnp = kwargs.get('dbsnp',None)
@@ -19,9 +20,9 @@ class variant(object):
 		#if str(reference) == "0" or not start:
 			#self.start = "-"
 	def setStrand( self , strand ):
-		if strand == -1:
+		if strand == -1 or strand == "-":
 			self.strand = "-"
-		if strand == 1:
+		else:
 			self.strand = "+"
 #		print self.strand
 	
