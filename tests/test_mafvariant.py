@@ -7,10 +7,7 @@ from biomine.variant.mafvariant import mafvariant
 class testmafvariant( unittest.TestCase ):
 	def test_empty_init( self ):
 		v = mafvariant()
-		if ( v ):
-			return True
-		else:
-			return False
+		self.assertFalse( v )
 
 	def test_mafLine2Variant( self ):
 		mafLine = "\t".join( [ \

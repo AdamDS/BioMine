@@ -6,10 +6,7 @@ from biomine.variant.variant import variant
 class testvariant( unittest.TestCase ):
 	def test_empty_init( self ):
 		v = variant()
-		if ( v ):
-			return True
-		else:
-			return False
+		self.assertFalse( v )
 
 #	def test_setStrand( self ):
 #		v = variant()
