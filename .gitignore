@@ -1,2 +1,7 @@
 *.pyc
 *.egg-info*
+*.sw*
+.DS_Store
+*.log
+*.out
+*.err
