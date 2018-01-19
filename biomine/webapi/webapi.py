@@ -32,6 +32,30 @@ class webapi(object):
 		#TODO consider limit if multiple instances or in parallel programs
 		#https://stackoverflow.com/questions/11458477/limit-number-of-class-instances-with-python
 
+	def checkIfTimeWindow( self , k ):
+		if ( k == "timeWindow" ):
+			return True
+		return False
+	def isUnitTimeWindow( self ):
+		if ( self.timeWindow == 1 ):
+			return True
+		return False
+	def checkEndpointSubset( self , k ):
+		if ( k == "endpoint" or k == "subset" ):
+			return True
+		return False
+	def __nonzero__( self ):
+		for k , v in self.__dict__.iteritems():
+			if ( self.checkEndpointSubset( k ) ):
+				continue
+			elif ( self.checkTimeWindow( k ) ):
+				if ( not self.isUnitTimeWindow() ):
+					return True
+			else:
+				if ( bool( v ) ):
+					return True
+		return False
+
 	def printInfo( self ):
 		self.__repr__()
 
