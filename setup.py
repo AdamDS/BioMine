@@ -1,6 +1,6 @@
 #https://docs.python.org/2/distutils/examples.html
 from distutils.core import setup
-version = "0.9.4"
+version = "0.9.5"
 setup( \
 	name = 'BioMine' , 
 	version = version , 
