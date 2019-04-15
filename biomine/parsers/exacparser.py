@@ -552,7 +552,7 @@ class exacparser(object):
 		with pysam.VariantFile( vcf , "r" ) as vf:
 			for var in self.variants:
 				entries[var.genomicVar()] = 1
-				here = ':'.join( [ str( var.chromosome ) , str( var.start ) , str( var.stop ) ] )
+				here = str( var.chromosome ) + ':' + str( var.start ) + '-' + str( var.stop )
 				for hit in vf.fetch( region = here ):
 					for i in range( 0 , len( hit.alts ) ):
 						evar = variant( chromosome = hit.contig , \
@@ -563,4 +563,5 @@ class exacparser(object):
 									)
 						if var.sameGenomicVariant( evar ):
 							entries[var.genomicVar()] =  hit.info["AF"]
+		return entries
 
